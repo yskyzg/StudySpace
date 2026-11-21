@@ -1,5 +1,8 @@
 name: 构建安卓 APK
 
+# 触发方式：
+# 1) 每次把代码推送到 main / master 分支时自动构建
+# 2) 也可以在 GitHub 网页 Actions 页面手动点击 "Run workflow"
 on:
   push:
     branches: [main, master]
@@ -23,22 +26,38 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: 缓存 Gradle（加快后续构建）
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: 安装依赖
         run: npm install
 
-      - name: 生成 Android 工程
-        run: npx cap add android
+      # 网页文件（index.html）在仓库根目录，这里自动建一个 www 目录并放进去，
+      # 这样 Capacitor 就能按配置里的 webDir: "www" 找到它。
+      - name: 准备网页资源目录
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+
+      - name: 重新生成 Android 工程
+        run: rm -rf android && npx cap add android
 
       - name: 同步网页资源
         run: npx cap sync android
 
-      - name: 赋予执行权限
+      - name: 赋予 gradlew 执行权限
         run: chmod +x android/gradlew
 
       - name: 构建 Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
-      - name: 上传 APK
+      - name: 上传 APK 供下载
         uses: actions/upload-artifact@v4
         with:
           name: 番茄学习助手-APK
