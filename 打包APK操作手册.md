@@ -57,9 +57,30 @@
 > Windows 文件管理器：点顶部「查看」→ 勾选「隐藏的项目」就能看到。
 > 如果 `.github` 没传上去，自动打包就不会运行。
 
+> 🆘 **`.github` 文件夹拖不进去 / 传不了？** 这是 GitHub 网页版的限制（选不了文件夹）。
+> 别用上传，改用**新建文件**的方式，方法见下面「第 3 步的备用方案」。
+
 > 💡 传到仓库后，仓库**第一层**就应该能看到 `index.html`、`package.json` 这些文件——不要在仓库里再套一层 `www` 文件夹。
 
 拖进去后，页面底部会出现 **「Commit changes」**（提交更改）按钮，随便写一句说明（比如 `initial`），点它。
+
+### 第 3 步的备用方案：`.github` 文件夹传不了怎么办
+
+GitHub 网页版选不了文件夹，所以 `.github` 文件夹经常拖不上去。用这个办法绕过：
+
+1. 回到仓库的 **Code 页**，点 **「Add file」→「Create new file」**（创建新文件）
+2. 在**文件名输入框**里，完整输入这一串（直接复制，别换行）：
+   ```
+   .github/workflows/build-apk.yml
+   ```
+   只要文件名里带 `/`，GitHub 会**自动帮你建好文件夹**，不用手动建。
+3. 在下面的大文本框里，把本手册「附录：build-apk.yml 全文」里的内容**整段复制粘贴**进去
+4. 拉到最下面点 **「Commit changes」**
+
+这样 `.github/workflows/build-apk.yml` 就建好了，效果和上传文件夹完全一样。
+
+> 同理，`.gitignore` 如果也传不了，就用「Create new file」，文件名填 `.gitignore`，内容从本地 `www/.gitignore` 复制进去。
+> 其他文件（index.html、package.json、capacitor.config.json）是普通文件，正常拖拽上传即可。
 
 ### 第 4 步：等它自动打包
 
@@ -156,6 +177,77 @@ E:\09 code\Review\              ← 你的原项目（已上传 GitHub，我们�
 - 根目录那些文件全是你原来的，我**没有改动任何一个**（包括 `.gitignore`）。
 - `www` 是独立的 APK 项目，以后单独上传到新仓库。
 - `www/index.html` 是从你原来的 `index.html` 复制过去的，内容一模一样；原来的那份留着当备份。
+
+---
+
+## 附录：`build-apk.yml` 全文（备用方案复制用）
+
+把下面从 `name:` 开始到最后的**全部内容**复制，粘贴到新建文件的文本框里：
+
+```yaml
+name: 构建安卓 APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 缓存 Gradle（加快后续构建）
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: 安装依赖
+        run: npm install
+
+      # 网页文件（index.html）在仓库根目录，这里自动建一个 www 目录并放进去，
+      # 这样 Capacitor 就能按配置里的 webDir: "www" 找到它。
+      - name: 准备网页资源目录
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+
+      - name: 重新生成 Android 工程
+        run: rm -rf android && npx cap add android
+
+      - name: 同步网页资源
+        run: npx cap sync android
+
+      - name: 赋予 gradlew 执行权限
+        run: chmod +x android/gradlew
+
+      - name: 构建 Debug APK
+        run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 番茄学习助手-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
+```
 
 ---
 
