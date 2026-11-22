@@ -253,6 +253,27 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
   padding:20px;margin:auto;box-shadow:var(--shadow);align-self:center}
 .confirm .t{font-size:15px;font-weight:600;margin-bottom:8px}
 .confirm .d{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-bottom:18px}
+/* 前台到点提醒弹窗（不依赖系统通知，息屏回前台/前台都能看到） */
+.alert-mask{position:fixed;inset:0;background:rgba(30,22,10,.5);z-index:150;display:flex;
+  align-items:center;justify-content:center;animation:fadeIn .2s}
+.alert-box{width:calc(100% - 56px);max-width:340px;background:var(--card);border-radius:18px;
+  padding:22px 20px 18px;text-align:center;box-shadow:0 16px 48px rgba(30,22,10,.3)}
+.alert-box .em{font-size:38px;line-height:1;margin-bottom:8px}
+.alert-box .t{font-size:17px;font-weight:600;color:var(--dai);margin-bottom:6px}
+.alert-box .d{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:18px}
+.alert-box .row2{display:flex;gap:10px}
+.alert-box .row2 .btn{flex:1}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+/* 设置分组内的开关行 */
+.set-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.set-row:last-child{border-bottom:none}
+.set-row .lbl{flex:1;color:var(--ink)}
+.set-row .lbl small{display:block;font-size:10.5px;color:var(--ink2);margin-top:2px}
+.sw{width:44px;height:25px;border-radius:20px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:.2s}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--dai)}
+.sw.on::after{left:22px}
+.set-sub{padding:2px 14px 12px;background:var(--bg)}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;padding:10px 18px;border-radius:22px;font-size:12.5px;
   z-index:200;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
@@ -449,6 +470,7 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 
 <div id="sheetRoot"></div>
 <div id="confirmRoot"></div>
+<div id="alertRoot"></div>
 <div id="toast"></div>
 
 <script>
@@ -498,10 +520,16 @@ function updateStatusBar(){
 function aiCfgBlank(){
   return {provider:'',apiKey:'',baseUrl:'',model:'',presets:[],models:[]};
 }
+/* 提示音配置：start/end/fifteen 各自 on 开关 + name（system 或自定义名）+ data（dataURL/空=系统音） */
+function soundCfgBlank(){
+  return {start:{on:false,name:'system',data:''},
+          end:{on:false,name:'system',data:''},
+          fifteen:{on:false,name:'system',data:''}};
+}
 function makeEmpty(){
   return {subjects:[],goals:{dailyMinutes:120,weeklyMinutes:600},subjectGoals:{},
     sessions:[],plans:[],mistakes:[],reviews:[],chats:[],archives:[],weeklyReports:[],
-    profile:{nickname:'学习者',purpose:''},aiConfig:aiCfgBlank()};
+    profile:{nickname:'学习者',purpose:''},aiConfig:aiCfgBlank(),soundCfg:soundCfgBlank()};
 }
 /* 迁移容错：老数据缺字段时补齐，保证升级不报错、不丢数据 */
 function migrate(s){
@@ -511,6 +539,11 @@ function migrate(s){
   s.weeklyReports=s.weeklyReports||[];s.subjectGoals=s.subjectGoals||{};
   s.profile=s.profile||{nickname:'学习者',purpose:''};
   s.aiConfig=s.aiConfig||aiCfgBlank();
+  s.soundCfg=s.soundCfg||soundCfgBlank();
+  ['start','end','fifteen'].forEach(function(k){
+    var d=s.soundCfg[k]||{};
+    s.soundCfg[k]={on:!!d.on,name:d.name||'system',data:d.data||''};
+  });
   if(!s.aiConfig.presets)s.aiConfig.presets=[];
   if(!s.aiConfig.models)s.aiConfig.models=[];
   if(!s.aiConfig.prompts)s.aiConfig.prompts=[];
@@ -700,10 +733,13 @@ initBackButton();
    每次 tick 用 Date.now()-runStart 反推真实流逝秒数，不依赖 setInterval 的触发次数。
    浏览器/系统在后台会冻结 setInterval，但时间戳照常走，回前台一次性补算。 */
 var T={mode:'down',subjectId:null,focusMin:25,restMin:5,running:false,phase:'focus',remain:25*60,elapsed:0,
-       runStart:0,baseElapsed:0,baseRemain:25*60,overtime:0,baseOvertime:0};
+       runStart:0,baseElapsed:0,baseRemain:25*60,overtime:0,baseOvertime:0,
+       _endFired:false,_15Fired:false};
 var timerId=null;
 function fmtSec(s){s=Math.max(0,Math.floor(s));var m=Math.floor(s/60),ss=s%60;return ('0'+m).slice(-2)+':'+('0'+ss).slice(-2);}
 function phaseTotal(){return (T.phase==='rest'?T.restMin:T.focusMin)*60;}
+/* 每段专注开始时重置到点提醒标志，避免重复提醒 */
+function resetAlertFlags(){T._endFired=false;T._15Fired=false;}
 /* 主按钮文案：没开始 / 暂停中 / 运行中 —— 暂停后明确显示「继续」 */
 function timerActionLabel(){
   if(T.running)return '暂停';
@@ -736,9 +772,14 @@ function advanceTimer(now){
     }
     if(!(dur>0)){dur=phaseTotal();T.baseRemain=dur;}   /* 休息段兜底，防止 0 时长死循环 */
     if(delta<dur){
+      var prevRemain=T.remain;
       T.remain=dur-delta;
       T.elapsed=T.baseElapsed+(T.phase==='focus'?delta:0);
       T.overtime=0;
+      /* 大于 1 小时的专注：剩余时间跨过 15 分钟时提醒一次 */
+      if(T.phase==='focus'&&T.mode==='down'&&T.focusMin>60&&!T._15Fired&&T.remain<=900){
+        T._15Fired=true;queueAlert('fifteen');
+      }
       break;
     }
     if(T.phase==='focus'){
@@ -746,6 +787,12 @@ function advanceTimer(now){
       T.overtime=delta-dur;
       T.remain=0;
       T.elapsed=T.baseElapsed+dur+T.overtime;
+      /* 专注到点：到点提醒（前台弹窗 + 系统闹钟）只触发一次 */
+      if(!T._endFired){
+        T._endFired=true;
+        if(!T._15Fired&&T.focusMin>60){T._15Fired=true;queueAlert('fifteen');}
+        queueAlert('end');
+      }
       break;
     }
     /* 休息走完自动回到下一轮专注（不记录专注时长） */
@@ -755,6 +802,7 @@ function advanceTimer(now){
     T.baseElapsed=0;
     T.baseRemain=phaseTotal();
     T.runStart+=dur*1000;                  /* 精确推进到下一段起点，保留毫秒余量 */
+    resetAlertFlags();queueAlert('rest');
     changed=true;
   }
   return changed;
@@ -769,6 +817,7 @@ function syncTimer(){
   }else if(!T._lastPersist||Date.now()-T._lastPersist>5000){
     persistTimer();T._lastPersist=Date.now(); /* 轻量落盘，被系统杀掉也能续上 */
   }
+  drainAlerts();                 /* 到点提醒：前台弹窗 + 提示音 */
   updateTimerUI();
 }
 function tick(){if(T.running)syncTimer();}
@@ -810,10 +859,13 @@ function toggleTimer(){
   if(!T.running){
     if(!T.subjectId){toast('先选一个科目');return;}
     var resuming=timerActionLabel()!=='开始专注';
+    if(!resuming)resetAlertFlags();   /* 全新一段：重置到点提醒标志 */
     T.running=true;T.runStart=Date.now();
     T.baseElapsed=T.elapsed;T.baseRemain=T.remain;T.baseOvertime=T.overtime;
     if(!timerId)timerId=setInterval(tick,1000);
+    playSound('start');               /* 开始提示音 */
     toast(resuming?'继续计时':'开始计时');
+    startLiveNotify();           /* 挂常驻「已开始专注」通知（正向/倒计时都有） */
     rescheduleNotify();          /* 预排系统提醒，息屏也能按时响 */
   }else{
     syncTimer();                 /* 暂停前先补算到当前时刻 */
@@ -823,7 +875,8 @@ function toggleTimer(){
   saveFocus();render();
 }
 function resetTimer(){T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
-  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;cancelNotify();saveFocus();render();toast('已重置');}
+  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
+  cancelNotify();saveFocus();render();toast('已重置');}
 function recordSession(sec){
   if(sec<1){return false;}
   if(!T.subjectId){toast('没有科目，未记录');return false;}
@@ -839,7 +892,7 @@ function manualRecord(){
   T.running=false;                       /* 真正结束计时，避免后台继续累加 */
   var ok=recordSession(sec);              /* 记录设定时长 + 超时部分的合计 */
   T.elapsed=0;T.remain=T.focusMin*60;T.phase='focus';T.overtime=0;T.baseOvertime=0;
-  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;
+  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
   cancelNotify();saveFocus();render();
   toast(ok?('已记录专注 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')):'未记录');
 }
@@ -877,28 +930,135 @@ function capCall(plugin,method,opts){
   if(typeof C.nativePromise==='function')return C.nativePromise(plugin,method,opts||{});
   return Promise.reject(new Error('no-bridge'));
 }
-/* ============ 专注结束系统提醒：预排到系统闹钟，息屏/后台也能响 ============ */
-var NOTIFY_ID={focus:4101,rest:4102};
+/* ============ 专注提醒：系统通知（后台/息屏）+ 前台弹窗 + 提示音 ============ */
+var NOTIFY_ID={focus:4101,rest:4102,fifteen:4103,live:4110};
+/* 会话常驻通知：一开始专注就挂上（正向/倒计时都有），ongoing 不可被划掉。
+   用固定 id，便于到点时就地替换为「专注完成」，主动结束时静默取消。 */
+function startLiveNotify(){
+  if(!isNative())return Promise.resolve();
+  var s=T.subjectId?subjById(T.subjectId):null,name=s?s.name:'StudySpace';
+  var body=name+' · '+(T.mode==='down'?('倒计时 '+fmtDur(Math.max(0,T.remain))):'正向计时中');
+  return capCall('LocalNotifications','requestPermissions',{}).then(function(r){
+    if(r&&r.display&&r.display!=='granted')return;
+    return capCall('LocalNotifications','schedule',{notifications:[{
+      id:NOTIFY_ID.live,
+      title:T.phase==='rest'?'休息中':'已开始专注',
+      body:body,ongoing:true,autoCancel:false,
+      schedule:{at:new Date(Date.now()+200),allowWhileIdle:true}
+    }]});
+  }).catch(function(){});
+}
 function cancelNotify(){
   if(!isNative())return Promise.resolve();
   return capCall('LocalNotifications','cancel',
-    {notifications:[{id:NOTIFY_ID.focus},{id:NOTIFY_ID.rest}]}).catch(function(){});
+    {notifications:[{id:NOTIFY_ID.focus},{id:NOTIFY_ID.rest},
+      {id:NOTIFY_ID.fifteen},{id:NOTIFY_ID.live}]}).catch(function(){});
 }
+/* 预排系统闹钟：息屏/后台也能响。前台不依赖它（各 ROM 会吞横幅），另走应用内弹窗 */
 function rescheduleNotify(){
   if(!isNative()||!T.running||T.mode!=='down'||T.remain<=0)return;
   var focus=T.phase==='focus',s=T.subjectId?subjById(T.subjectId):null;
   capCall('LocalNotifications','requestPermissions',{}).then(function(r){
     if(r&&r.display&&r.display!=='granted')return;
     var at=new Date(Date.now()+Math.ceil(T.remain)*1000);
-    return capCall('LocalNotifications','schedule',{notifications:[{
-      id:focus?NOTIFY_ID.focus:NOTIFY_ID.rest,
-      title:focus?'专注完成':'休息结束',
-      body:focus?((s?s.name:'StudySpace')+' · 本次专注结束，起来活动一下'):
+    /* 到点那条用 live id，就地替换「已开始专注」为「专注完成！」，含科目+时长 */
+    var list=[{
+      id:NOTIFY_ID.live,
+      title:focus?'专注完成！':'休息结束',
+      body:focus?((s?s.name:'StudySpace')+' · 本次专注 '+fmtDur(T.focusMin*60)):
                   '休息结束，继续下一轮专注',
       schedule:{at:at,allowWhileIdle:true}
+    }];
+    /* 大于 1 小时的倒计时，剩 15 分钟也预排一条系统通知 */
+    if(focus&&T.focusMin>60){
+      var at15=new Date(Date.now()+Math.max(0,Math.ceil(T.remain)-900)*1000);
+      if(at15.getTime()>Date.now())list.push({
+        id:NOTIFY_ID.fifteen,title:'还剩 15 分钟',
+        body:(s?s.name:'StudySpace')+' · 专注即将结束',
+        schedule:{at:at15,allowWhileIdle:true}
+      });
+    }
+    return capCall('LocalNotifications','schedule',{notifications:list});
+  }).catch(function(){});
+}
+/* ---- 提示音：系统默认用 Web Audio 合成「叮咚」，自定义用上传的 dataURL ---- */
+function playSound(kind,suffix){
+  var c=(S.soundCfg||{})[kind];
+  if(!c||!c.on)return;
+  var src=c.data||'';
+  if(src){
+    try{var a=new Audio(src);a.currentTime=0;a.play().catch(function(){});}catch(e){}
+  }else systemChime(kind);
+}
+function systemChime(kind){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    if(!systemChime._ctx)systemChime._ctx=new AC();
+    var ctx=systemChime._ctx;if(ctx.state==='suspended')ctx.resume();
+    var notes=kind==='end'?[784,988,1175]:kind==='fifteen'?[659,784]:[659,880];
+    notes.forEach(function(f,i){
+      var o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*0.16;
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.28,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.42);
+      o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.45);
+    });
+  }catch(e){}
+}
+/* ---- 到点事件队列：advanceTimer 只置位，syncTimer 统一消费，避免补算时重复弹 ---- */
+function queueAlert(kind){window.__alertQueue=window.__alertQueue||[];if(window.__alertQueue.indexOf(kind)<0)window.__alertQueue.push(kind);}
+/* 到点即时系统通知：at=此刻，避免只靠提前预排被 ROM 延迟/吞掉 */
+function fireNowNotify(kind){
+  if(!isNative())return;
+  var s=T.subjectId?subjById(T.subjectId):null;
+  /* 到点(end)用 live id 就地替换常驻通知；15分钟/休息结束是补充提醒，用独立 id */
+  var id=kind==='fifteen'?NOTIFY_ID.fifteen:(kind==='rest'?NOTIFY_ID.rest:NOTIFY_ID.live);
+  var cfg=kind==='fifteen'?{title:'还剩 15 分钟',body:(s?s.name:'StudySpace')+' · 专注即将结束'}:
+          kind==='rest'?{title:'休息结束',body:'休息好了，开始下一轮专注吧'}:
+          {title:'专注完成！',body:(s?s.name:'StudySpace')+' · 本次专注 '+fmtDur(T.elapsed||T.focusMin*60)};
+  capCall('LocalNotifications','requestPermissions',{}).then(function(r){
+    if(r&&r.display&&r.display!=='granted')return;
+    return capCall('LocalNotifications','schedule',{notifications:[{
+      id:id,title:cfg.title,body:cfg.body,schedule:{at:new Date(Date.now()+300),allowWhileIdle:true}
     }]});
   }).catch(function(){});
 }
+function drainAlerts(){
+  var q=window.__alertQueue||[];window.__alertQueue=[];
+  q.forEach(function(kind){
+    if(kind==='start'){playSound('start');return;}
+    if(kind==='fifteen'){playSound('fifteen');showTimerAlert('fifteen');fireNowNotify('fifteen');return;}
+    if(kind==='end'){playSound('end');showTimerAlert('end');fireNowNotify('end');return;}
+    if(kind==='rest'){playSound('end');showTimerAlert('rest');fireNowNotify('rest');return;}
+  });
+}
+/* 前台弹窗：App 在前台时系统通知常被吞，这个一定能看到 */
+function showTimerAlert(kind){
+  if(document.getElementById('alertRoot'))document.getElementById('alertRoot').innerHTML='';
+  var s=T.subjectId?subjById(T.subjectId):null,name=s?esc(s.name):'StudySpace';
+  var icon='⏰',title,desc,btns;
+  if(kind==='fifteen'){
+    icon='⏳';title='还剩 15 分钟';desc=name+' · 专注即将结束，坚持一下';
+  }else if(kind==='rest'){
+    title='休息结束';desc='休息好了，开始下一轮专注吧';
+  }else{
+    title='专注完成！';
+    desc=name+' · 本次已完成 '+fmtDur(T.focusMin*60+(T.overtime||0))+'，起来活动一下';
+  }
+  if(kind==='fifteen'||kind==='rest'){
+    btns='<button class="btn primary" onclick="closeAlert()">知道了</button>';
+  }else{
+    btns='<button class="btn ghost" onclick="closeAlert()">继续计时</button>'+
+         '<button class="btn primary" onclick="closeAlert();manualRecord()">结束并记录</button>';
+  }
+  var root=document.getElementById('alertRoot');if(!root)return;
+  root.innerHTML='<div class="alert-mask"><div class="alert-box">'+
+    '<div class="em">'+icon+'</div><div class="t">'+title+'</div><div class="d">'+desc+'</div>'+
+    '<div class="row2">'+btns+'</div></div></div>';
+  if(isNative()){try{navigator.vibrate&&navigator.vibrate([120,80,120]);}catch(e){}}
+}
+function closeAlert(){var r=document.getElementById('alertRoot');if(r)r.innerHTML='';}
 function copyText(t,tip){
   var done=function(){toast(tip||'已复制');};
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -1220,7 +1380,8 @@ function persistTimer(){
   try{localStorage.setItem(KEY+'_focus',JSON.stringify({
     subjectId:T.subjectId,focusMin:T.focusMin,restMin:T.restMin,mode:T.mode,
     running:T.running,phase:T.phase,elapsed:T.elapsed,remain:T.remain,
-    baseElapsed:T.baseElapsed,baseRemain:T.baseRemain,runStart:T.runStart,overtime:T.overtime,baseOvertime:T.baseOvertime
+    baseElapsed:T.baseElapsed,baseRemain:T.baseRemain,runStart:T.runStart,overtime:T.overtime,baseOvertime:T.baseOvertime,
+    _endFired:T._endFired,_15Fired:T._15Fired
   }));}catch(e){}
 }
 function loadFocus(){
@@ -1235,15 +1396,18 @@ function loadFocus(){
     if(typeof f.overtime==='number')T.overtime=f.overtime;
     if(typeof f.baseOvertime==='number')T.baseOvertime=f.baseOvertime;
     if(f.runStart)T.runStart=f.runStart;
+    if(typeof f._endFired==='boolean')T._endFired=f._endFired;
+    if(typeof f._15Fired==='boolean')T._15Fired=f._15Fired;
     if(typeof f.remain==='number')T.remain=f.remain;else T.remain=T.focusMin*60;
     /* 恢复运行态：用时间戳补算离开期间流逝的时间（含息屏/后台/重启） */
     if(f.running&&f.runStart){T.running=true;syncTimer();}
-    if(T.running&&T.mode==='down'&&T.remain>0)rescheduleNotify();
+    if(T.running){startLiveNotify();if(T.mode==='down'&&T.remain>0)rescheduleNotify();}
   }catch(e){}
 }
 loadFocus();
 function setMode(m){T.mode=m;T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
-  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;cancelNotify();saveFocus();render();}
+  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
+  cancelNotify();saveFocus();render();}
 function step(field,delta,min,max){
   T[field]=Math.max(min,Math.min(max,T[field]+delta));
   if(field==='focusMin'&&!T.running&&T.phase==='focus')T.remain=T.focusMin*60;
@@ -1990,14 +2154,18 @@ function mistTypePicker(){
   var opts=[{label:'全部题型',sel:!mistType,onclick:"setMistType('')"}];
   types.forEach(function(t){opts.push({label:esc(t),sel:t===mistType,
     onclick:"setMistType('"+esc(t).replace(/'/g,"\\'")+"')"});});
-  if(!types.length)opts.push({html:'<span class="muted">这个科目还没有题型，可在「科目管理」里添加</span>',
+  /* 记错题时题型是选填，没填的归到「未分类」，也要能筛出来 */
+  opts.push({label:'未分类',sel:mistType==='__none__',onclick:"setMistType('__none__')"});
+  if(!types.length)opts.push({html:'<span class="muted">这个科目还没有设置题型，可在「科目管理」里添加</span>',
     onclick:'closePicker()',sel:false});
   makePicker('mistTypePick',opts,null,null);
 }
-/* 当前筛选结果：页面、全选、导出三处共用，保证「全选」只作用于可见的错题 */
+/* 当前筛选结果：页面、全选、导出三处共用，保证「全选」只作用于可见的错题。
+   mistType==='__none__' 表示只看没填题型的错题 */
 function mistFiltered(){
   return S.mistakes.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');})
-    .filter(function(m){return (!mistSubject||m.subjectId===mistSubject)&&(!mistType||m.type===mistType);});
+    .filter(function(m){return (!mistSubject||m.subjectId===mistSubject)&&
+      (!mistType||(mistType==='__none__'?!m.type:m.type===mistType));});
 }
 function pageMistakes(){
   var due=dueMistakes();
@@ -2005,7 +2173,7 @@ function pageMistakes(){
   var selCount=list.filter(function(m){return mistSel[m.id];}).length;
   var allSel=list.length>0&&selCount===list.length;
   var subjName=mistSubject?(subjById(mistSubject)?subjById(mistSubject).name:'未分类'):'全部科目';
-  var typeName=mistType||'全部题型';
+  var typeName=mistType==='__none__'?'未分类':(mistType||'全部题型');
   function card(m){
     var sb=subjById(m.subjectId),rate=m.total?Math.round((1-(m.wrong||0)/m.total)*100):0;
     var isDue=m.nextReview&&m.nextReview<=today();
@@ -2363,6 +2531,7 @@ function pageSettings(){
   var ac=S.archives||[],cfg=S.aiConfig||{};
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">设置</span></div>'+
     '<div class="card"><div class="sec-title">通用</div>'+
+      '<div class="menu-item" onclick="openSoundCfg()"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4V5zM15 9l5 6m0-6l-5 6"/></svg><span>专注倒计时提示音</span><span class="arw">›</span></div>'+
       '<div class="menu-item" onclick="exportStudyPDF()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg><span>导出学习数据（报告 / PDF）</span><span class="arw">›</span></div>'+
       '<div class="menu-item" onclick="push(\'archive\')"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg><span>归档（已存 '+ac.length+' 条）</span><span class="arw">›</span></div></div>'+
     '<div class="card"><div class="sec-title">AI 接口</div>'+
@@ -2373,9 +2542,74 @@ function pageSettings(){
       '<div class="menu-item" onclick="document.getElementById(\'importFile\').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 17v3h16v-3"/></svg><span>导入恢复（JSON）</span><span class="arw">›</span></div>'+
       '<input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importDataJSON(this)">'+
       '<div class="tiny muted" style="padding:8px 14px">导出后会显示文件位置，可选择保存位置、复制路径或复制文件内容</div></div>'+
+    '<div class="card"><div class="sec-title">关于</div>'+
+      '<div class="menu-item" onclick="push(\'about\')"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><span>关于 StudySpace</span><span class="arw">›</span></div></div>'+
     '<div class="card"><div class="sec-title" style="color:'+C.zhe+'">危险区</div>'+
       '<div class="menu-item" onclick="resetEmpty()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清空全部数据</span><span class="arw">›</span></div></div>'+
-    '<div class="tiny muted" style="text-align:center;padding:10px 0 20px">StudySpace v1.0<br>数据全部保存在本机，不上传云端</div>';
+    '<div class="tiny muted" style="text-align:center;padding:10px 0 20px">StudySpace v1.0.5<br>数据全部保存在本机，不上传云端</div>';
+}
+/* 关于页：版本信息 / 开源协议 / 免责协议 / 使用方法（内容待补） */
+function pageAbout(){
+  var rows=[
+    /* 版本号只在这里展示一次，顶部封面不再重复 */
+    {t:'版本信息',html:'<div style="font-size:28px;font-weight:600;color:'+C.dai+';margin:4px 0 6px">v1.0.5</div>'+
+      '<div class="tiny muted">StudySpace 正式版 · 单文件离线运行，数据全部保存在本机</div>'},
+    {t:'开源协议',d:'MIT License —— 允许自由使用、复制、修改与分发，需保留版权声明。'},
+    {t:'免责协议',d:'本应用为个人学习工具，数据仅保存在本机。使用者需自行备份，因设备损坏、系统清理或误操作导致的数据丢失，开发者不承担责任。学习成果因人而异，本应用不对升学、考试成绩作任何承诺。'},
+    {t:'使用方法',d:'内容整理中，将在全部功能完成后补充。'}
+  ];
+  return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">关于</span></div>'+
+    '<div class="card"><div class="hero-title" style="font-size:20px">StudySpace</div>'+
+      '<div class="hero-sub">专注 · 计划 · 复盘 · 沉淀</div></div>'+
+    rows.map(function(r){return '<div class="card"><div class="sec-title">'+esc(r.t)+'</div>'+
+      (r.html?r.html:'<div class="tiny muted" style="line-height:1.8">'+esc(r.d)+'</div>')+'</div>';}).join('');
+}
+/* ============ 专注倒计时提示音设置 ============ */
+var SOUND_KINDS=[
+  {k:'start',n:'开始提示音',d:'点「开始专注 / 继续」时播放'},
+  {k:'end',n:'结束提示音',d:'倒计时到点、专注完成时播放'},
+  {k:'fifteen',n:'15 分钟提示音',d:'仅大于 1 小时的倒计时，剩 15 分钟时播放'}
+];
+function openSoundCfg(){renderSoundSheet();}
+function renderSoundSheet(){
+  var cfg=S.soundCfg||soundCfgBlank();
+  var body='<div class="tiny muted" style="margin-bottom:12px;line-height:1.7">默认用系统提示音；可上传自己的音乐（仅存本机，建议 1MB 内）。每项可独立开关。</div>';
+  SOUND_KINDS.forEach(function(o){
+    var c=cfg[o.k]||{on:false,name:'system',data:''};
+    var custom=c.data&&c.name!=='system';
+    body+='<div class="fld" style="margin-bottom:8px"><div class="set-row" style="border:1px solid '+C.line+';border-radius:10px 10px 0 0">'+
+        '<span class="lbl">'+o.n+'<small>'+o.d+'</small></span>'+
+        '<span class="sw'+(c.on?' on':'')+'" onclick="toggleSound(\''+o.k+'\')"></span></div>'+
+      '<div class="set-sub" style="border:1px solid '+C.line+';border-top:none;border-radius:0 0 10px 10px">'+
+        '<div class="row" style="margin-top:10px">'+
+          '<button class="btn ghost sm" onclick="previewSound(\''+o.k+'\')">试听</button>'+
+          '<button class="btn ghost sm" onclick="document.getElementById(\'snd_'+o.k+'\').click()">上传音乐</button>'+
+          (custom?'<button class="btn danger sm" onclick="clearSound(\''+o.k+'\')">还原系统音</button>':'')+
+        '</div>'+
+        '<div class="tiny muted" style="margin-top:8px">当前：'+(custom?esc(c.name):'系统提示音')+'</div>'+
+        '<input type="file" id="snd_'+o.k+'" accept="audio/*" style="display:none" onchange="uploadSound(\''+o.k+'\',this)">'+
+      '</div></div>';
+  });
+  sheet('专注倒计时提示音',body);
+}
+function toggleSound(k){
+  var c=(S.soundCfg||soundCfgBlank())[k];c.on=!c.on;save();renderSoundSheet();
+  if(c.on)playSound(k);
+}
+function previewSound(k){var c=(S.soundCfg||{})[k];if(c){var old=c.on;c.on=true;playSound(k);c.on=old;}}
+function clearSound(k){
+  var c=S.soundCfg[k];c.name='system';c.data='';save();renderSoundSheet();toast('已还原为系统提示音');
+}
+function uploadSound(k,input){
+  var f=input.files&&input.files[0];if(!f)return;
+  if(f.size>1024*1024){toast('文件过大，请选 1MB 以内的音乐');input.value='';return;}
+  var rd=new FileReader();
+  rd.onload=function(){
+    var c=S.soundCfg[k];c.name=f.name;c.data=rd.result;save();renderSoundSheet();
+    toast(k==='start'?'开始提示音已更新':k==='end'?'结束提示音已更新':'15 分钟提示音已更新');
+  };
+  rd.onerror=function(){toast('读取失败，请重试');};
+  rd.readAsDataURL(f);
 }
 /* ============ AI 接口配置（预设管理 + 供应商 + 模型拉取） ============ */
 function openAICfg(){
@@ -2592,6 +2826,7 @@ function render(){
   else if(page==='reviews')html=pageReviews();
   else if(page==='ai')html=pageAI();
   else if(page==='settings')html=pageSettings();
+  else if(page==='about')html=pageAbout();
   else if(page==='archive')html=pageArchive();
   else html=simplePage('页面','');
   var scr=document.getElementById('screen');
