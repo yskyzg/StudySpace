@@ -422,6 +422,89 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .cal-d.checked.today{background:var(--dai);color:#fff;border-color:var(--dai)}
 .cal-d.hit.today{background:var(--zhu);color:#fff;border-color:var(--zhu)}
 .cal-hint{font-size:10.5px;color:var(--ink2);line-height:1.65;margin-top:9px;text-align:center}
+
+/* 番茄记录页 */
+.tom-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tom-nav .arw{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+  color:var(--dai);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.tom-nav .arw.off{opacity:.35;cursor:default}
+.tom-nav .d{font-size:14px;font-weight:600;color:var(--ink);flex:1;text-align:center}
+.tom-nav .d small{display:block;font-size:10.5px;font-weight:400;color:var(--ink2);margin-top:2px}
+.tom-sum{display:flex;gap:10px;margin-top:12px}
+.tom-sum .b{flex:1;background:var(--dai3);border-radius:10px;padding:10px 8px;text-align:center}
+.tom-sum .b b{display:block;font-size:18px;font-weight:600;color:var(--dai);letter-spacing:-.5px}
+.tom-sum .b span{font-size:10.5px;color:var(--ink2)}
+.tom-track{height:8px;background:var(--paper2);border-radius:6px;overflow:hidden;margin-top:10px}
+.tom-track>i{display:block;height:100%;background:var(--dai);border-radius:6px;transition:width .3s}
+.tom-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.tom-row:last-child{border-bottom:none}
+.tom-row .dot{margin-top:5px}
+.tom-main{flex:1;min-width:0}
+.tom-l1{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ink);flex-wrap:wrap}
+.tom-src{font-size:10px;font-weight:400;border-radius:20px;padding:1px 8px}
+.tom-src.auto{background:var(--dai3);color:var(--dai)}
+.tom-src.manual{background:var(--tengbg);color:var(--teng)}
+.tom-l2{font-size:11px;color:var(--ink2);line-height:1.6;margin-top:3px;word-break:break-all}
+.tom-del{font-size:11px;color:var(--zhe);background:var(--zhubg);border:none;border-radius:8px;
+  padding:6px 9px;cursor:pointer;font-family:inherit;flex:none;margin-top:2px}
+
+/* 长期计划：独立视觉区块，不与日常计划混排 */
+.lp-section{background:linear-gradient(180deg,#FBF3DF,#F8EED4);border:1px solid #E4D2A8;
+  border-radius:var(--r-card);padding:14px;margin:16px 0 12px;box-shadow:var(--shadow)}
+.lp-sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.lp-sec-title{font-size:14px;font-weight:600;color:var(--ink)}
+.lp-sec-title::before{content:'◇';color:var(--teng);margin-right:6px}
+.lp-sec-head .btn{flex:none;min-height:36px;padding:0 12px;font-size:12px}
+.lp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:10px}
+.lp-card:last-child{margin-bottom:0}
+.lp-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lp-name{font-size:13.5px;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-badge{font-size:10px;border-radius:20px;padding:2px 9px;flex:none}
+.lp-badge.running{background:var(--dai3);color:var(--dai)}
+.lp-badge.overdue{background:var(--zhubg);color:var(--zhe)}
+.lp-badge.done{background:var(--qingbg);color:var(--qing)}
+.lp-meta{font-size:10.5px;color:var(--ink2);margin-top:5px;line-height:1.6}
+.lp-mid{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:9px 0 8px}
+.lp-days{font-size:26px;font-weight:600;color:var(--zhu);letter-spacing:-1px;line-height:1}
+.lp-days small{font-size:11px;font-weight:400;color:var(--ink2);margin-left:5px;letter-spacing:0}
+.lp-days.done{color:var(--qing)}
+.lp-prog{text-align:right;font-size:11px;color:var(--ink2)}
+.lp-prog b{display:block;font-size:15px;color:var(--dai);font-weight:600}
+.lp-bar{height:8px;background:var(--paper2);border-radius:6px;overflow:hidden}
+.lp-bar>i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--dai2),var(--dai));transition:width .3s}
+.lp-bar.done>i{background:var(--qing)}
+.lp-note{font-size:11px;color:var(--ink2);margin-top:8px;line-height:1.6}
+.lp-actions{display:flex;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line);font-size:11.5px}
+.lp-actions span{color:var(--dai);cursor:pointer;flex:1;text-align:center}
+.lp-empty{background:var(--card);border:1px dashed #D9C79E;border-radius:12px;padding:18px;text-align:center;
+  font-size:12px;color:var(--ink2);line-height:1.8}
+.lp-home{background:linear-gradient(135deg,#FFFDF7,#F8EED4);border-color:#E4D2A8;cursor:pointer}
+.lp-home .sec-title{margin-bottom:8px}
+.lp-home-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lp-home-row .lp-name{font-size:14px}
+.lp-home .lp-bar{margin-top:10px}
+.lp-home-foot{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink2);margin-top:7px}
+/* 长期计划「已完成」分组：默认收起，只留一条计数入口，常用区域保持整洁 */
+.lp-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 2px 8px;font-size:11.5px;color:var(--ink2)}
+.lp-group-head b{font-size:12px;font-weight:600;color:var(--ink)}
+.lp-group-head .tog{flex:none;color:var(--dai);background:var(--card);border:1px solid var(--line);
+  border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer}
+.lp-done-hint{display:inline-block;margin-top:4px;font-size:11.5px;color:var(--dai);cursor:pointer}
+.lp-actions .arch{color:var(--ink2)}
+/* 计划页：归档入口条 */
+.plan-arch-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);
+  border:1px dashed #D9C79E;border-radius:12px;padding:9px 12px;margin-bottom:12px;
+  font-size:11px;color:var(--ink2);line-height:1.5}
+.plan-arch-bar span:last-child{flex:none;color:var(--dai);font-size:11.5px;cursor:pointer}
+/* 归档页：全部视图切换 + 恢复按钮 */
+.arch-all-bar{display:flex;align-items:center;justify-content:space-between;margin-top:10px;
+  padding-top:9px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dai);cursor:pointer}
+.arch-all-bar span:last-child{color:var(--ink2)}
+.arch-item-acts{display:flex;align-items:center;flex:none}
+.arch-undo{font-size:10px;color:var(--dai);background:var(--dai3);border-radius:20px;
+  padding:2px 9px;cursor:pointer;white-space:nowrap}
+.lp-quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.lp-quick span{font-size:11px;color:var(--dai);background:var(--dai3);border-radius:20px;padding:5px 10px;cursor:pointer}
 .cal-detail{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);
   border-radius:12px;background:var(--card);margin-bottom:10px}
 .cal-detail .n{font-size:19px;font-weight:600;color:var(--dai)}
@@ -531,6 +614,11 @@ var C={paper:'#F6F1E5',paper2:'#EFE8D6',card:'#FFFDF7',line:'#E9DFC9',ink:'#2722
 function dstr(d){var y=d.getFullYear(),m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2);return y+'-'+m+'-'+dd;}
 function shiftDay(n){var d=new Date();d.setDate(d.getDate()+n);return dstr(d);}
 function today(){return dstr(new Date());}
+/* 日期字符串运算：不依赖 WebView 对 ISO 字符串的解析差异 */
+function parseDay(ds){var p=String(ds||'').split('-');return new Date(Number(p[0])||2026,(Number(p[1])||1)-1,Number(p[2])||1);}
+function shiftDateStr(ds,n){var d=parseDay(ds);d.setDate(d.getDate()+n);return dstr(d);}
+function dayDiff(a,b){return Math.round((parseDay(a)-parseDay(b))/86400000);}
+function weekCn(ds){return ['周日','周一','周二','周三','周四','周五','周六'][parseDay(ds).getDay()];}
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function minutes(sec){return Math.round(sec/60);}
@@ -595,13 +683,17 @@ function soundCfgBlank(){
 }
 function makeEmpty(){
   return {subjects:[],goals:{dailyMinutes:120,weeklyMinutes:600},subjectGoals:{},
-    sessions:[],plans:[],mistakes:[],reviews:[],chats:[],archives:[],weeklyReports:[],
+    sessions:[],plans:[],longPlans:[],mistakes:[],reviews:[],chats:[],archives:[],weeklyReports:[],
     profile:{nickname:'学习者',purpose:''},aiConfig:aiCfgBlank(),soundCfg:soundCfgBlank()};
 }
 /* 迁移容错：老数据缺字段时补齐，保证升级不报错、不丢数据 */
 function migrate(s){
   if(!s||!s.subjects)return s;
-  s.plans=s.plans||[];s.sessions=s.sessions||[];s.mistakes=s.mistakes||[];
+  s.plans=s.plans||[];s.longPlans=s.longPlans||[];s.sessions=s.sessions||[];s.mistakes=s.mistakes||[];
+  s.longPlans.forEach(function(p){
+    p.title=p.title||'未命名长期计划';p.targetDate=p.targetDate||today();p.startDate=p.startDate||today();
+    p.progress=Math.max(0,Math.min(100,Number(p.progress)||0));p.done=!!p.done;p.note=p.note||'';
+  });
   s.reviews=s.reviews||[];s.chats=s.chats||[];s.archives=s.archives||[];
   s.weeklyReports=s.weeklyReports||[];s.subjectGoals=s.subjectGoals||{};
   s.profile=s.profile||{nickname:'学习者',purpose:''};
@@ -660,12 +752,14 @@ var statRange=7,statSubject='',statType=''; /* 统计页：科目 + 题型联动
 var mistSubject='',mistType='',mistBatch=false,mistSel={}; /* 错题本 */
 var revFilter='all';                    /* 复盘 */
 var chatOpenId=null;                   /* AI 助手当前会话 */
+var tomDate=null;                       /* 番茄记录页当前查看日期 */
+var lpDoneOpen=false;                   /* 长期计划「已完成」分组是否展开（默认收起） */
 /* ============ 选择性清理数据 ============ */
 var CLEAN_ITEMS=[
-  {k:'all',n:'清空所有数据',d:'科目、计时、目标、计划、错题、复盘、归档、周报、AI 聊天、设置全部恢复初始状态',danger:true},
-  {k:'sessions',n:'清理计时数据',d:'清空全部专注记录；学习统计、首页趋势、热力图、周报同步更新'},
+  {k:'all',n:'清空所有数据',d:'科目、计时、目标、日常计划、长期计划、错题、复盘、归档、周报、AI 聊天、设置全部恢复初始状态',danger:true},
+  {k:'sessions',n:'清理计时数据',d:'清空全部专注记录（含手补番茄）；今日番茄记录页、学习统计、首页趋势、打卡月历、周报同步更新'},
   {k:'goals',n:'清理学习目标数据',d:'日/周目标恢复默认，清空全部分科目标'},
-  {k:'plans',n:'清空计划',d:'清空全部学习计划；首页待办、计划页同步更新'},
+  {k:'plans',n:'清空计划',d:'清空当前日常计划与长期计划；已归档记录保留，首页待办、倒计时与进度条同步消失'},
   {k:'subjects',n:'清理科目数据',d:'只删科目定义与分科目标；已有计时/错题记录保留并归为「未分类」'},
   {k:'mistakes',n:'清空错题数据',d:'清空全部错题与复习进度；错题趋势、待复习提醒同步更新'},
   {k:'reviews',n:'清空复盘数据',d:'清空全部每日 / 每周复盘'},
@@ -721,12 +815,12 @@ function performCleanup(keys){
     S=makeEmpty();
     chatOpenId=null;
     haltTimerForCleanup(true);
-    archMonth=null;weekOffset=0;
+    archMonth=null;weekOffset=0;tomDate=null;lpDoneOpen=false;
   }else{
     keys.forEach(function(k){
       if(k==='sessions')S.sessions=[];
       else if(k==='goals'){S.goals={dailyMinutes:120,weeklyMinutes:600};S.subjectGoals={};}
-      else if(k==='plans')S.plans=[];
+      else if(k==='plans'){S.plans=[];S.longPlans=[];}
       else if(k==='subjects'){S.subjects=[];S.subjectGoals={};haltTimerForCleanup(false);}
       else if(k==='mistakes')S.mistakes=[];
       else if(k==='reviews')S.reviews=[];
@@ -734,9 +828,11 @@ function performCleanup(keys){
       else if(k==='chats'){S.chats=[];chatOpenId=null;}
     });
     weekOffset=0;
+    if(keys.indexOf('sessions')>=0)tomDate=null;
   }
   /* 所有筛选/选中态同步复位，避免清理后统计页仍停在旧科目/旧题型 */
   statSubject='';statType='';mistSubject='';mistType='';mistBatch=false;mistSel={};revFilter='all';
+  lpDoneOpen=false;
   window.__cleanSel={};
   save();saveFocus();render();
   toast(all?'已清空全部数据，现在是空白状态':'已清理 '+keys.length+' 项数据');
@@ -774,10 +870,18 @@ function nextColor(){
   for(var i=0;i<PALETTE.length;i++){if(used.indexOf(PALETTE[i].c)<0)return PALETTE[i].c;}
   return PALETTE[S.subjects.length%PALETTE.length].c;
 }
-/* 当前归档月份（默认本月，可切换） */
+/* 当前归档月份（默认本月，可切换）；'all' = 跨年月查看全部归档 */
 var archMonth=null;
 var archOpenPop=null; /* 归档两级下拉当前展开：null|'year'|'month' */
 function curArchMonth(){if(!archMonth)archMonth=today().slice(0,7);return archMonth;}
+function isArchAll(){return archMonth==='all';}
+function setArchAll(){archMonth='all';archOpenPop=null;render();}
+function setArchByMonth(){
+  var tree=archTree();
+  archMonth=tree.length?tree[0].y+'-'+tree[0].ms[0]:today().slice(0,7);
+  archOpenPop=null;render();
+}
+function cloneData(o){try{return JSON.parse(JSON.stringify(o));}catch(e){return null;}}
 /* 归档年月树：[{y:'2026',ms:['11','10']}, ...] 年/月均倒序（新的在前），自动跨年分组 */
 function archTree(){
   var map={};
@@ -791,18 +895,37 @@ function archTree(){
     return {y:y,ms:Object.keys(map[y]).sort().reverse()};
   });
 }
+/* 当前筛选月份已无数据时，自动跳到仍有归档的年月；「全部」视图保持不变 */
+function syncArchMonth(){
+  archOpenPop=null;
+  if(isArchAll())return;
+  var tree=archTree();
+  if(!tree.length){archMonth=today().slice(0,7);return;}
+  var ok=tree.some(function(n){
+    return n.y===String(archMonth).slice(0,4)&&n.ms.indexOf(String(archMonth).slice(5,7))>=0;});
+  if(!ok)archMonth=tree[0].y+'-'+tree[0].ms[0];
+}
 /* 删除一条归档（二次确认） */
 function delArchive(id){
   confirmDo('删除这条归档？','删除后不可恢复，归档列表与筛选会同步更新。',function(){
     S.archives=(S.archives||[]).filter(function(a){return a.id!==id;});
-    var tree=archTree();
-    if(!tree.length){archMonth=today().slice(0,7);}
-    else{
-      var ok=tree.some(function(n){return n.y===archMonth.slice(0,4)&&n.ms.indexOf(archMonth.slice(5,7))>=0;});
-      if(!ok)archMonth=tree[0].y+'-'+tree[0].ms[0];
-    }
-    archOpenPop=null;save();render();toast('已删除归档');
+    syncArchMonth();save();render();toast('已删除归档');
   });
+}
+/* 恢复归档：完整数据放回原列表，常用区域重新可见 */
+function restoreArchive(id){
+  var a=(S.archives||[]).filter(function(x){return x.id===id;})[0];
+  if(!a||!a.data||(a.kind!=='plan'&&a.kind!=='longplan')){toast('这条归档没有可恢复的完整数据');return;}
+  var isLong=a.kind==='longplan',key=isLong?'longPlans':'plans';
+  confirmDo('恢复这条'+(isLong?'长期计划':'计划')+'？',
+    '会放回到「计划」页'+(isLong?'长期计划区块':'对应日期')+'，同时从归档里移除。',
+    function(){
+      S[key]=S[key]||[];
+      S[key]=S[key].filter(function(x){return x.id!==a.data.id;});
+      S[key].push(cloneData(a.data));
+      S.archives=(S.archives||[]).filter(function(x){return x.id!==id;});
+      syncArchMonth();save();render();toast('已恢复，可在计划页继续编辑');
+    });
 }
 /* 两级下拉交互 */
 function toggleArchPop(which){archOpenPop=(archOpenPop===which?null:which);render();}
@@ -810,29 +933,73 @@ function setArchYear(y){
   var node=archTree().filter(function(n){return n.y===y;})[0];
   archMonth=y+'-'+(node?node.ms[0]:'01');archOpenPop=null;render();
 }
-function setArchMonth(m){archMonth=archMonth.slice(0,4)+'-'+m;archOpenPop=null;render();}
+function setArchMonth(m){archMonth=String(archMonth).slice(0,4)+'-'+m;archOpenPop=null;render();}
 /* 归档当前目标：把当前目标+本月成果存成一条快照，并在本月归档里可见 */
 function archiveGoals(){
-  var m=curArchMonth();
+  var m=isArchAll()?today().slice(0,7):curArchMonth();
   var detail='日目标 '+S.goals.dailyMinutes+' 分 · 周目标 '+S.goals.weeklyMinutes+' 分 · 本周完成 '+fmtDur(weekSec())+' · 连续 '+streak()+' 天';
   confirmDo('归档当前学习目标？','将把当前目标与本月成果存成一条快照，放入对应月份的归档中，不会删除现有目标。',function(){
     S.archives.push({id:uid(),kind:'goal',month:m,date:today(),title:'学习目标快照',detail:detail});
     save();render();toast('已归档学习目标');
   });
 }
-/* 归档以往计划：把日期早于今天的计划存入归档，从当前计划列表移除 */
-function archivePlans(){
-  var old=S.plans.filter(function(p){return p.date<today();});
-  if(!old.length){toast('没有可归档的以往计划');return;}
-  confirmDo('归档 '+old.length+' 条以往计划？','这些计划将从「今日计划」移入归档，按月可查，不会删除。',function(){
-    old.forEach(function(p){
-      var s=subjById(p.subjectId);
-      var line=(s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
-      S.archives.push({id:uid(),kind:'plan',month:p.date.slice(0,7),date:p.date,title:p.title,detail:line});
-    });
-    S.plans=S.plans.filter(function(p){return p.date>=today();});
-    save();render();toast('已归档 '+old.length+' 条计划');
+/* 今天的计划上下文：把已归档的「今天已完成」也算进完成率与空状态，避免归档后显示成「还没计划」 */
+function todayPlanCtx(){
+  var t=today();
+  var active=S.plans.filter(function(p){return p.date===t;});
+  var undone=active.filter(function(p){return !p.done;});
+  var done=active.filter(function(p){return p.done;});
+  var archivedDone=(S.archives||[]).filter(function(a){
+    return a.kind==='plan'&&a.date===t&&a.data&&a.data.done;}).length;
+  var total=active.length+archivedDone;
+  var doneN=done.length+archivedDone;
+  return {active:active,undone:undone,done:done,archivedDone:archivedDone,
+    total:total,rate:total?Math.round(doneN/total*100):0};
+}
+/* 单条长期计划归档：完整数据存进归档，从长期计划与首页倒计时移出 */
+function pushLongPlanArchive(p){
+  var line='目标 '+String(p.targetDate||'')+' · 完成 '+(Number(p.progress)||0)+'%'+
+    (p.done?' · 已完成':' · 进行中')+(p.note?' · '+String(p.note):'');
+  S.archives.push({id:uid(),kind:'longplan',month:today().slice(0,7),date:today(),
+    title:p.title||'未命名长期计划',detail:line,data:cloneData(p)});
+}
+function archiveLongPlan(id){
+  var p=(S.longPlans||[]).filter(function(x){return x.id===id;})[0];if(!p)return;
+  confirmDo('归档这个长期计划？','将从「长期计划」区块与首页倒计时移出，完整数据存进「归档」，可随时恢复或删除。',function(){
+    pushLongPlanArchive(p);
+    S.longPlans=(S.longPlans||[]).filter(function(x){return x.id!==id;});
+    lpDoneOpen=false;save();render();toast('已归档，可在「归档」查看');
   });
+}
+/* 可归档范围：以往计划 + 今天已完成的日常计划 + 已完成的长期计划 */
+function archivablePlans(){
+  var t=today();
+  return {daily:S.plans.filter(function(p){return p.date<t||(p.date===t&&p.done);}),
+          long:(S.longPlans||[]).filter(function(p){return p.done;})};
+}
+/* 归档整理：一次性把上面三类移入归档，页面常用区域只留进行中的计划 */
+function archivePlans(){
+  var a=archivablePlans(),n=a.daily.length+a.long.length;
+  if(!n){toast('没有可归档的计划');return;}
+  var parts=[];
+  if(a.daily.length)parts.push(a.daily.length+' 条以往／今天已完成的日常计划');
+  if(a.long.length)parts.push(a.long.length+' 条已完成的长期计划');
+  confirmDo('归档整理 '+n+' 条计划？',
+    parts.join('、')+'将移入「归档」（按年月可查，也能看全部；可恢复或删除），并从计划页、首页移除。进行中的计划保持原位，数据完整保留，不会删除。',
+    function(){
+      a.daily.forEach(function(p){
+        var s=subjById(p.subjectId);
+        var line=(s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
+        S.archives.push({id:uid(),kind:'plan',month:String(p.date).slice(0,7),date:p.date,
+          title:p.title,detail:line,data:cloneData(p)});
+      });
+      a.long.forEach(pushLongPlanArchive);
+      var rm={};a.daily.forEach(function(p){rm[p.id]=1;});
+      S.plans=S.plans.filter(function(p){return !rm[p.id];});
+      S.longPlans=(S.longPlans||[]).filter(function(p){return !p.done;});
+      lpDoneOpen=false;archMonth='all';archOpenPop=null;
+      save();render();toast('已归档 '+n+' 条，点「查看归档」可全部看到');
+    });
 }
 /* 删除单个已设的分科目目标 */
 function delSubjectGoal(id){
@@ -1530,10 +1697,12 @@ function renderTabbar(){
 /* ============ 页面：首页 ============ */
 function pageHome(){
   var tSec=todaySec(),tm=minutes(tSec),goal=S.goals.dailyMinutes,pct=goal?tSec/(goal*60):0,done=pct>=1;
-  var todayPlans=S.plans.filter(function(p){return p.date===today();});
-  var todo=todayPlans.filter(function(p){return !p.done;}).slice(0,3);
-  var emptyPlanHtml=todayPlans.length?
-    '<div class="placeholder" style="padding:20px">今天的任务都完成了 ✓</div>':
+  /* 归档掉的「今天已完成」也算今天有过计划，空状态继续显示「今天的任务都完成了 ✓」 */
+  var planCtx=todayPlanCtx();
+  var todo=planCtx.undone.slice(0,3);
+  var emptyPlanHtml=planCtx.total?
+    '<div class="placeholder" style="padding:20px">今天的任务都完成了 ✓'+
+      (planCtx.archivedDone?'<br><span class="tiny muted">'+planCtx.archivedDone+' 项已完成计划已归档</span>':'')+'</div>':
     '<div class="placeholder" style="padding:20px">今天还没有计划<br><button class="btn ghost sm" onclick="goTab(\'plan\')">去添加</button></div>';
   /* 近 7 天：默认全体科目，含学习时长 + 新增错题两组数据 */
   var days=[];
@@ -1561,8 +1730,9 @@ function pageHome(){
       '<div class="bar"><i style="width:'+Math.min(100,pct*100)+'%'+(done?';background:'+C.zhu:'')+'"></i></div>'+
       '<div class="foot"><span>'+(done?'已达成今日目标 ✓':'还差 '+fmtDur(Math.max(0,goal*60-tSec))+' 达成')+'</span><span class="num">'+Math.round(pct*100)+'%</span></div>'+
     '</div>'+
-    '<div class="kpi"><div class="card"><div class="tiny muted">今日番茄</div><div class="n num">'+pomodorosOn(today())+' <span style="font-size:12px">个</span></div></div>'+
+    '<div class="kpi"><div class="card" onclick="openTomatoToday()" style="cursor:pointer" title="查看今日番茄记录"><div class="tiny muted">今日番茄 <span style="float:right;color:'+C.dai+'">记录 ›</span></div><div class="n num">'+pomodorosOn(today())+' <span style="font-size:12px">个</span></div></div>'+
     '<div class="card" onclick="openCheckinCalendar()" style="cursor:pointer" title="查看打卡日历"><div class="tiny muted">连续打卡 <span style="float:right;color:'+C.dai+'">日历 ›</span></div><div class="n red num">'+streak()+'</div></div></div>'+
+    homeLongPlanHtml()+
     '<div class="card"><div class="sec-title">今天该做 <span class="more" onclick="goTab(\'plan\')">全部 ›</span></div>'+todoHtml+'</div>'+
     '<div class="card"><div class="sec-title">学习趋势 <span class="more" onclick="push(\'stats\')">近 7 天 ›</span></div>'+trendHtml+'</div>'+
     '<div class="ai-tip" onclick="expandTip()"><div class="hd">✦ 智能提醒</div><div id="tipBody">'+tipShort()+'</div></div>';
@@ -1820,6 +1990,234 @@ function savePlan(){
   save();closeSheet();render();toast(wasEdit?'已保存计划':'已添加计划');
 }
 
+/* ============ 页面：番茄记录（首页「今日番茄」→ 记录页） ============ */
+/* 全部时长/番茄数都以 S.sessions 为唯一数据源，增删改后各统计页随 render() 自动同步 */
+function curTomDate(){if(!tomDate)tomDate=today();return tomDate;}
+function tomDateShift(n){
+  var d=shiftDateStr(curTomDate(),n);
+  if(d>today())return;                 /* 不查看未来 */
+  tomDate=d;render();
+}
+function tomGoToday(){tomDate=today();render();}
+function openTomatoToday(){tomDate=today();push('tomatoes');}
+function sessionsFor(day){return sessionsOn(day).slice().sort(function(a,b){
+  return String(b.time||'').localeCompare(String(a.time||''));});}
+function pageTomatoes(){
+  var ds=curTomDate(),list=sessionsFor(ds),sec=secondsOn(ds),pc=pomodorosOn(ds);
+  var goal=(S.goals&&S.goals.dailyMinutes)||120,pct=goal?Math.min(100,sec/(goal*60)*100):0;
+  var isToday=ds===today();
+  var rows=list.map(function(x){
+    var sb=subjById(x.subjectId),manual=!!x.manual;
+    return '<div class="tom-row"><span class="dot" style="background:'+(sb?sb.color:C.ink2)+'"></span>'+
+      '<div class="tom-main"><div class="tom-l1"><span>'+fmtDur(x.seconds||0)+'</span>'+
+      '<span class="tom-src '+(manual?'manual':'auto')+'">'+(manual?'手补记录':'专注记录')+'</span></div>'+
+      '<div class="tom-l2">'+(sb?esc(sb.name):'未分类')+' · '+esc(x.time||'--:--')+' · '+(x.pomodoros||1)+' 个番茄'+
+      (x.note?' · '+esc(x.note):'')+'</div></div>'+
+      '<button class="tom-del" onclick="delSession(\''+x.id+'\')">删除</button></div>';
+  }).join('');
+  return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">番茄记录</span></div>'+
+    '<div class="hero-title" style="font-size:18px">每一条都算数</div>'+
+    '<div class="hero-sub">查看、删除或补记番茄，所有时长数据实时同步</div>'+
+    '<div class="page-actions"><button class="btn primary" onclick="openManualSession()">＋ 补记番茄</button>'+
+      '<button class="btn ghost" onclick="tomGoToday()">回到今天</button></div>'+
+    '<div class="card"><div class="tom-nav">'+
+      '<span class="arw" onclick="tomDateShift(-1)">‹</span>'+
+      '<span class="d">'+ds+' <small>'+weekCn(ds)+(isToday?' · 今天':'')+'</small></span>'+
+      '<span class="arw'+(isToday?' off':'')+'" onclick="tomDateShift(1)">›</span></div>'+
+      '<div class="tom-sum"><div class="b"><b>'+fmtClock(sec)+'</b><span>专注总时长</span></div>'+
+      '<div class="b"><b>'+pc+'</b><span>番茄个数</span></div>'+
+      '<div class="b"><b>'+list.length+'</b><span>记录条数</span></div></div>'+
+      '<div class="tom-track"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="lp-home-foot"><span>当日目标 '+goal+' 分钟 · 已完成 '+Math.round(pct)+'%</span><span>点右侧删除单条</span></div></div>'+
+    '<div class="card"><div class="sec-title">当天记录 <span class="more">共 '+list.length+' 条</span></div>'+
+      (list.length?rows:'<div class="placeholder" style="padding:22px">这一天还没有番茄记录<br>没打开 App 时完成的专注，可以点上方「＋ 补记番茄」补上</div>')+'</div>';
+}
+/* 手补番茄：科目 + 时长 + 日期 + 备注，写入 S.sessions 并标记 manual */
+function openManualSession(){
+  window.__manualSubject=(S.subjects[0]&&S.subjects[0].id)||null;
+  window.__manualMin=25;window.__manualNote='';window.__manualDate=curTomDate();
+  renderManualSheet();
+}
+function renderManualSheet(){
+  var s=window.__manualSubject?subjById(window.__manualSubject):null;
+  sheet('补记番茄记录',
+    '<div class="tiny muted" style="margin-bottom:12px;line-height:1.7">没打开 App 时完成的番茄也能补上。补记会立刻计入首页时长、番茄数、学习统计、趋势、目标与周报。</div>'+
+    '<div class="fld"><label>科目（下拉选择）</label>'+pickerBtn('tomPick',s?s.name:'',s?s.color:'',
+      'picker(\'tomPick\',\'pickManualSubject\',\''+(window.__manualSubject||'')+'\')','请选择科目')+'</div>'+
+    '<div class="fld"><label>专注时长（分钟）</label><span class="stepper"><button onclick="tomStep(-5)">−</button>'+
+      '<input class="v num" type="number" id="tomMin" min="1" max="600" value="'+(window.__manualMin||25)+'" onchange="tomClamp()"><button onclick="tomStep(5)">+</button></span></div>'+
+    '<div class="fld"><label>日期（不能晚于今天）</label><input type="date" id="tomDateInput" max="'+today()+'" value="'+(window.__manualDate||today())+'"></div>'+
+    '<div class="fld"><label>备注（选填）</label><input id="tomNote" maxlength="40" placeholder="例如：图书馆自习 / 纸质刷题" value="'+esc(window.__manualNote||'')+'"></div>',
+    '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="saveManualSession()">保存记录</button>');
+}
+function stashManual(){
+  var m=document.getElementById('tomMin'),d=document.getElementById('tomDateInput'),n=document.getElementById('tomNote');
+  if(m)window.__manualMin=m.value;if(d)window.__manualDate=d.value;if(n)window.__manualNote=n.value;
+}
+function pickManualSubject(id){stashManual();window.__manualSubject=id;renderManualSheet();}
+function tomStep(n){var e=document.getElementById('tomMin');if(!e)return;e.value=Math.max(1,Math.min(600,(parseInt(e.value)||25)+n));}
+function tomClamp(){var e=document.getElementById('tomMin');if(!e)return;var v=parseInt(e.value);if(isNaN(v))v=25;e.value=Math.max(1,Math.min(600,v));}
+function addManualSession(o){
+  var sec=Math.max(1,Math.round(Number(o.min)*60));
+  var rec={id:uid(),subjectId:o.subjectId,seconds:sec,pomodoros:Math.max(1,Math.round(sec/1500)),
+    date:o.date,time:nowClock(),manual:true,note:o.note||''};
+  S.sessions.push(rec);
+  return rec;
+}
+function saveManualSession(){
+  var m=document.getElementById('tomMin'),d=document.getElementById('tomDateInput'),n=document.getElementById('tomNote');
+  var min=m?Math.max(1,Math.min(600,parseInt(m.value)||0)):0;
+  var date=d&&d.value?d.value:today(),note=n?n.value.trim():'';
+  if(!window.__manualSubject){toast('请先选择科目');return;}
+  if(!min){toast('请输入专注时长');return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today()){toast('日期不能晚于今天');return;}
+  addManualSession({min:min,subjectId:window.__manualSubject,date:date,note:note});
+  tomDate=date;save();closeSheet();render();
+  toast('已补记 '+min+' 分钟，统计数据已同步');
+}
+function delSession(id){
+  var x=S.sessions.filter(function(s){return s.id===id;})[0];if(!x)return;
+  confirmDo('删除这条番茄记录？',
+    '将移除 '+fmtDur(x.seconds||0)+' 的记录。删除后首页时长、番茄数、学习统计、趋势、目标与周报会同步调整，且不可恢复。',
+    function(){S.sessions=S.sessions.filter(function(s){return s.id!==id;});save();render();toast('已删除，统计数据已同步');});
+}
+
+/* ============ 长期计划（计划页独立区块 + 首页倒计时 / 进度条） ============ */
+function longPlans(){
+  return (S.longPlans||[]).slice().sort(function(a,b){
+    if(!!a.done!==!!b.done)return a.done?1:-1;
+    return String(a.targetDate||'').localeCompare(String(b.targetDate||''));
+  });
+}
+function lpMeta(p){
+  var target=p.targetDate||today(),left=dayDiff(target,today());
+  var prog=Math.max(0,Math.min(100,Number(p.progress)||0));
+  var total=Math.max(1,dayDiff(target,p.startDate||today())+1);
+  var passed=Math.max(0,Math.min(total,total-left));
+  var state=p.done?'done':left<0?'overdue':'running';
+  return {left:left,progress:prog,state:state,total:total,passed:passed,
+    badge:p.done?'已完成':left<0?'已逾期':'进行中',
+    leftText:p.done?'已完成':left<0?('逾期 '+(-left)):(left===0?'今天到期':String(left))};
+}
+function lpCardHtml(p){
+  var m=lpMeta(p);
+  return '<div class="lp-card"><div class="lp-top"><span class="lp-name">'+esc(p.title||'未命名长期计划')+'</span>'+
+    '<span class="lp-badge '+m.state+'">'+m.badge+'</span></div>'+
+    '<div class="lp-meta">目标日期 '+(p.targetDate||'')+' · 已进行 '+m.passed+' / 共 '+m.total+' 天</div>'+
+    '<div class="lp-mid"><div class="lp-days'+(p.done?' done':'')+' num">'+m.leftText+
+      '<small>'+(p.done?'':'天')+'</small></div>'+
+      '<div class="lp-prog">完成进度<b>'+m.progress+'%</b></div></div>'+
+    '<div class="lp-bar'+(p.done?' done':'')+'"><i style="width:'+m.progress+'%"></i></div>'+
+    (p.note?'<div class="lp-note">'+esc(p.note)+'</div>':'')+
+    '<div class="lp-actions"><span onclick="openLongPlanEditor(\''+p.id+'\')">编辑 ›</span>'+
+      '<span onclick="toggleLongPlanDone(\''+p.id+'\')">'+(p.done?'↺ 重新开启':'✓ 标记完成')+'</span>'+
+      '<span class="arch" onclick="archiveLongPlan(\''+p.id+'\')">归档 ›</span></div></div>';
+}
+/* 长期计划区块：进行中常驻，已完成的移入「已完成」分组（默认收起），常用区域保持整洁 */
+function toggleLpDone(){lpDoneOpen=!lpDoneOpen;render();}
+function lpSectionHtml(){
+  var list=longPlans();
+  var active=list.filter(function(p){return !p.done;});
+  var done=list.filter(function(p){return p.done;});
+  var h='<div class="lp-section"><div class="lp-sec-head"><div>'+
+    '<div class="lp-sec-title">长期计划</div><div class="tiny muted">大目标单独管理，不与今日计划混排</div></div>'+
+    '<button class="btn primary" onclick="openLongPlanEditor()">＋ 新建长期计划</button></div>'+
+    '<div class="lp-group-head"><b>进行中 '+active.length+' 项</b>'+
+      (done.length?'<span class="tog" onclick="toggleLpDone()">已完成 '+done.length+' 项 '+(lpDoneOpen?'收起 ▴':'展开 ▾')+'</span>':'')+
+    '</div>';
+  if(active.length)h+=active.map(lpCardHtml).join('');
+  else if(done.length)h+='<div class="lp-empty">进行中的长期计划都完成了 ✓<br>'+
+    '<span class="lp-done-hint" onclick="toggleLpDone()">'+
+      (lpDoneOpen?'收起已完成':'查看已完成 '+done.length+' 项')+' ›</span></div>';
+  else h+='<div class="lp-empty">还没有长期计划<br>例如：12 月 21 日考前完成三轮复习<br>'+
+    '<button class="btn ghost sm" style="margin-top:10px" onclick="openLongPlanEditor()">＋ 新建第一个长期计划</button></div>';
+  if(done.length&&lpDoneOpen)h+='<div class="lp-group-head"><b>已完成 '+done.length+' 项</b>'+
+    '<span class="tiny muted">可逐条归档，归档后数据仍保留</span></div>'+done.map(lpCardHtml).join('');
+  return h+'</div>';
+}
+function homeLongPlanHtml(){
+  var all=longPlans(),list=all.filter(function(p){return !p.done;});
+  var doneN=all.length-list.length;
+  if(!list.length)return '<div class="card lp-home" onclick="goTab(\'plan\')">'+
+    '<div class="sec-title">长期计划 <span class="more">'+(doneN?'共 '+all.length+' 项':'去添加')+' ›</span></div>'+
+    '<div class="placeholder" style="padding:12px">'+
+      (doneN?'长期计划都完成了 ✓<br><span class="tiny muted">'+doneN+' 项已完成，点开计划页可查看或归档</span>':
+             '还没有长期计划。设一个目标日期，首页就能看到倒计时和完成进度。')+'</div></div>';
+  var p=list[0],m=lpMeta(p);
+  return '<div class="card lp-home" onclick="goTab(\'plan\')" title="查看全部长期计划">'+
+    '<div class="sec-title">长期计划 <span class="more">共 '+list.length+' 项 · 全部 ›</span></div>'+
+    '<div class="lp-home-row"><div style="min-width:0"><div class="lp-name">'+esc(p.title||'未命名长期计划')+'</div>'+
+      '<div class="lp-meta">目标 '+(p.targetDate||'')+' · '+m.badge+'</div></div>'+
+      '<div class="lp-days'+(p.done?' done':'')+' num" style="font-size:22px">'+m.leftText+
+        '<small>'+(p.done?'':'天')+'</small></div></div>'+
+    '<div class="lp-bar'+(p.done?' done':'')+'"><i style="width:'+m.progress+'%"></i></div>'+
+    '<div class="lp-home-foot"><span>完成进度 '+m.progress+'%</span><span>已进行 '+m.passed+' / '+m.total+' 天</span></div></div>';
+}
+function openLongPlanEditor(id){
+  window.__editLongPlan=id||null;
+  var p=id?(S.longPlans||[]).filter(function(x){return x.id===id;})[0]:null;
+  window.__lpTitle=p?p.title||'':'';
+  window.__lpTarget=p?p.targetDate||today():shiftDateStr(today(),30);
+  window.__lpProgress=p?Number(p.progress)||0:0;
+  window.__lpNote=p?p.note||'':'';
+  renderLongPlanSheet();
+}
+function renderLongPlanSheet(){
+  var editing=!!window.__editLongPlan;
+  sheet(editing?'编辑长期计划':'新建长期计划',
+    '<div class="fld"><label>目标名称</label><input id="lpTitle" maxlength="24" placeholder="例如：考前三轮复习" value="'+esc(window.__lpTitle||'')+'"></div>'+
+    '<div class="fld"><label>目标日期（首页倒计时按这天计算）</label><input type="date" id="lpTarget" value="'+(window.__lpTarget||today())+'"></div>'+
+    '<div class="fld"><label>完成进度 <span class="num" id="lpProgVal">'+(window.__lpProgress||0)+'</span>%</label>'+
+      '<input type="range" id="lpProg" min="0" max="100" step="5" value="'+(window.__lpProgress||0)+'" style="width:100%" oninput="lpProgInput(this.value)">'+
+      '<div class="lp-quick"><span onclick="lpQuick(-10)">−10%</span><span onclick="lpQuick(10)">+10%</span>'+
+      '<span onclick="lpQuick(25)">+25%</span><span onclick="lpQuick(100)">全部完成</span></div></div>'+
+    '<div class="fld"><label>备注（选填）</label><input id="lpNote" maxlength="40" placeholder="例如：重点放在错题与真题" value="'+esc(window.__lpNote||'')+'"></div>',
+    (editing?'<button class="btn danger" onclick="delLongPlan(\''+window.__editLongPlan+'\')">删除</button>':'')+
+    '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="saveLongPlan()">保存</button>');
+}
+function lpProgInput(v){var e=document.getElementById('lpProgVal');if(e)e.textContent=v;}
+function lpQuick(v){
+  var g=document.getElementById('lpProg');if(!g)return;
+  var n=Math.max(0,Math.min(100,(parseInt(g.value)||0)+v));
+  g.value=n;lpProgInput(n);window.__lpProgress=n;
+}
+function stashLongPlan(){
+  var t=document.getElementById('lpTitle'),d=document.getElementById('lpTarget'),
+      g=document.getElementById('lpProg'),n=document.getElementById('lpNote');
+  if(t)window.__lpTitle=t.value;if(d)window.__lpTarget=d.value;
+  if(g)window.__lpProgress=parseInt(g.value)||0;if(n)window.__lpNote=n.value;
+}
+function saveLongPlan(){
+  stashLongPlan();
+  var t=(window.__lpTitle||'').trim();
+  if(!t){toast('请输入目标名称');return;}
+  var d=window.__lpTarget||today();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('请选择目标日期');return;}
+  var g=Math.max(0,Math.min(100,parseInt(window.__lpProgress)||0));
+  var note=(window.__lpNote||'').trim();
+  var editing=!!window.__editLongPlan;
+  if(editing){
+    var p=(S.longPlans||[]).filter(function(x){return x.id===window.__editLongPlan;})[0];
+    if(p){p.title=t;p.targetDate=d;p.progress=g;p.done=g>=100;p.note=note;}
+  }else{
+    S.longPlans=S.longPlans||[];
+    S.longPlans.push({id:uid(),title:t,targetDate:d,startDate:today(),progress:g,done:g>=100,note:note});
+  }
+  window.__editLongPlan=null;save();closeSheet();render();toast(editing?'长期计划已更新':'长期计划已创建');
+}
+function delLongPlan(id){
+  confirmDo('删除这个长期计划？','首页倒计时与进度条会同步移除，此操作不可撤销。',function(){
+    S.longPlans=(S.longPlans||[]).filter(function(x){return x.id!==id;});
+    window.__editLongPlan=null;save();closeSheet();render();toast('已删除长期计划');
+  });
+}
+function toggleLongPlanDone(id){
+  var p=(S.longPlans||[]).filter(function(x){return x.id===id;})[0];if(!p)return;
+  if(!p.done){p.prevProgress=Number(p.progress)||0;p.done=true;p.progress=100;lpDoneOpen=false;}
+  else{p.done=false;p.progress=typeof p.prevProgress==='number'?p.prevProgress:Math.min(100,Number(p.progress)||0);}
+  save();render();toast(p.done?'已完成，已移入「已完成」分组':'已重新开启，回到进行中');
+}
+
 /* ============ 页面：计划 ============ */
 /* 月历：始终显示完整日历网格，有计划的日子带圆点 */
 var planCalMonth=null;   /* 'YYYY-MM' */
@@ -1924,8 +2322,10 @@ function streakForDay(day){
 }
 function openDayPlans(ds){
   var ps=plansOn(ds);
+  var archN=(S.archives||[]).filter(function(a){return a.kind==='plan'&&a.date===ds;}).length;
   var body='<div class="tiny muted" style="margin-bottom:10px">'+ds+'</div>';
-  if(!ps.length){body+='<div class="placeholder" style="padding:18px">这一天还没有计划</div>';}
+  if(!ps.length){body+='<div class="placeholder" style="padding:18px">'+
+    (archN?'这天的计划已归档，可在「归档」查看':'这一天还没有计划')+'</div>';}
   else{
     body+=ps.map(function(p){
       var s=subjById(p.subjectId);
@@ -1935,14 +2335,15 @@ function openDayPlans(ds){
     }).join('');
   }
   sheet(ds+' · 当日计划',body,
+    (archN?'<button class="btn ghost" onclick="openArchForDate(\''+ds+'\')">归档 '+archN+' 条 ›</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">关闭</button>'+
     '<button class="btn primary" onclick="openNewPlanFor(\''+ds+'\')">＋ 当天新增计划</button>');
 }
+function openArchForDate(ds){archMonth=String(ds).slice(0,7);archOpenPop=null;closeSheet();push('archive');}
 function openNewPlanFor(ds){openNewPlan();window.__draftPlanDate=ds;renderPlanSheet();}
 function pagePlan(){
-  var undone=S.plans.filter(function(p){return p.date===today()&&!p.done;});
-  var done=S.plans.filter(function(p){return p.date===today()&&p.done;});
-  var rate=S.plans.length?Math.round(S.plans.filter(function(p){return p.done;}).length/S.plans.length*100):0;
+  var ctx=todayPlanCtx();
+  var undone=ctx.undone,done=ctx.done,rate=ctx.rate;
   function item(p){
     var s=subjById(p.subjectId);
     return '<div class="todo-item'+(p.done?' done':'')+'"><div class="chk'+(p.done?' on':'')+'" onclick="togglePlan(\''+p.id+'\')">'+(p.done?'✓':'')+'</div>'+
@@ -1950,15 +2351,20 @@ function pagePlan(){
       '<span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span>'+
       '<span class="edit" style="color:'+C.dai+';font-size:12px;cursor:pointer;padding:6px" onclick="openPlanEditor(\''+p.id+'\')">编辑</span></div>';
   }
-  var oldCnt=S.plans.filter(function(p){return p.date<today();}).length;
+  var a=archivablePlans(),archCnt=a.daily.length+a.long.length;
+  var acTot=(S.archives||[]).length;
   return '<div class="hero-title" style="font-size:18px">计划</div><div class="hero-sub">今天日期 · 完成率 '+rate+'%</div>'+
     '<div class="page-actions"><button class="btn primary" onclick="openNewPlan()">＋ 新增计划</button>'+
-      '<button class="btn ghost" onclick="archivePlans()"'+(!oldCnt?' disabled style="opacity:.45"':'')+'>归档以往计划</button></div>'+
+      '<button class="btn ghost" onclick="archivePlans()"'+(!archCnt?' disabled style="opacity:.45"':'')+'>归档整理'+(archCnt?'（'+archCnt+'）':'')+'</button></div>'+
+    (acTot?'<div class="plan-arch-bar"><span>已归档 '+acTot+' 条 · 数据完整保留</span>'+
+      '<span onclick="push(\'archive\')">查看归档 ›</span></div>':'')+
     '<div class="card"><div class="sec-title">待完成 <span class="more">'+undone.length+' 项</span></div>'+
       (undone.length?undone.map(item).join(''):
-        (done.length?'<div class="placeholder" style="padding:16px">今天的任务都完成了 ✓</div>':
+        (ctx.total?'<div class="placeholder" style="padding:16px">今天的任务都完成了 ✓'+
+                    (ctx.archivedDone?'<br><span class="tiny muted">'+ctx.archivedDone+' 项已完成计划已归档，可在「归档」查看</span>':'')+'</div>':
                      '<div class="placeholder" style="padding:16px">今天还没有计划<br><button class="btn ghost sm" style="margin-top:8px" onclick="openNewPlan()">＋ 新增计划</button></div>'))+'</div>'+
     (done.length?'<div class="card"><div class="sec-title">已完成 <span class="more">'+done.length+' 项</span></div>'+done.map(item).join('')+'</div>':'')+
+    lpSectionHtml()+
     '<div class="card">'+planCalendarHtml()+'</div>';
 }
 
@@ -3316,34 +3722,44 @@ function importDataJSON(input){
   };
   reader.readAsText(f);
 }
-/* 归档查看页：年/月两级下拉筛选（跨年自动分组），每条归档可删除 */
+/* 归档查看页：年/月两级筛选 + 「全部归档」跨年月视图；目标／日常计划／长期计划分组，可恢复或删除 */
 function pageArchive(){
   var ac=S.archives||[];
   var tree=archTree();
   if(!archMonth)archMonth=tree.length?tree[0].y+'-'+tree[0].ms[0]:today().slice(0,7);
-  var cy=archMonth.slice(0,4),cm=archMonth.slice(5,7);
-  var yNode=tree.filter(function(n){return n.y===cy;})[0];
-  var months=yNode?yNode.ms:[cm];
-  var list=ac.filter(function(a){return a.month===archMonth;});
+  var all=isArchAll();
+  var cy=all?'':String(archMonth).slice(0,4),cm=all?'':String(archMonth).slice(5,7);
+  var yNode=all?null:tree.filter(function(n){return n.y===cy;})[0];
+  var months=yNode?yNode.ms:(all?[]:[cm]);
+  var list=all?ac.slice():ac.filter(function(a){return a.month===archMonth;});
+  list.sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
   var plans=list.filter(function(a){return a.kind==='plan';});
+  var longs=list.filter(function(a){return a.kind==='longplan';});
   var goals=list.filter(function(a){return a.kind==='goal';});
 
-  var yearPop=archOpenPop==='year'?
+  var yearPop=(!all&&archOpenPop==='year')?
     '<div class="picker-pop arch-pop">'+(tree.length?tree.map(function(n){
       return '<div class="pi'+(n.y===cy?' sel':'')+'" onclick="setArchYear(\''+n.y+'\')">'+n.y+' 年'+(n.y===cy?'<span class="ck">✓</span>':'')+'</div>';
     }).join(''):'<div class="pi muted">暂无归档</div>')+'</div>':'';
-  var monthPop=archOpenPop==='month'?
+  var monthPop=(!all&&archOpenPop==='month')?
     '<div class="picker-pop arch-pop">'+months.map(function(m){
       return '<div class="pi'+(m===cm?' sel':'')+'" onclick="setArchMonth(\''+m+'\')">'+parseInt(m,10)+' 月'+(m===cm?'<span class="ck">✓</span>':'')+'</div>';
     }).join('')+'</div>':'';
 
   function archItem(a){
-    return '<div class="todo-item"><span class="dot" style="background:'+(a.kind==='goal'?C.zhu:C.dai)+'"></span>'+
-      '<span class="tt">'+esc(a.title)+'<br><span class="tiny muted">'+esc(a.detail)+'</span></span>'+
-      '<span class="pg tiny">'+a.date.slice(5)+'</span>'+
-      '<span class="arch-del" onclick="delArchive(\''+a.id+'\')">✕ 删除</span></div>';
+    var canRestore=!!a.data&&(a.kind==='plan'||a.kind==='longplan');
+    var color=a.kind==='goal'?C.zhu:(a.kind==='longplan'?C.teng:C.dai);
+    return '<div class="todo-item"><span class="dot" style="background:'+color+'"></span>'+
+      '<span class="tt">'+esc(a.title)+'<br><span class="tiny muted">'+esc(a.detail||'')+'</span></span>'+
+      '<span class="pg tiny">'+String(a.date||'').slice(5)+'</span>'+
+      '<span class="arch-item-acts">'+
+        (canRestore?'<span class="arch-undo" onclick="restoreArchive(\''+a.id+'\')">↩ 恢复</span>':'')+
+        '<span class="arch-del" onclick="delArchive(\''+a.id+'\')">✕ 删除</span></span></div>';
   }
-  return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">归档</span></div>'+
+  var filterCard=all?
+    '<div class="card"><div class="sec-title">全部归档 <span class="more">'+list.length+' 条</span></div>'+
+      '<div class="tiny muted" style="line-height:1.7">跨年月显示所有归档记录。归档只把计划移出常用区域，数据完整保留，可随时恢复或删除。</div>'+
+      '<div class="arch-all-bar" onclick="setArchByMonth()"><span>← 返回按年 / 月筛选</span><span>共 '+ac.length+' 条</span></div></div>':
     '<div class="card"><div class="sec-title">筛选（年 / 月）</div>'+
       '<div class="arch-filter">'+
         '<div class="af-col"><div class="picker-anchor"><div class="picker-btn" onclick="toggleArchPop(\'year\')">'+
@@ -3351,11 +3767,17 @@ function pageArchive(){
         '<div class="af-col"><div class="picker-anchor"><div class="picker-btn" onclick="toggleArchPop(\'month\')">'+
           '<span class="nm">'+parseInt(cm,10)+' 月</span><span class="arw">▼</span></div></div>'+monthPop+'</div>'+
       '</div>'+
-      '<div class="tiny muted" style="margin-top:8px">'+cy+' 年 '+parseInt(cm,10)+' 月 · 共 '+list.length+' 条归档</div></div>'+
-    '<div class="card"><div class="sec-title">目标归档 <span class="more">'+goals.length+' 条</span></div>'+
-      (goals.length?goals.map(archItem).join(''):'<div class="placeholder" style="padding:14px">该月暂无目标归档</div>')+'</div>'+
-    '<div class="card"><div class="sec-title">计划归档 <span class="more">'+plans.length+' 条</span></div>'+
-      (plans.length?plans.map(archItem).join(''):'<div class="placeholder" style="padding:14px">该月暂无计划归档</div>')+'</div>';
+      '<div class="tiny muted" style="margin-top:8px">'+cy+' 年 '+parseInt(cm,10)+' 月 · 共 '+list.length+' 条归档</div>'+
+      '<div class="arch-all-bar" onclick="setArchAll()"><span>查看全部归档（跨年月）</span><span>共 '+ac.length+' 条 ›</span></div></div>';
+  function group(title,arr,empty){
+    return '<div class="card"><div class="sec-title">'+title+' <span class="more">'+arr.length+' 条</span></div>'+
+      (arr.length?arr.map(archItem).join(''):'<div class="placeholder" style="padding:14px">'+empty+'</div>')+'</div>';
+  }
+  return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">归档</span></div>'+
+    filterCard+
+    group('目标归档',goals,all?'暂无目标归档':'该月暂无目标归档')+
+    group('计划归档',plans,all?'暂无日常计划归档':'该月暂无计划归档')+
+    group('长期计划归档',longs,all?'暂无长期计划归档':'该月暂无长期计划归档');
 }
 /* 导出学习数据：App 内预览 + 保存报告文件；浏览器就地打印为 PDF，不跳新页面 */
 function exportStudyPDF(){
@@ -3403,7 +3825,8 @@ function render(){
     else if(R.tab==='focus')html=pageFocus();
     else if(R.tab==='plan')html=pagePlan();
     else html=pageMine();
-  }else if(page==='goals')html=pageGoals();
+  }else if(page==='tomatoes')html=pageTomatoes();
+  else if(page==='goals')html=pageGoals();
   else if(page==='subjectDetail')html=pageSubjectDetail(R.stack[R.stack.length-1].arg);
   else if(page==='subjects')html=pageSubjects();
   else if(page==='stats')html=pageStats();
