@@ -758,7 +758,7 @@ function weekMin(){return minutes(weekSec());}
 function streak(){
   var n=0;for(var i=0;i<400;i++){if(secondsOn(shiftDay(-i))>0)n++;else{if(i===0)continue;break;}}return n;
 }
-/* 打卡判定：当天有专注记录（含手动补记）即打卡；达日目标额外标红。
+/* 打卡判定：当天有专注记录即打卡；达日目标额外标红。
    计划完成、错题复习不计入打卡；今天未计时不算断。 */
 function checkinMeta(day){
   var sec=secondsOn(day),goal=(S.goals&&S.goals.dailyMinutes)||0;
@@ -1884,7 +1884,7 @@ function checkinCalendarHtml(){
   }
   h+='</div><div class="cal-legend"><span><i style="background:'+C.zhu+'"></i>达标</span>'+
     '<span><i style="background:'+C.dai+'"></i>已打卡</span><span><i style="background:#EFE7D2"></i>未打卡</span></div>'+
-    '<div class="cal-hint">打卡 = 当天有专注记录（时长 &gt; 0，含手动补记）；达日目标 '+goal+' 分钟标红。今日未学不打断连续。</div>';
+    '<div class="cal-hint">打卡 = 当天有专注记录（时长 &gt; 0）；达日目标 '+goal+' 分钟标红。今日未学不打断连续。</div>';
   return h;
 }
 function openCheckinCalendar(){
@@ -2642,18 +2642,63 @@ function markReviewed(id){
   m.nextReview=shiftDay(gaps[stage]===gaps[gaps.length-1]&&stage===gaps.length-1?7:gaps[stage]);
   save();closeSheet();render();toast('已记录，'+gaps[stage]+' 天后再复习');
 }
+/* 错题 → AI：先选「发到已有对话 / 新建对话」，新建时可选提示词预设 */
 function askAIMistake(id){
   var m=S.mistakes.filter(function(x){return x.id===id;})[0];if(!m)return;
   var sb=subjById(m.subjectId);
-  var q='帮我讲解这道'+(sb?sb.name+'':'')+'错题：'+m.title+
-    (m.reason?'\n我的错因：'+m.reason:'')+(m.knowledge&&m.knowledge.length?'\n知识点：'+m.knowledge.join('、'):'')+'\n请给出解题思路和易错点。';
-  var chat={id:uid(),title:m.title||'错题提问',createdAt:today(),
-    promptName:getChatPrompt(null).name||aiPrompts()[0].name,
-    messages:[{role:'user',text:q,img:m.img||'',time:nowClock()}]};
+  window.__askMistake={title:m.title||'错题提问',
+    q:'帮我讲解这道'+(sb?sb.name+'':'')+'错题：'+m.title+
+      (m.reason?'\n我的错因：'+m.reason:'')+(m.knowledge&&m.knowledge.length?'\n知识点：'+m.knowledge.join('、'):'')+'\n请给出解题思路和易错点。',
+    img:m.img||''};
+  openMistakeAITarget();
+}
+function openMistakeAITarget(){
+  var a=window.__askMistake;if(!a)return;
+  var h='<div class="tiny muted" style="line-height:1.7;margin-bottom:10px">'+
+    '这道题会作为一条消息发送，带上题目、错因、知识点'+(a.img?'和图片':'')+'。选一个已有对话接着问，或新建一个对话。</div>'+
+    '<div class="sec-title">发到已有对话</div>';
+  if(S.chats.length){
+    S.chats.forEach(function(c){
+      h+='<div class="sess-item" onclick="sendMistakeToChat(\''+c.id+'\')">'+
+        '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+
+        '<span class="nm">'+esc(c.title)+'</span>'+
+        '<span class="pn">'+esc(getChatPrompt(c).name||'默认')+'</span></div>';
+    });
+  }else{
+    h+='<div class="placeholder" style="padding:14px">还没有对话，新建一个吧</div>';
+  }
+  sheet('问 AI · 选择对话',h,
+    '<button class="btn ghost" onclick="closeSheet()">取消</button>'+
+    '<button class="btn primary" onclick="openMistakeAINew()">＋ 新建对话</button>');
+}
+function openMistakeAINew(){
+  var a=window.__askMistake;if(!a)return;
+  var ps=aiPrompts(),def=(S.aiConfig&&S.aiConfig.defaultPrompt)||ps[0].name;
+  var opts=ps.map(function(p){
+    return '<option value="'+esc(p.name)+'"'+(p.name===def?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');
+  var body='<div class="fld"><label>这条新对话使用的提示词预设</label>'+
+    '<select id="askPromptSel">'+opts+'</select></div>'+
+    '<div class="tiny muted" style="line-height:1.7">提示词决定 AI 讲解的风格与步骤；建好后仍可在 AI 助手顶部单独切换，不影响其他会话。</div>'+
+    '<div class="tiny" style="margin-top:10px;color:'+C.dai+'">题目：'+esc(a.title)+'</div>';
+  sheet('新建对话 · 选择提示词',body,
+    '<button class="btn ghost" onclick="openMistakeAITarget()">返回</button>'+
+    '<button class="btn primary" onclick="sendMistakeToNew()">发送问题</button>');
+}
+function sendMistakeToChat(id){
+  var a=window.__askMistake;if(!a)return;
+  var chat=S.chats.filter(function(c){return c.id===id;})[0];if(!chat)return;
+  chat.messages.push({role:'user',text:a.q,img:a.img,time:nowClock()});
+  if(chat.messages.length===1)chat.title=a.title.slice(0,14);
+  save();closeSheet();chatOpenId=id;push('ai');aiReply(id);
+}
+function sendMistakeToNew(){
+  var a=window.__askMistake;if(!a)return;
+  var sel=document.getElementById('askPromptSel');
+  var name=(sel&&sel.value)||(S.aiConfig&&S.aiConfig.defaultPrompt)||aiPrompts()[0].name;
+  var chat={id:uid(),title:a.title.slice(0,14),createdAt:today(),promptName:name,
+    messages:[{role:'user',text:a.q,img:a.img,time:nowClock()}]};
   S.chats.unshift(chat);if(S.chats.length>50)S.chats.pop();
-  save();closeSheet();
-  chatOpenId=chat.id;push('ai');
-  aiReply(chat.id);
+  save();closeSheet();chatOpenId=chat.id;push('ai');aiReply(chat.id);
 }
 function exportMistPDF(){
   /* 只导出当前筛选结果里被勾选的错题 */
@@ -2799,7 +2844,9 @@ function pageAI(){
   var promptOpts=prompts.map(function(p){
     return '<option value="'+esc(p.name)+'"'+(p.name===curPrompt.name?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');
   var ctxLen=chat.messages.reduce(function(a,m){return a+(m.text||'').length;},0);
+  var compressed=chat.messages.length===1&&/^【上下文摘要/.test(chat.messages[0].text||'');
   var ctx='<div class="ai-ctx">上下文 '+chat.messages.length+' 条 · 约 '+ctxLen+' 字'+
+    (compressed?' · 已压缩':'')+
     (chat.messages.length>=4?' · <span onclick="compressChat()">压缩</span>':'')+
     ' · <span onclick="viewChatCtx()">查看</span></div>';
   return '<div class="chat-wrap">'+
@@ -2967,11 +3014,49 @@ function aiReply(chatId){
     finish(aiMockReply(q,chat));
   }
 }
+/* 上下文压缩：生成可编辑的「接力摘要」，保留未问完的原问题，下一问带着它继续 */
+function textClip(s,n){s=String(s||'').replace(/\s+/g,' ');return s.length>n?s.slice(0,n)+'…':s;}
+function pendingQuestion(chat){
+  var ms=chat.messages||[];
+  for(var i=ms.length-1;i>=0;i--)
+    if(ms[i].role==='user')return (ms[i].text||'')+(ms[i].img?'（含附图）':'');
+  return '';
+}
+function draftChatSummary(chat){
+  var ms=chat.messages||[],users=ms.filter(function(m){return m.role==='user';}),out=[];
+  out.push('会话主题：'+(users.length?textClip(users[0].text,120):'（无）'));
+  var prev=users.slice(0,-1).slice(-8);
+  if(prev.length){
+    out.push('已问过：');
+    prev.forEach(function(u,i){out.push((i+1)+'. '+textClip(u.text,100)+(u.img?'（含附图）':''));});
+  }
+  var lastAi=null;
+  for(var i=ms.length-1;i>=0;i--){if(ms[i].role==='ai'){lastAi=ms[i];break;}}
+  if(lastAi)out.push('已讲到：'+textClip(lastAi.text,180));
+  var q=pendingQuestion(chat);
+  if(q)out.push('待继续（请接着回答这个问题）：'+q);
+  return out.join('\n');
+}
 function compressChat(){
   var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];if(!chat)return;
+  if(window.__aiThinking===chat.id){toast('等这条回复完成再压缩');return;}
+  if(chat.messages.length<2){toast('还没有足够内容可压缩');return;}
+  var body='<div class="tiny muted" style="line-height:1.7;margin-bottom:8px">'+
+    '压缩只保留下面这份「接力摘要」，下一问会带着它继续，不会丢掉正在问的题。'+
+    '可以直接编辑，尤其确认最后一段「待继续」的问题。</div>'+
+    '<textarea id="sumText" style="width:100%;min-height:190px;border:1px solid var(--line);'+
+    'border-radius:10px;padding:10px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);'+
+    'resize:vertical;line-height:1.7">'+esc(draftChatSummary(chat))+'</textarea>';
+  sheet('压缩上下文',body,'<button class="btn ghost" onclick="closeSheet()">取消</button>'+
+    '<button class="btn primary" onclick="doCompressChat()">保存并压缩</button>');
+}
+function doCompressChat(){
+  var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];if(!chat)return;
+  var t=((document.getElementById('sumText')||{}).value||'').trim();
+  if(!t){toast('摘要不能为空');return;}
   var n=chat.messages.length;
-  chat.messages=[{role:'ai',text:'（已压缩前 '+n+' 条对话的要点：围绕学习方法与错题复习展开）\n\n我们继续吧，你想问什么？',time:nowClock()}];
-  save();render();toast('上下文已压缩');
+  chat.messages=[{role:'ai',text:'【上下文摘要 · 已压缩前 '+n+' 条】\n'+t,time:nowClock()}];
+  save();render();toast('已压缩，下一问会带着这份摘要继续');
 }
 function pageSettings(){
   var ac=S.archives||[],cfg=S.aiConfig||{};
