@@ -47,12 +47,14 @@
 - `package.json`
 - `capacitor.config.json`
 - `assets` 文件夹（里面只有 `logo.svg`，桌面图标和启动图靠它生成）
+- `android.keystore.b64` ← **固定签名密钥，千万别删**（保证新 APK 能覆盖安装、不丢数据）
 - `.github` 文件夹（自动打包的"说明书"）← 别忘了这个隐藏文件夹
 - `.gitignore`
 
 > ⚠️ **每次改完功能重新上传时，`index.html`、`package.json`、`capacitor.config.json` 三个都要覆盖。**
 > `capacitor.config.json` 决定 App 名字（StudySpace），`package.json` 决定打包时装哪些插件。只传 `index.html` 会出现「名字还是旧的」「导出/分享、通知、返回键不生效」这类问题。
 > `assets/logo.svg` 决定桌面图标和启动图。网页上不能直接传文件夹，就用「Create new file」新建一个叫 `assets/logo.svg` 的文件，把 `www/assets/logo.svg` 的内容复制进去。
+> `android.keystore.b64` 是一段文本，用「Create new file」新建同名文件、把内容粘进去即可。删了它，新 APK 签名就会变、只能卸载重装（数据丢失）。
 
 建议一起上传的：
 - `PRD_番茄学习助手_APK重构.md`（产品文档）
@@ -111,6 +113,8 @@ GitHub 网页版选不了文件夹，所以 `.github` 文件夹经常拖不上�
 
 > 说明：这种叫 **Debug APK**（调试版），个人使用完全没问题。缺点是没经过官方应用商店签名，不能上架商店——但现在先跑通流程，上架是后面的事。
 
+> 提示音规则：开始、结束、15 分钟、最后 5 分钟各自独立开关。「最后 5 分钟」只在**大于 1 小时的倒计时**且该提示音开启时，于剩 5 分钟主动提醒。正向计时、倒计时未到点主动点「结束并记录」都会响结束提示音；倒计时到点已响过一次后，是否再响一次由专注页「计时设置 → 结束后再响一次」控制（默认关闭）。
+
 ---
 
 ## 三、以后想改功能 / 加界面：怎么出新版本
@@ -123,7 +127,10 @@ GitHub 网页版选不了文件夹，所以 `.github` 文件夹经常拖不上�
 2. 打开 GitHub 仓库，点「上传」→ 把改好的文件传上去覆盖旧的
 3. 提交（Commit changes）
 4. **它会自动开始打包**——不用再手动点 Run workflow（因为我们配了 push 自动触发）
-5. 等绿色对勾，去 Artifacts 下载新的 APK，装到手机覆盖安装
+5. 等绿色对勾，去 Artifacts 下载新的 APK，装到手机**直接覆盖安装**（数据会保留，见下方常见问题）
+
+> ✅ **覆盖安装不会丢数据**：新版 APK 用了固定签名（`android.keystore.b64`），每次打包签名完全一致。下载后直接点在旧版上安装即可，学习计划、专注记录、错题、设置全都还在。**不需要卸载旧版**。
+> ⚠️ 但你**现在手机上装的旧版**是随机签名打的，第一次升级时签名对不上，系统会要求先卸载——这一次会丢数据。升级到这个固定签名版本后，以后就都能无损覆盖了（旧数据可先用「导出备份 JSON」存好，装新版后再导入）。
 
 ### 情况 B：让我帮你改（推荐，你不用懂代码）
 
@@ -139,6 +146,11 @@ GitHub 网页版选不了文件夹，所以 `.github` 文件夹经常拖不上�
 ---
 
 ## 四、常见问题
+
+**Q：新 APK 能直接覆盖旧的吗？数据会不会丢？**
+A：能，而且**数据会保留**。新版用了固定签名密钥（仓库里的 `android.keystore.b64`），每次构建签名一致，Android 允许同名同签名的 App 直接覆盖升级，学习数据原封不动。只要你不删这个密钥文件、不改 `capacitor.config.json` 里的 appId（`com.studywr.pomodoro`），就能一直无损升级。
+> 唯一例外：从"随机签名"的旧版本升级到这个"固定签名"版本时，签名对不上，需要先卸载一次（数据会清掉）。这是最后一次，用「导出备份 JSON」过渡即可。
+> 千万别删 `android.keystore.b64`——删了构建就会换回随机签名，又变成只能卸载重装。它是一段文本，可以用「Create new file」粘贴上传。
 
 **Q：改了文件，但 Actions 没自动打包？**
 A：检查是不是传到了 `main` 或 `master` 分支（默认分支一般就是这俩）。或者干脆去 Actions 页面手动点 Run workflow。
@@ -165,8 +177,16 @@ A：点导出后**不会跳到新页面**，App 内会弹出「导出完成」�
 学习数据导出的是 `.html` 报告文件，用浏览器打开后点「打印 / 另存为 PDF」即可得到 PDF；错题集导出同样是 `.html`。
 > 注：文件导出/分享依赖 `@capacitor/filesystem` 和 `@capacitor/share` 两个插件，所以 `package.json` 必须一并上传，漏传就打不出带这两个能力的包。
 
-**Q：专注结束时有提醒吗？息屏了也会响吗？**
-A：有。点「开始专注」时系统会弹出通知权限请求，**请点「允许」**（只弹一次）。之后 App 会把提醒预排到系统闹钟，即使手机息屏、App 被切到后台也会按时响。暂停或结束时会取消这条提醒。如果当时点了「拒绝」，去手机「设置 → 通知」里给 StudySpace 打开通知权限，再重新开始一次专注即可。
+**Q：专注时有后台通知吗？息屏了也会响吗？**
+A：有。点「开始专注」时手机通知栏会常驻一条「已开始专注 · 科目 · 剩余时间」（划不掉），倒计时到点就地把这条变成「专注完成！· 科目 · 本次时长」，主动结束时这条通知会安静消失。即使息屏、切到后台也会按时更新。
+
+**Q：通知没弹出来 / 通知栏空的，怎么办？**
+A：九成是系统通知权限没给。去「设置 → 通用 → 通知诊断」：
+1. 点「**重新检查权限**」——会显示权限是否已授予；
+2. 如果是拒绝，点「**打开系统设置**」（或手动到 手机设置 → 应用 → StudySpace → 通知），允许通知后回来重试；
+3. 点「**发一条测试通知**」看通知栏能不能出现；
+4. 还是不行，把面板里那段「诊断日志」截图发我，里面写明了桥接、插件、权限的真实状态。
+> 首次开始专注时会弹一次通知权限请求，**请点「允许」**（Android 13 及以上必需）。
 
 **Q：按手机返回键会直接退出吗？**
 A：不会。返回键按「关下拉 → 关弹窗 → 退回上一层 → 回到首页」的顺序处理；已经在首页时，需要**连续按两次**才会退出，第一次只提示「再按一次退出 StudySpace」。
@@ -272,6 +292,17 @@ jobs:
 
       - name: 赋予 gradlew 执行权限
         run: chmod +x android/gradlew
+
+      # 固定调试签名：每次构建用同一份密钥，同名覆盖安装时数据才不会丢。
+      - name: 固定调试签名（保证覆盖安装保留数据）
+        run: |
+          mkdir -p ~/.android
+          base64 -d android.keystore.b64 > /tmp/studyspace.p12
+          keytool -importkeystore \
+            -srckeystore /tmp/studyspace.p12 -srcstoretype PKCS12 -srcstorepass android \
+            -destkeystore ~/.android/debug.keystore -deststoretype JKS \
+            -deststorepass android -destkeypass android -noprompt \
+            && echo "已用固定密钥签名" || { cp /tmp/studyspace.p12 ~/.android/debug.keystore && echo "已用 PKCS12 固定密钥签名"; }
 
       - name: 构建 Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon

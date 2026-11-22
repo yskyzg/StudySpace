@@ -68,6 +68,18 @@ jobs:
       - name: 赋予 gradlew 执行权限
         run: chmod +x android/gradlew
 
+      # 固定调试签名：每次构建用同一份密钥，同名覆盖安装时数据才不会丢。
+      # 换掉 GitHub runner 自动生成的随机 debug.keystore（那样每次签名都不同，只能卸载重装）。
+      - name: 固定调试签名（保证覆盖安装保留数据）
+        run: |
+          mkdir -p ~/.android
+          base64 -d android.keystore.b64 > /tmp/studyspace.p12
+          keytool -importkeystore \
+            -srckeystore /tmp/studyspace.p12 -srcstoretype PKCS12 -srcstorepass android \
+            -destkeystore ~/.android/debug.keystore -deststoretype JKS \
+            -deststorepass android -destkeypass android -noprompt \
+            && echo "已用固定密钥签名" || { cp /tmp/studyspace.p12 ~/.android/debug.keystore && echo "已用 PKCS12 固定密钥签名"; }
+
       - name: 构建 Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
