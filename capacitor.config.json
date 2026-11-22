@@ -1,6 +1,6 @@
 {
   "appId": "com.studywr.pomodoro",
-  "appName": "番茄学习助手",
+  "appName": "StudySpace",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
