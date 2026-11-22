@@ -68,20 +68,49 @@ jobs:
       - name: 赋予 gradlew 执行权限
         run: chmod +x android/gradlew
 
-      # 固定调试签名：每次构建用同一份密钥，同名覆盖安装时数据才不会丢。
-      # 换掉 GitHub runner 自动生成的随机 debug.keystore（那样每次签名都不同，只能卸载重装）。
+      # 固定调试签名：不依赖 runner 的 ~/.android/debug.keystore（可能被 AGP 重建/忽略），
+      # 直接把仓库里的 PKCS12 放进生成的 Android 工程，并在 build.gradle 里显式指定。
       - name: 固定调试签名（保证覆盖安装保留数据）
         run: |
-          mkdir -p ~/.android
-          base64 -d android.keystore.b64 > /tmp/studyspace.p12
-          keytool -importkeystore \
-            -srckeystore /tmp/studyspace.p12 -srcstoretype PKCS12 -srcstorepass android \
-            -destkeystore ~/.android/debug.keystore -deststoretype JKS \
-            -deststorepass android -destkeypass android -noprompt \
-            && echo "已用固定密钥签名" || { cp /tmp/studyspace.p12 ~/.android/debug.keystore && echo "已用 PKCS12 固定密钥签名"; }
+          base64 -d android.keystore.b64 > android/app/studyspace.p12
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, re
+          p = Path('android/app/build.gradle')
+          s = p.read_text()
+          # versionCode 用 GitHub Actions 构建序号，保证每次新包都是升级而不是同版本重装
+          vc = int(os.environ.get('GITHUB_RUN_NUMBER', '2'))
+          s = s.replace('versionCode 1', 'versionCode ' + str(vc), 1)
+          m = re.search(r'(?m)^(\s*)buildTypes\s*\{\s*$', s)
+          if not m:
+              raise SystemExit('未找到 buildTypes，无法写入签名配置')
+          indent = m.group(1)
+          sig = (indent + 'signingConfigs {\n' +
+                 indent + '    debug {\n' +
+                 indent + "        storeFile file('studyspace.p12')\n" +
+                 indent + "        storePassword 'android'\n" +
+                 indent + "        storeType 'PKCS12'\n" +
+                 indent + "        keyAlias 'androiddebugkey'\n" +
+                 indent + "        keyPassword 'android'\n" +
+                 indent + '    }\n' +
+                 indent + '}\n')
+          s = s[:m.start()] + sig + s[m.start():]
+          m2 = re.search(r'(?m)^(\s*)buildTypes\s*\{\s*$', s)
+          i = m2.group(1)
+          s = (s[:m2.end()] + '\n' + i + '    debug {\n' +
+               i + '        signingConfig signingConfigs.debug\n' +
+               i + '    }' + s[m2.end():])
+          p.write_text(s)
+          print('已写入固定签名配置，versionCode=' + str(vc))
+          PY
 
       - name: 构建 Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: 输出 APK 签名指纹（排查覆盖安装）
+        run: |
+          keytool -printcert -jarfile android/app/build/outputs/apk/debug/app-debug.apk \
+            | grep -E 'Owner:|Issuer:|SHA256:' || true
 
       - name: 上传 APK 供下载
         uses: actions/upload-artifact@v4
