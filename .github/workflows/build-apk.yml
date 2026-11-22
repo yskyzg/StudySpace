@@ -18,7 +18,7 @@ jobs:
       - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 安装 Java 17
         uses: actions/setup-java@v4
@@ -47,6 +47,20 @@ jobs:
 
       - name: 重新生成 Android 工程
         run: rm -rf android && npx cap add android
+
+      # 用仓库根目录 assets/logo.svg 生成各密度桌面图标与启动图，
+      # 覆盖 cap add android 自带的 Capacitor 默认机器人图标。
+      - name: 生成 StudySpace 图标与启动图
+        run: |
+          if [ -f assets/logo.svg ]; then
+            npx @capacitor/assets generate --android --assetPath assets \
+              --iconBackgroundColor '#F6F1E5' \
+              --iconBackgroundColorDark '#F6F1E5' \
+              --splashBackgroundColor '#F6F1E5' \
+              --splashBackgroundColorDark '#F6F1E5'
+          else
+            echo "::warning::未找到 assets/logo.svg，本次使用默认图标"
+          fi
 
       - name: 同步网页资源
         run: npx cap sync android
