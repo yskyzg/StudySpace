@@ -282,6 +282,16 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .mist-card .thumbs img,.mist-card .thumbs .ph{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#EFE7D2}
 .mist-card .thumbs .ph{display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:18px}
 .mist-card .due{font-size:10.5px;color:var(--zhu);margin-top:6px}
+/* 批量模式：勾选框 + 选中高亮，选了什么一眼可见 */
+.mist-card.batch{display:flex;gap:10px;align-items:flex-start}
+.mist-card .body{flex:1;min-width:0}
+.mist-card.sel{border-color:var(--dai);background:var(--dai3);box-shadow:0 0 0 2px rgba(61,90,128,.14)}
+.mist-check{flex:none;width:22px;height:22px;margin-top:2px;border:1.5px solid var(--line);border-radius:7px;
+  background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;
+  color:transparent;user-select:none}
+.mist-card.sel .mist-check{background:var(--dai);border-color:var(--dai);color:#fff}
+.export-path{font-size:12px;word-break:break-all;background:var(--dai3);border:1px solid var(--line);
+  border-radius:8px;padding:9px 10px;color:var(--ink);line-height:1.55}
 .big-img{width:100%;border-radius:10px;border:1px solid var(--line);margin:8px 0}
 .kv-block{margin-bottom:12px}
 .kv-block .k{font-size:11.5px;color:var(--ink2);margin-bottom:4px;font-weight:600}
@@ -770,6 +780,120 @@ function confirmDo(title,desc,fn){
     '<div class="sheet-foot"><button class="btn ghost" onclick="closeSheet()">取消</button>'+
     '<button class="btn danger" onclick="var f=window.__confirmFn;closeSheet();if(f)f()">确定</button></div></div></div>';
 }
+/* ============ 导出中心：全程在 App 内完成，原生写文件 + 系统面板选保存位置 ============ */
+function isNative(){
+  var C=window.Capacitor;
+  return !!(C&&((typeof C.isNativePlatform==='function'&&C.isNativePlatform())||(C.platform&&C.platform!=='web')));
+}
+/* 单文件 HTML 没有打包插件 JS，直接走 Capacitor 底层桥 nativePromise(plugin, method, options)；
+   若运行环境已注入 Plugins 代理则优先使用。 */
+function capCall(plugin,method,opts){
+  var C=window.Capacitor;
+  if(!C||!isNative())return Promise.reject(new Error('not-native'));
+  if(C.Plugins&&C.Plugins[plugin]&&typeof C.Plugins[plugin][method]==='function')
+    return C.Plugins[plugin][method](opts||{});
+  if(typeof C.nativePromise==='function')return C.nativePromise(plugin,method,opts||{});
+  return Promise.reject(new Error('no-bridge'));
+}
+function copyText(t,tip){
+  var done=function(){toast(tip||'已复制');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){legacyCopy(t,done);});
+  }else legacyCopy(t,done);
+}
+function legacyCopy(t,cb){
+  try{
+    var ta=document.createElement('textarea');ta.value=t;
+    ta.style.cssText='position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    if(ta.parentNode)ta.parentNode.removeChild(ta);cb();
+  }catch(e){toast('复制失败，请长按文字手动复制');}
+}
+function reportDoc(title,body){
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">'+
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title>'+
+    '<style>body{font-family:-apple-system,"Microsoft YaHei",sans-serif;padding:24px;max-width:680px;'+
+    'margin:0 auto;color:#2B2620;line-height:1.7}h2{color:#3D5A80;margin:0 0 6px}'+
+    'img{max-width:100%}@media print{body{padding:0}}</style></head><body>'+body+'</body></html>';
+}
+function browserDownload(o){
+  try{
+    var blob=new Blob([o.content],{type:o.mime||'text/plain;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=o.name;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);if(a.parentNode)a.parentNode.removeChild(a);},3000);
+    return true;
+  }catch(e){return false;}
+}
+/* 统一导出：o = {name, content, mime, title} */
+function exportFile(o){
+  window.__lastExport=o;window.__exportUri='';
+  if(!isNative()){
+    var okd=browserDownload(o);
+    showExportResult({name:o.name,uri:'',native:false,downloaded:okd,title:o.title||'导出'});
+    return;
+  }
+  function write(dir){
+    return capCall('Filesystem','writeFile',
+      {path:o.name,data:o.content,directory:dir,encoding:'utf8',recursive:true})
+      .then(function(r){return {uri:(r&&r.uri)||'',dir:dir};});
+  }
+  /* 公共 Documents 在「文件管理」里直接可见；老安卓无权限时退回 App 私有目录 */
+  write('DOCUMENTS').catch(function(){return write('DATA');}).then(function(res){
+    if(res.uri)return res;
+    return capCall('Filesystem','getUri',{path:o.name,directory:res.dir})
+      .then(function(g){return {uri:(g&&g.uri)||'',dir:res.dir};})
+      .catch(function(){return res;});
+  }).then(function(res){
+    showExportResult({name:o.name,uri:res.uri,dir:res.dir,native:true,title:o.title||'导出'});
+  }).catch(function(){
+    browserDownload(o);   /* 极端情况兜底：至少能下载 / 复制内容 */
+    showExportResult({name:o.name,uri:'',native:false,downloaded:true,title:o.title||'导出',fallback:true});
+  });
+}
+function showExportResult(r){
+  window.__exportUri=r.uri||'';
+  var where=r.native?(r.dir==='DOCUMENTS'?'手机「文件管理」→ Documents 文件夹':'App 私有目录（用下方按钮选择保存位置）')
+                    :'浏览器下载目录 / 下载记录';
+  var body='<div class="tiny muted" style="margin-bottom:10px">'+esc(r.title)+'已完成，全程留在 App 内，没有跳转到新页面。</div>'+
+    '<div class="fld"><label>文件名</label><div class="export-path">'+esc(r.name)+'</div></div>'+
+    '<div class="fld"><label>保存在</label><div class="export-path">'+esc(where)+'</div></div>'+
+    (r.native&&r.uri?'<div class="fld"><label>完整路径（可复制后在文件管理里查找）</label><div class="export-path">'+esc(r.uri)+'</div></div>':'')+
+    (r.fallback?'<div class="tiny" style="color:'+C.zhe+';margin-top:8px">直接写文件失败，已改为下载；若仍找不到，请点「复制文件内容」自行保存。</div>':'')+
+    '<div class="tiny muted" style="margin-top:8px">点「选择保存位置 / 分享」可在系统面板里挑文件夹、网盘或发送给别人；报告类文件用浏览器打开后即可打印 / 另存为 PDF。</div>';
+  var foot='<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%">'+
+    (r.native&&r.uri?'<button class="btn primary sm" style="flex:1 1 100%" onclick="shareExport()">选择保存位置 / 分享</button>'+
+      '<button class="btn ghost sm" style="flex:1" onclick="copyExportPath()">复制路径</button>':'')+
+    '<button class="btn ghost sm" style="flex:1" onclick="copyExportContent()">复制文件内容</button>'+
+    '<button class="btn ghost sm" style="flex:1" onclick="closeSheet()">完成</button></div>';
+  sheet('导出完成',body,foot);
+}
+function shareExport(){
+  var uri=window.__exportUri;
+  if(!uri){toast('没有可分享的文件');return;}
+  capCall('Share','share',{title:'StudySpace 导出文件',dialogTitle:'选择保存位置',files:[uri]})
+    .catch(function(){toast('分享未完成，可复制路径或文件内容');});
+}
+function copyExportPath(){copyText(window.__exportUri||'','路径已复制');}
+function copyExportContent(){
+  var o=window.__lastExport;
+  if(o)copyText(o.content,'文件内容已复制，可粘贴保存');
+}
+/* 页面内隐藏 iframe 打印，不再 window.open 新窗口（打印对话框取消即回到 App） */
+function printHtml(html){
+  var f=document.createElement('iframe');
+  f.style.cssText='position:absolute;width:0;height:0;border:0;left:-9999px;top:0';
+  document.body.appendChild(f);
+  try{var d=f.contentDocument;d.open();d.write(html);d.close();}
+  catch(e){if(f.parentNode)f.parentNode.removeChild(f);toast('当前环境不支持打印，请改用保存报告文件');return;}
+  setTimeout(function(){
+    try{f.contentWindow.focus();f.contentWindow.print();}catch(e){toast('当前环境不支持打印，请改用保存报告文件');}
+    setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f);},1500);
+  },350);
+  closeSheet();
+  toast('已打开打印窗口，取消即可返回');
+}
 /* 统一下拉核心：浮层挂在锚点内部（相对定位），随滚动移动、不再脱离
    opts: [{label,color,value,sel,html}]；newCb：底部「＋新建」回调；onPick(value) */
 /* 页面入场动画会给 .screen 的直接子元素制造独立层叠上下文，
@@ -777,16 +901,25 @@ function confirmDo(title,desc,fn){
    打开时临时把锚点的整条祖先链抬到最上层，关闭后原样还原。 */
 function raisePickerAncestors(el){
   window.__pickerRaised=[];
-  var p=el.parentElement;
+  var p=el;                                  /* 含锚点自身：统计页 .seg .s.pk-trigger 就是 overflow:hidden */
   while(p&&p!==document.body&&p.id!=='screen'){
-    window.__pickerRaised.push({el:p,pos:p.style.position,z:p.style.zIndex});
-    if(getComputedStyle(p).position==='static')p.style.position='relative';
+    var cs=getComputedStyle(p);
+    window.__pickerRaised.push({el:p,pos:p.style.position,z:p.style.zIndex,
+      ox:p.style.overflowX,oy:p.style.overflowY});
+    if(cs.position==='static')p.style.position='relative';
     p.style.zIndex='999';
+    /* 锚点或祖先的 hidden/clip 会把浮层裁得完全不可见（点上去落到后面的卡片）。
+       打开期间逐轴临时解除，避免影响 overflow:auto 的滚动容器；关闭后原样还原。 */
+    if(cs.overflowX==='hidden'||cs.overflowX==='clip')p.style.overflowX='visible';
+    if(cs.overflowY==='hidden'||cs.overflowY==='clip')p.style.overflowY='visible';
     p=p.parentElement;
   }
 }
 function restorePickerAncestors(){
-  (window.__pickerRaised||[]).forEach(function(o){o.el.style.position=o.pos;o.el.style.zIndex=o.z;});
+  (window.__pickerRaised||[]).forEach(function(o){
+    o.el.style.position=o.pos;o.el.style.zIndex=o.z;
+    o.el.style.overflowX=o.ox;o.el.style.overflowY=o.oy;
+  });
   window.__pickerRaised=[];
 }
 function makePicker(anchorId,opts,onPick,newCb){
@@ -1709,40 +1842,66 @@ function simpleBody(text){return '<div class="card"><div class="placeholder" sty
 function dueMistakes(){
   return S.mistakes.filter(function(m){return m.nextReview&&m.nextReview<=today();});
 }
-function pickMistakeSubject(id){mistSubject=id;closePicker();render();}
-function setMistType(v){mistType=v;closePicker();render();}
+/* 换科目 / 换题型都重置批量选择，避免选中的是筛选外的错题 */
+function pickMistakeSubject(id){mistSubject=id;mistType='';mistSel={};closePicker();render();}
+function setMistType(v){mistType=v;mistSel={};closePicker();render();}
 function mistSubjectPicker(){
   var opts=[{label:'全部科目',sel:!mistSubject,onclick:"pickMistakeSubject('')"}];
   S.subjects.forEach(function(s){opts.push({label:esc(s.name),color:s.color,sel:s.id===mistSubject,
     onclick:"pickMistakeSubject('"+s.id+"')"});});
   makePicker('mistSubjPick',opts,null,null);
 }
+/* 题型随科目联动：只取当前科目配置的题型 + 该科目错题里出现过的题型 */
+function mistTypes(){
+  var set={},out=[];
+  if(mistSubject){
+    var sb=subjById(mistSubject);
+    if(sb&&sb.types)sb.types.forEach(function(t){if(t)set[t]=1;});
+  }
+  S.mistakes.forEach(function(m){
+    if(mistSubject&&m.subjectId!==mistSubject)return;
+    if(m.type)set[m.type]=1;});
+  Object.keys(set).forEach(function(t){out.push(t);});
+  return out.sort();
+}
 function mistTypePicker(){
-  var types=[];S.mistakes.forEach(function(m){if(m.type&&types.indexOf(m.type)<0)types.push(m.type);});
+  var types=mistTypes();
   var opts=[{label:'全部题型',sel:!mistType,onclick:"setMistType('')"}];
   types.forEach(function(t){opts.push({label:esc(t),sel:t===mistType,
     onclick:"setMistType('"+esc(t).replace(/'/g,"\\'")+"')"});});
+  if(!types.length)opts.push({html:'<span class="muted">这个科目还没有题型，可在「科目管理」里添加</span>',
+    onclick:'closePicker()',sel:false});
   makePicker('mistTypePick',opts,null,null);
+}
+/* 当前筛选结果：页面、全选、导出三处共用，保证「全选」只作用于可见的错题 */
+function mistFiltered(){
+  return S.mistakes.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');})
+    .filter(function(m){return (!mistSubject||m.subjectId===mistSubject)&&(!mistType||m.type===mistType);});
 }
 function pageMistakes(){
   var due=dueMistakes();
-  var list=S.mistakes.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');})
-    .filter(function(m){return (!mistSubject||m.subjectId===mistSubject)&&(!mistType||m.type===mistType);});
+  var list=mistFiltered();
+  var selCount=list.filter(function(m){return mistSel[m.id];}).length;
+  var allSel=list.length>0&&selCount===list.length;
   var subjName=mistSubject?(subjById(mistSubject)?subjById(mistSubject).name:'未分类'):'全部科目';
   var typeName=mistType||'全部题型';
   function card(m){
     var sb=subjById(m.subjectId),rate=m.total?Math.round((1-(m.wrong||0)/m.total)*100):0;
     var isDue=m.nextReview&&m.nextReview<=today();
-    return '<div class="mist-card" onclick="openMistakeDetail(\''+m.id+'\')">'+
-      '<div class="top"><span class="dot" style="background:'+(sb?sb.color:C.ink2)+'"></span>'+
+    var inner='<div class="top"><span class="dot" style="background:'+(sb?sb.color:C.ink2)+'"></span>'+
         '<span class="tag">'+(sb?esc(sb.name):'未分类')+'</span>'+(m.type?'<span class="tag">'+esc(m.type)+'</span>':'')+
         '<span class="rate">正确率 '+rate+'%</span></div>'+
       '<div class="ttl">'+esc(m.title||'（未填写摘要）')+'</div>'+
       '<div class="kv">'+esc(m.date||'')+' · 做 '+m.total+' 错 '+(m.wrong||0)+'</div>'+
       ((m.knowledge&&m.knowledge.length)?'<div style="margin-top:6px">'+m.knowledge.map(function(k){return '<span class="pill">'+esc(k)+'</span>';}).join('')+'</div>':'')+
       (m.img?'<div class="thumbs"><img src="'+m.img+'" alt="题目"></div>':'')+
-      (isDue?'<div class="due">● 今天该复习了</div>':'')+
-      '</div>';
+      (isDue?'<div class="due">● 今天该复习了</div>':'');
+    if(mistBatch){
+      var on=!!mistSel[m.id];
+      return '<div class="mist-card batch'+(on?' sel':'')+'" onclick="toggleMistSel(\''+m.id+'\')">'+
+        '<div class="mist-check">✓</div><div class="body">'+inner+'</div></div>';
+    }
+    return '<div class="mist-card" onclick="openMistakeDetail(\''+m.id+'\')">'+inner+'</div>';
   }
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">错题本</span></div>'+
     (due.length?'<div class="card" style="border-color:'+C.zhu+'"><div class="sec-title" style="color:'+C.zhu+'">待复习提醒 <span class="more">'+due.length+' 道 · 1/3/7 天</span></div>'+
@@ -1751,16 +1910,24 @@ function pageMistakes(){
       '<span class="s pk-trigger picker-anchor" id="mistSubjPick" onclick="mistSubjectPicker()">'+esc(subjName)+'</span>'+
       '<span class="s pk-trigger picker-anchor" id="mistTypePick" onclick="mistTypePicker()">'+esc(typeName)+'</span>'+
       '<span class="s'+(mistBatch?' on':'')+'" onclick="toggleMistBatch()">'+(mistBatch?'完成':'批量')+'</span></div>'+
-    (mistBatch?'<div class="row" style="margin-bottom:10px"><button class="btn ghost sm" onclick="selectAllMist()">全选</button>'+
-      '<button class="btn primary sm" onclick="exportMistPDF()">导出所选 PDF</button>'+
-      '<span class="tiny muted">已选 '+Object.keys(mistSel).filter(function(k){return mistSel[k];}).length+' 道</span></div>':'')+
+    (mistBatch?'<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">'+
+      '<button class="btn ghost sm" onclick="selectAllMist()">'+(allSel?'取消全选':'全选')+'</button>'+
+      '<button class="btn primary sm" onclick="exportMistPDF()">保存所选（'+selCount+'）</button>'+
+      '<span class="tiny muted">已选 '+selCount+' / '+list.length+' 道'+((mistSubject||mistType)?'（当前筛选）':'')+'</span></div>':'')+
     (list.length?list.map(card).join(''):'<div class="empty"><div class="ic">✎</div><div>'+
       (S.mistakes.length?'没有符合筛选条件的错题':'还没有错题<br>遇到错题记下来，按 1/3/7 天复习')+'</div>'+
       '<button class="btn primary" onclick="openMistakeEditor()">＋ 记一道错题</button></div>')+
     (S.mistakes.length&&!mistBatch?'<button class="btn primary block" onclick="openMistakeEditor()">＋ 新增错题</button>':'');
 }
 function toggleMistBatch(){mistBatch=!mistBatch;mistSel={};render();}
-function selectAllMist(){S.mistakes.forEach(function(m){mistSel[m.id]=true;});render();}
+/* 全选 / 取消全选只作用于当前筛选结果，并清掉筛选外的残留选择 */
+function selectAllMist(){
+  var list=mistFiltered();
+  var all=list.length>0&&list.every(function(m){return mistSel[m.id];});
+  mistSel={};
+  if(!all)list.forEach(function(m){mistSel[m.id]=true;});
+  render();
+}
 function toggleMistSel(id){mistSel[id]=!mistSel[id];render();}
 /* 录入/编辑弹窗 */
 function openMistakeEditor(id){
@@ -1886,7 +2053,8 @@ function askAIMistake(id){
   setTimeout(function(){aiReply(chat.id);},500);
 }
 function exportMistPDF(){
-  var sel=S.mistakes.filter(function(m){return mistSel[m.id];});
+  /* 只导出当前筛选结果里被勾选的错题 */
+  var sel=mistFiltered().filter(function(m){return mistSel[m.id];});
   if(!sel.length){toast('请先勾选错题');return;}
   var h='<h2>错题集导出（'+sel.length+' 道）</h2>';
   sel.forEach(function(m,i){var sb=subjById(m.subjectId);
@@ -1894,7 +2062,8 @@ function exportMistPDF(){
       '<p>做 '+m.total+' 错 '+(m.wrong||0)+'　正确率 '+(m.total?Math.round((1-m.wrong/m.total)*100):0)+'%</p>'+
       (m.reason?'<p>错因：'+esc(m.reason)+'</p>':'')+(m.answer?'<p>正解：'+esc(m.answer)+'</p>':'')+
       (m.img?'<img src="'+m.img+'" style="max-width:300px">':'')+'</div>';});
-  window.__pdfHtml=h;closeSheet();doExportPDF();
+  exportFile({name:'StudySpace错题集_'+today()+'.html',content:reportDoc('StudySpace 错题集',h),
+    mime:'text/html;charset=utf-8',title:'错题集（'+sel.length+' 道）'});
 }
 /* ============ 复盘 ============ */
 function setRevFilter(v){revFilter=v;render();}
@@ -1972,9 +2141,7 @@ function exportReviewTXT(id){
   var r=S.reviews.filter(function(x){return x.id===id;})[0];if(!r)return;
   var t='复盘 · '+r.date+'（'+(r.type==='weekly'?'每周':'每日')+'）\n\n'+
     '完成情况：\n'+(r.done||'')+'\n\n困难与不足：\n'+(r.hard||'')+'\n\n改进措施：\n'+(r.improve||'')+'\n\n明日重点：\n'+(r.tomorrow||'');
-  var blob=new Blob([t],{type:'text/plain;charset=utf-8'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='复盘_'+r.date+'.txt';a.click();
-  toast('已导出 TXT');
+  exportFile({name:'复盘_'+r.date+'.txt',content:t,mime:'text/plain;charset=utf-8',title:'复盘文字'});
 }
 /* ============ AI 助手（框架 + 模拟回应） ============ */
 function newChat(){
@@ -2077,7 +2244,7 @@ function pageSettings(){
   var ac=S.archives||[],cfg=S.aiConfig||{};
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">设置</span></div>'+
     '<div class="card"><div class="sec-title">通用</div>'+
-      '<div class="menu-item" onclick="exportStudyPDF()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg><span>导出学习数据（PDF）</span><span class="arw">›</span></div>'+
+      '<div class="menu-item" onclick="exportStudyPDF()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg><span>导出学习数据（报告 / PDF）</span><span class="arw">›</span></div>'+
       '<div class="menu-item" onclick="push(\'archive\')"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg><span>归档（已存 '+ac.length+' 条）</span><span class="arw">›</span></div></div>'+
     '<div class="card"><div class="sec-title">AI 接口</div>'+
       '<div class="menu-item" onclick="openAICfg()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg><span>'+(cfg.apiKey?'已配置 · '+(cfg.provider||'')+(cfg.model?' · '+cfg.model:''):'未配置（当前用模拟回应）')+'</span><span class="arw">›</span></div>'+
@@ -2085,7 +2252,8 @@ function pageSettings(){
     '<div class="card"><div class="sec-title">数据</div>'+
       '<div class="menu-item" onclick="exportDataJSON()"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg><span>导出备份（JSON）</span><span class="arw">›</span></div>'+
       '<div class="menu-item" onclick="document.getElementById(\'importFile\').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 17v3h16v-3"/></svg><span>导入恢复（JSON）</span><span class="arw">›</span></div>'+
-      '<input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importDataJSON(this)"></div>'+
+      '<input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importDataJSON(this)">'+
+      '<div class="tiny muted" style="padding:8px 14px">导出后会显示文件位置，可选择保存位置、复制路径或复制文件内容</div></div>'+
     '<div class="card"><div class="sec-title" style="color:'+C.zhe+'">危险区</div>'+
       '<div class="menu-item" onclick="resetEmpty()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清空全部数据</span><span class="arw">›</span></div></div>'+
     '<div class="tiny muted" style="text-align:center;padding:10px 0 20px">StudySpace v1.0<br>数据全部保存在本机，不上传云端</div>';
@@ -2192,10 +2360,8 @@ function saveAICfg(){
   save();closeSheet();render();toast('AI 接口已保存');
 }
 function exportDataJSON(){
-  var blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json;charset=utf-8'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='StudySpace备份_'+today()+'.json';a.click();
-  toast('备份已导出');
+  exportFile({name:'StudySpace备份_'+today()+'.json',content:JSON.stringify(S,null,2),
+    mime:'application/json;charset=utf-8',title:'数据备份'});
 }
 function importDataJSON(input){
   var f=input.files&&input.files[0];if(!f)return;
@@ -2252,7 +2418,7 @@ function pageArchive(){
     '<div class="card"><div class="sec-title">计划归档 <span class="more">'+plans.length+' 条</span></div>'+
       (plans.length?plans.map(archItem).join(''):'<div class="placeholder" style="padding:14px">该月暂无计划归档</div>')+'</div>';
 }
-/* 导出学习数据：生成统计摘要，打印/另存为 PDF（浏览器打印对话框） */
+/* 导出学习数据：App 内预览 + 保存报告文件；浏览器就地打印为 PDF，不跳新页面 */
 function exportStudyPDF(){
   var days=[],i,m;
   for(i=6;i>=0;i--){days.push(shiftDay(-i));}
@@ -2273,22 +2439,21 @@ function exportStudyPDF(){
     '<table style="width:100%;border-collapse:collapse;font-size:12px">'+rows+'</table>'+
     '<h3 style="font-size:13px;margin:16px 0 6px">分科目用时</h3>'+(srows||'<div class="muted">暂无科目</div>')+
     '</div>';
-  sheet('导出学习数据 · PDF',
-    '<div class="tiny muted" style="margin-bottom:10px">下面是学习统计摘要，点「导出 PDF」后在打印窗口选择「另存为 PDF」。</div>'+
+  window.__pdfHtml=reportDoc('StudySpace 学习数据统计',summary);
+  sheet('导出学习数据',
+    '<div class="tiny muted" style="margin-bottom:10px">下面是学习统计摘要。导出全程在 App 内完成，不会跳到新页面。<br>'+
+      '点「保存报告文件」后可选择保存位置；需要 PDF 时用浏览器打开该报告，再打印 / 另存为 PDF。</div>'+
     '<div style="border:1px solid '+C.line+';border-radius:10px;padding:10px;max-height:320px;overflow:auto">'+summary+'</div>',
-    '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="doExportPDF()">导出 PDF</button>');
-  window.__pdfHtml=summary;
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%">'+
+      '<button class="btn primary sm" style="flex:1 1 100%" onclick="saveStudyReport()">保存报告文件</button>'+
+      (isNative()?'':'<button class="btn ghost sm" style="flex:1" onclick="printReport()">打印 / 另存为 PDF</button>')+
+      '<button class="btn ghost sm" style="flex:1" onclick="closeSheet()">取消</button></div>');
 }
-function doExportPDF(){
-  var w=window.open('','_blank');
-  if(!w){toast('请允许弹窗以导出');return;}
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>学习数据统计</title>'+
-    '<style>body{font-family:-apple-system,"Microsoft YaHei",sans-serif;padding:24px;max-width:640px;margin:0 auto}</style>'+
-    '</head><body>'+window.__pdfHtml+'</body></html>');
-  w.document.close();
-  setTimeout(function(){w.print();},300);
-  closeSheet();toast('已在新窗口打开，可另存为 PDF');
+function saveStudyReport(){
+  exportFile({name:'StudySpace学习报告_'+today()+'.html',content:window.__pdfHtml,
+    mime:'text/html;charset=utf-8',title:'学习数据报告'});
 }
+function printReport(){printHtml(window.__pdfHtml);}
 
 /* ============ 渲染主函数 ============ */
 function render(){
