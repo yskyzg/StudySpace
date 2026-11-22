@@ -950,7 +950,7 @@ function capCall(plugin,method,opts){
   return Promise.reject(new Error('no-bridge'));
 }
 /* ============ 专注提醒：系统通知（后台/息屏）+ 前台弹窗 + 提示音 ============ */
-var NOTIFY_ID={focus:4101,rest:4102,fifteen:4103,five:4104,live:4110};
+var NOTIFY_ID={focus:4101,rest:4102,fifteen:4103,five:4104,live:4110,done:4111};
 var NOTIF_CHANNEL='studyspace';
 var NOTIF_LOG=[];
 function nlog(m){NOTIF_LOG.push(m);if(NOTIF_LOG.length>50)NOTIF_LOG.shift();}
@@ -996,7 +996,7 @@ function sendNotif(o){
   }).catch(function(e){nlog('sendNotif 异常='+e);});
 }
 /* 会话常驻通知：一开始专注就挂上（正向/倒计时都有），ongoing 不可被划掉。
-   用固定 id，便于到点时就地替换为「专注完成」，主动结束时静默取消。 */
+   用固定 live id，便于暂停/结束时静默取消；到点完成通知另用 done id，避免预排覆盖常驻。 */
 function startLiveNotify(){
   if(!isNative())return Promise.resolve();
   var s=T.subjectId?subjById(T.subjectId):null,name=s?s.name:'StudySpace';
@@ -1008,18 +1008,26 @@ function startLiveNotify(){
 function cancelNotify(){
   if(!isNative())return Promise.resolve();
   return notifCall('cancel',{notifications:[{id:NOTIFY_ID.focus},{id:NOTIFY_ID.rest},
-    {id:NOTIFY_ID.fifteen},{id:NOTIFY_ID.five},{id:NOTIFY_ID.live}]}).then(function(){nlog('已取消会话通知');})
+    {id:NOTIFY_ID.fifteen},{id:NOTIFY_ID.five},{id:NOTIFY_ID.live},{id:NOTIFY_ID.done}]}).then(function(){nlog('已取消会话通知');})
     .catch(function(e){nlog('取消通知失败='+e);});
+}
+/* 只撤掉指定通知：到点时用「先撤常驻/旧完成通知，再发新完成通知」避免同 id 互相覆盖 */
+function cancelNotifIds(ids){
+  if(!isNative())return Promise.resolve();
+  return notifCall('cancel',{notifications:(ids||[]).map(function(id){return {id:id};})})
+    .catch(function(e){nlog('取消通知失败='+e);return false;});
 }
 /* 预排系统闹钟：息屏/后台也能响。前台不依赖它（各 ROM 会吞横幅），另走应用内弹窗 */
 function rescheduleNotify(){
   if(!isNative()||!T.running||T.mode!=='down'||T.remain<=0)return;
   var focus=T.phase==='focus',s=T.subjectId?subjById(T.subjectId):null;
   var at=new Date(Date.now()+Math.ceil(T.remain)*1000);
-  /* 到点那条用 live id，就地替换「已开始专注」为「专注完成！」，含科目+时长 */
-  sendNotif({id:NOTIFY_ID.live,title:focus?'专注完成！':'休息结束',
+  /* 到点通知用独立 done id：不能和常驻 live 同 id，否则预排会立刻把「已开始专注」覆盖掉，
+     倒计时就看不到常驻通知；独立 id 才能让常驻 + 到点闹钟同时存在，息屏到点照常弹。 */
+  sendNotif({id:NOTIFY_ID.done,title:focus?'专注完成！':'休息结束',
     body:focus?((s?s.name:'StudySpace')+' · 本次专注 '+fmtDur(T.focusMin*60)):
                 '休息结束，继续下一轮专注',
+    ongoing:false,autoCancel:true,
     schedule:{at:at,allowWhileIdle:true}});
   /* 大于 1 小时的倒计时，剩 15 分钟也预排一条系统通知 */
   if(focus&&T.focusMin>60){
@@ -1069,13 +1077,22 @@ function queueAlert(kind){window.__alertQueue=window.__alertQueue||[];if(window.
 function fireNowNotify(kind){
   if(!isNative())return;
   var s=T.subjectId?subjById(T.subjectId):null;
-  /* 到点(end)用 live id 就地替换常驻通知；5/15 分钟、休息结束是补充提醒，用独立 id */
-  var id=kind==='five'?NOTIFY_ID.five:kind==='fifteen'?NOTIFY_ID.fifteen:(kind==='rest'?NOTIFY_ID.rest:NOTIFY_ID.live);
+  /* 到点通知和常驻通知必须用不同 id；否则同 id 预排会立刻覆盖「已开始专注」。
+     5/15 分钟、休息结束本来就是独立补充提醒。 */
+  var id=kind==='five'?NOTIFY_ID.five:kind==='fifteen'?NOTIFY_ID.fifteen:
+         kind==='rest'?NOTIFY_ID.rest:NOTIFY_ID.done;
   var cfg=kind==='five'?{title:'还剩 5 分钟',body:(s?s.name:'StudySpace')+' · 最后 5 分钟，坚持一下'}:
           kind==='fifteen'?{title:'还剩 15 分钟',body:(s?s.name:'StudySpace')+' · 专注即将结束'}:
           kind==='rest'?{title:'休息结束',body:'休息好了，开始下一轮专注吧'}:
           {title:'专注完成！',body:(s?s.name:'StudySpace')+' · 本次专注 '+fmtDur(T.elapsed||T.focusMin*60)};
-  sendNotif({id:id,title:cfg.title,body:cfg.body,schedule:{at:new Date(Date.now()+300),allowWhileIdle:true}});
+  var note={id:id,title:cfg.title,body:cfg.body,ongoing:false,autoCancel:true,
+    schedule:{at:new Date(Date.now()+300),allowWhileIdle:true}};
+  if(kind==='end'){
+    /* 先撤常驻 + 旧预排，再发带实际时长的完成通知，避免两条并存或互相覆盖 */
+    cancelNotifIds([NOTIFY_ID.live,NOTIFY_ID.done]).then(function(){sendNotif(note);});
+  }else{
+    sendNotif(note);
+  }
 }
 function drainAlerts(){
   var q=window.__alertQueue||[];window.__alertQueue=[];
