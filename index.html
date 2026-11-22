@@ -599,6 +599,7 @@ var CLEAN_ITEMS=[
   {k:'all',n:'清空所有数据',d:'科目、计时、目标、计划、错题、复盘、归档、周报、设置全部恢复初始状态',danger:true},
   {k:'sessions',n:'清理计时数据',d:'清空全部专注记录；学习统计、首页趋势、热力图、周报同步更新'},
   {k:'goals',n:'清理学习目标数据',d:'日/周目标恢复默认，清空全部分科目标'},
+  {k:'plans',n:'清空计划',d:'清空全部学习计划；首页待办、计划页同步更新'},
   {k:'subjects',n:'清理科目数据',d:'只删科目定义与分科目标；已有计时/错题记录保留并归为「未分类」'},
   {k:'mistakes',n:'清空错题数据',d:'清空全部错题与复习进度；错题趋势、待复习提醒同步更新'},
   {k:'reviews',n:'清空复盘数据',d:'清空全部每日 / 每周复盘'},
@@ -657,6 +658,7 @@ function performCleanup(keys){
     keys.forEach(function(k){
       if(k==='sessions')S.sessions=[];
       else if(k==='goals'){S.goals={dailyMinutes:120,weeklyMinutes:600};S.subjectGoals={};}
+      else if(k==='plans')S.plans=[];
       else if(k==='subjects'){S.subjects=[];S.subjectGoals={};haltTimerForCleanup(false);}
       else if(k==='mistakes')S.mistakes=[];
       else if(k==='reviews')S.reviews=[];
