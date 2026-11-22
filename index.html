@@ -188,8 +188,6 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .ring-card .lbl{font-size:12px;color:var(--ink2);margin-top:2px}
 .ring-card .val{font-size:11px;color:var(--ink2);margin-top:2px}
 .ring-num{font-size:19px;font-weight:600}
-.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:6px}
-.heat i{aspect-ratio:1;border-radius:4px;background:#EFE7D2}
 .subj-prog{margin-bottom:14px}
 .subj-prog .top{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px;cursor:pointer}
 .subj-prog .track{height:10px;background:#EFE7D2;border-radius:6px;overflow:hidden}
@@ -360,6 +358,39 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .sess-item .ic{width:18px;height:18px;stroke:var(--dai);fill:none;stroke-width:1.7;flex:none}
 .sess-item .nm{flex:1;font-size:13px}
 .sess-item .del{font-size:11px;color:var(--zhe);padding:6px}
+/* AI 助手：提示词栏 / 引导条 / 上下文条 / 外链工具 / 消息内图片 */
+.ai-bar{display:flex;align-items:center;gap:6px;flex:none;margin-bottom:6px}
+.ai-bar .label{font-size:11px;color:var(--ink2);flex:none}
+.ai-bar select{flex:1;min-width:0;font-size:12px;padding:7px 8px;border:1px solid var(--line);
+  border-radius:9px;background:var(--card);color:var(--dai);font-weight:600;font-family:inherit}
+.ai-bar .btn{flex:none}
+.ai-guide{background:var(--dai3);border-radius:9px;padding:8px 11px;font-size:11.5px;
+  color:var(--dai);line-height:1.6;flex:none;margin-bottom:6px}
+.ai-guide span{text-decoration:underline;cursor:pointer}
+.ai-ctx{display:flex;align-items:center;gap:8px;flex:none;margin-bottom:6px;font-size:11px;color:var(--ink2)}
+.ai-ctx span{color:var(--dai);cursor:pointer;text-decoration:underline}
+/* 提示词预设：卡片式列表，默认项高亮 */
+.pr-head{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink2);
+  padding:0 4px 6px;border-bottom:1px solid var(--line)}
+.pr-row{display:flex;align-items:center;gap:8px;padding:10px 9px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:8px;background:var(--card);cursor:pointer}
+.pr-row.def{border-color:var(--dai2);background:var(--dai3)}
+.pr-row .n{flex:1;min-width:0}
+.pr-row .n b{font-size:12.5px;font-weight:600}
+.pr-row .n em{font-style:normal;font-size:10px;color:var(--dai);background:#fff;
+  border:1px solid var(--dai2);border-radius:20px;padding:1px 7px;margin-left:6px}
+.pr-row .n small{display:block;font-size:10.5px;color:var(--ink2);line-height:1.5;
+  margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-row .d{font-size:11px;color:var(--dai);cursor:pointer;padding:4px 6px;border-left:1px solid var(--line)}
+.sess-item .pn{font-size:10px;color:var(--ink2);background:var(--dai3);border-radius:20px;
+  padding:2px 7px;flex:none;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg .bubble img{max-width:100%;border-radius:8px;margin-top:8px;display:block;border:1px solid var(--line)}
+/* 智能提醒：展开后的多条建议 */
+.tip-list{margin-top:8px}
+.tip-row{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)}
+.tip-row:last-child{border-bottom:0}
+.tip-row .t{flex:1;font-size:12px;line-height:1.65}
+.tip-row .go{font-size:11px;color:var(--dai);cursor:pointer;flex:none;padding-top:1px}
 .typing{display:inline-flex;gap:4px;align-items:center}
 .typing i{width:5px;height:5px;border-radius:50%;background:var(--ink2);animation:blink 1s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
@@ -385,6 +416,16 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .cal-legend{display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:10px;color:var(--ink2)}
 .cal-legend span{display:flex;align-items:center;gap:4px}
 .cal-legend i{width:7px;height:7px;border-radius:50%}
+/* 打卡月历：复用计划月历网格，按打卡状态着色 */
+.cal-d.checked{background:var(--dai3);border-color:#CBD9EA}
+.cal-d.hit{background:var(--zhubg);border-color:#E7BDB0}
+.cal-d.checked.today{background:var(--dai);color:#fff;border-color:var(--dai)}
+.cal-d.hit.today{background:var(--zhu);color:#fff;border-color:var(--zhu)}
+.cal-hint{font-size:10.5px;color:var(--ink2);line-height:1.65;margin-top:9px;text-align:center}
+.cal-detail{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:12px;background:var(--card);margin-bottom:10px}
+.cal-detail .n{font-size:19px;font-weight:600;color:var(--dai)}
+.cal-detail .l{font-size:11px;color:var(--ink2);line-height:1.6}
 /* 图表悬浮/触摸提示 */
 #chartTip{position:fixed;z-index:400;pointer-events:none;background:var(--ink);color:#fff;
   font-size:12px;line-height:1.5;padding:7px 11px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.22);
@@ -517,8 +558,31 @@ function updateStatusBar(){
   var d=document.getElementById('dayCount');if(d)d.textContent=studyDays();
 }
 
+/* 内置提示词：首次安装直接带这套，之后完全由用户增删改 */
+var AI_PROMPTS_DEFAULT=[
+  {name:'考公解题助手',text:'你是公考 / 事业单位考试辅导老师。按「审题 → 考点 → 解题步骤 → 易错提醒」四步讲解，简明、有条理。'},
+  {name:'错题讲解',text:'你是耐心的学科老师。结合错题的错因和知识点讲清解题思路，指出同类题的通用方法，最后给一道变式练习。'},
+  {name:'复盘顾问',text:'你是学习复盘顾问。基于用户的专注与错题数据，指出最值得改进的一点，给出明天可执行的三条建议。'},
+  {name:'计划助手',text:'你是学习计划助手。把大任务拆成今天可完成的番茄清单，按优先级排序，每项不超过 25 分钟。'}
+];
 function aiCfgBlank(){
-  return {provider:'',apiKey:'',baseUrl:'',model:'',presets:[],models:[]};
+  return {provider:'',apiKey:'',baseUrl:'',model:'',presets:[],models:[],defaultPrompt:'',
+    prompts:AI_PROMPTS_DEFAULT.map(function(p){return {name:p.name,text:p.text};})};
+}
+function aiPrompts(){
+  var p=(S.aiConfig&&S.aiConfig.prompts)||[];
+  return p.length?p:AI_PROMPTS_DEFAULT;
+}
+/* 提示词库是全局预设；每个会话各存一个 promptName，互不干扰 */
+function getChatPrompt(chat){
+  var ps=aiPrompts();
+  for(var i=0;i<ps.length;i++)if(ps[i].name===(chat&&chat.promptName))return ps[i];
+  for(var j=0;j<ps.length;j++)if(ps[j].name===((S.aiConfig||{}).defaultPrompt))return ps[j];
+  return ps[0]||{name:'',text:''};
+}
+function setChatPrompt(name){
+  var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];if(!chat)return;
+  chat.promptName=name;save();render();toast('本会话已切换提示词');
 }
 /* 提示音配置：start/end/fifteen/five 各自 on 开关 + name（system 或自定义名）+ data（dataURL/空=系统音）
    endAgainOnManual：倒计时到点已响过一次后，再主动点「结束并记录」是否重响 */
@@ -550,7 +614,9 @@ function migrate(s){
   s.soundCfg.endAgainOnManual=!!s.soundCfg.endAgainOnManual;
   if(!s.aiConfig.presets)s.aiConfig.presets=[];
   if(!s.aiConfig.models)s.aiConfig.models=[];
-  if(!s.aiConfig.prompts)s.aiConfig.prompts=[];
+  if(!s.aiConfig.prompts||!s.aiConfig.prompts.length)
+    s.aiConfig.prompts=AI_PROMPTS_DEFAULT.map(function(p){return {name:p.name,text:p.text};});
+  if(typeof s.aiConfig.defaultPrompt!=='string')s.aiConfig.defaultPrompt='';
   s.mistakes.forEach(function(m){
     m.type=m.type||'';m.reason=m.reason||'';m.answer=m.answer||'';
     m.knowledge=m.knowledge||[];m.img=m.img||'';m.answerImg=m.answerImg||'';
@@ -596,14 +662,15 @@ var revFilter='all';                    /* 复盘 */
 var chatOpenId=null;                   /* AI 助手当前会话 */
 /* ============ 选择性清理数据 ============ */
 var CLEAN_ITEMS=[
-  {k:'all',n:'清空所有数据',d:'科目、计时、目标、计划、错题、复盘、归档、周报、设置全部恢复初始状态',danger:true},
+  {k:'all',n:'清空所有数据',d:'科目、计时、目标、计划、错题、复盘、归档、周报、AI 聊天、设置全部恢复初始状态',danger:true},
   {k:'sessions',n:'清理计时数据',d:'清空全部专注记录；学习统计、首页趋势、热力图、周报同步更新'},
   {k:'goals',n:'清理学习目标数据',d:'日/周目标恢复默认，清空全部分科目标'},
   {k:'plans',n:'清空计划',d:'清空全部学习计划；首页待办、计划页同步更新'},
   {k:'subjects',n:'清理科目数据',d:'只删科目定义与分科目标；已有计时/错题记录保留并归为「未分类」'},
   {k:'mistakes',n:'清空错题数据',d:'清空全部错题与复习进度；错题趋势、待复习提醒同步更新'},
   {k:'reviews',n:'清空复盘数据',d:'清空全部每日 / 每周复盘'},
-  {k:'weekly',n:'清空周报数据',d:'清空已保存周报；周报页由计时数据实时生成，会随「清理计时数据」同步变空'}
+  {k:'weekly',n:'清空周报数据',d:'清空已保存周报；周报页由计时数据实时生成，会随「清理计时数据」同步变空'},
+  {k:'chats',n:'清空 AI 聊天记录',d:'清空全部对话与消息；提示词和 AI 接口配置保留'}
 ];
 function openCleanData(){window.__cleanSel={};renderCleanSheet();}
 function renderCleanSheet(){
@@ -652,6 +719,7 @@ function performCleanup(keys){
   var all=keys.indexOf('all')>=0;
   if(all){
     S=makeEmpty();
+    chatOpenId=null;
     haltTimerForCleanup(true);
     archMonth=null;weekOffset=0;
   }else{
@@ -663,6 +731,7 @@ function performCleanup(keys){
       else if(k==='mistakes')S.mistakes=[];
       else if(k==='reviews')S.reviews=[];
       else if(k==='weekly')S.weeklyReports=[];
+      else if(k==='chats'){S.chats=[];chatOpenId=null;}
     });
     weekOffset=0;
   }
@@ -688,6 +757,12 @@ function weekSec(){var t=0;for(var i=0;i<7;i++)t+=secondsOn(shiftDay(-i));return
 function weekMin(){return minutes(weekSec());}
 function streak(){
   var n=0;for(var i=0;i<400;i++){if(secondsOn(shiftDay(-i))>0)n++;else{if(i===0)continue;break;}}return n;
+}
+/* 打卡判定：当天有专注记录（含手动补记）即打卡；达日目标额外标红。
+   计划完成、错题复习不计入打卡；今天未计时不算断。 */
+function checkinMeta(day){
+  var sec=secondsOn(day),goal=(S.goals&&S.goals.dailyMinutes)||0;
+  return {sec:sec,checked:sec>0,goalMet:sec>0&&goal>0&&sec>=goal*60};
 }
 function subjectSec(id,day){return sessionsOn(day).filter(function(s){return s.subjectId===id;}).reduce(function(a,s){return a+(s.seconds||0);},0);}
 function subjectMin(id,day){return minutes(subjectSec(id,day));}
@@ -1487,31 +1562,46 @@ function pageHome(){
       '<div class="foot"><span>'+(done?'已达成今日目标 ✓':'还差 '+fmtDur(Math.max(0,goal*60-tSec))+' 达成')+'</span><span class="num">'+Math.round(pct*100)+'%</span></div>'+
     '</div>'+
     '<div class="kpi"><div class="card"><div class="tiny muted">今日番茄</div><div class="n num">'+pomodorosOn(today())+' <span style="font-size:12px">个</span></div></div>'+
-    '<div class="card"><div class="tiny muted">连续打卡</div><div class="n red num">'+streak()+'</div></div></div>'+
+    '<div class="card" onclick="openCheckinCalendar()" style="cursor:pointer" title="查看打卡日历"><div class="tiny muted">连续打卡 <span style="float:right;color:'+C.dai+'">日历 ›</span></div><div class="n red num">'+streak()+'</div></div></div>'+
     '<div class="card"><div class="sec-title">今天该做 <span class="more" onclick="goTab(\'plan\')">全部 ›</span></div>'+todoHtml+'</div>'+
     '<div class="card"><div class="sec-title">学习趋势 <span class="more" onclick="push(\'stats\')">近 7 天 ›</span></div>'+trendHtml+'</div>'+
     '<div class="ai-tip" onclick="expandTip()"><div class="hd">✦ 智能提醒</div><div id="tipBody">'+tipShort()+'</div></div>';
 }
-/* 智能提醒：全部基于本机真实数据，无数据给引导 */
+/* 智能提醒：全部基于本机真实数据，无数据给引导；每条都带可执行的跳转 */
+function smartTips(){
+  if(!S.subjects.length)return [{t:'还没有科目。先建立科目，就能开始专注与记录目标了。',go:'去建立 ›',page:'subjects'}];
+  if(!S.sessions.length)return [{t:'还没有专注记录。完成第一个番茄后，这里会根据你的数据给出提醒。',go:'去专注 ›',page:'focus'}];
+  var out=[],due=dueMistakes(),undone=S.plans.filter(function(p){return p.date===today()&&!p.done;});
+  if(due.length)out.push({t:'有 '+due.length+' 道错题今天该复习，按 1/3/7 天节奏重做效果最好：'+
+    due.slice(0,2).map(function(m){return m.title||'错题';}).join('、')+(due.length>2?' 等':'')+'。',
+    go:'去复习 ›',page:'mistakes'});
+  if(undone.length)out.push({t:'今天还有 '+undone.length+' 项计划待完成，先做最重要的一件：'+
+    (undone[0].title||'未命名计划')+'。',go:'去计划 ›',page:'plan'});
+  var goal=(S.goals&&S.goals.dailyMinutes)||120,sec=todaySec();
+  if(sec<goal*60)out.push({t:'今日专注 '+fmtDur(sec)+'，距 '+goal+' 分钟目标还差 '+fmtDur(goal*60-sec)+'。',
+    go:'去专注 ›',page:'focus'});
+  var st=streak();
+  if(st>=3)out.push({t:'已连续打卡 '+st+' 天（当天有专注记录即算）。打开打卡日历看看是哪几天。',
+    go:'看日历 ›',page:'goals'});
+  if(!out.length)out.push({t:'今天的任务都完成了，可以复盘一下今天的收获，沉淀成自己的方法。',
+    go:'去复盘 ›',page:'reviews'});
+  return out;
+}
 function tipShort(){
-  var due=dueMistakes().length,undone=S.plans.filter(function(p){return p.date===today()&&!p.done;}).length;
-  if(!S.subjects.length)return '还没有科目。先到「我的 → 科目管理」建立科目，就能开始专注与记录目标了。';
-  if(!S.sessions.length)return '还没有专注记录。完成第一个番茄后，这里会根据你的数据给出提醒。点击展开 ›';
-  if(due)return '有 '+due+' 道错题今天该复习了，按 1/3/7 天节奏重做效果最好。点击展开 ›';
-  if(undone)return '今天还有 '+undone+' 项计划待完成，先做最重要的一件。点击展开 ›';
-  return '今日学习节奏不错，保持连续打卡。点击展开 ›';
+  var t=smartTips()[0];if(!t)return '保持节奏，继续积累。点击展开 ›';
+  var s=t.t;return esc(s.length>36?s.slice(0,36)+'…':s)+' 点击展开 ›';
+}
+function goTipPage(p){
+  if(p==='focus'||p==='plan')goTab(p);else push(p);
 }
 function expandTip(){
   var b=document.getElementById('tipBody');if(!b)return;
   if(b.dataset.open){b.dataset.open='';b.innerHTML=tipShort();return;}
   b.dataset.open='1';
-  var due=dueMistakes(),undone=S.plans.filter(function(p){return p.date===today()&&!p.done;});
-  var html='<b>今日概览</b><br>专注 '+fmtDur(todaySec())+' · '+pomodorosOn(today())+' 个番茄<br>'+
-    '待办计划 '+undone.length+' 项 · 待复习错题 '+due.length+' 道';
-  if(due.length)html+='<br><br><b>建议：</b>优先重做待复习错题：'+esc(due.slice(0,3).map(function(m){return m.title||'错题';}).join('、'))+(due.length>3?' 等':'')+'。';
-  else if(undone.length)html+='<br><br><b>建议：</b>今天先完成 '+esc(undone[0].title)+'，再安排下一项。';
-  else if(S.sessions.length)html+='<br><br><b>建议：</b>今天的任务都完成了，可以复盘一下今天的收获。';
-  html+='<br><span style="color:'+C.dai+'">（点此收起）</span>';
+  var html='<div class="tip-list">'+smartTips().map(function(x){
+    return '<div class="tip-row"><span class="t">'+esc(x.t)+'</span>'+
+      '<span class="go" onclick="event.stopPropagation();goTipPage(\''+x.page+'\')">'+x.go+'</span></div>';
+  }).join('')+'</div><br><span style="color:'+C.dai+'">（点此收起）</span>';
   b.innerHTML=html;
 }
 function togglePlan(id){
@@ -1764,6 +1854,74 @@ function planCalendarHtml(){
     '<span><i style="background:'+C.qing+'"></i>已完成</span><span>点日期查看当天计划</span></div>';
   return h;
 }
+
+/* ============ 打卡月历：与计划月历同款网格，按真实专注记录标记 ============ */
+var checkinCalMonth=null;  /* 'YYYY-MM' */
+function curCheckinMonth(){if(!checkinCalMonth)checkinCalMonth=today().slice(0,7);return checkinCalMonth;}
+function checkinMonthShift(n){
+  var y=parseInt(curCheckinMonth().slice(0,4),10),m=parseInt(curCheckinMonth().slice(5,7),10)+n;
+  var d=new Date(y,m-1,1);checkinCalMonth=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+  /* 弹层里翻月时只重绘弹层，页面上的月历下次渲染也会同步 */
+  var sr=document.getElementById('sheetRoot');
+  if(sr&&sr.innerHTML)openCheckinCalendar();else render();
+}
+function checkinCalendarHtml(){
+  var ym=curCheckinMonth(),y=parseInt(ym.slice(0,4),10),m=parseInt(ym.slice(5,7),10);
+  var firstDow=(new Date(y,m-1,1).getDay()+6)%7;   /* 周一为 0 */
+  var days=new Date(y,m,0).getDate();
+  var t=today(),goal=(S.goals&&S.goals.dailyMinutes)||0;
+  var h='<div class="sec-title">打卡月历 <span class="cal-nav"><span onclick="checkinMonthShift(-1)">‹</span><b>'+y+' 年 '+m+' 月</b><span onclick="checkinMonthShift(1)">›</span></span></div>';
+  h+='<div class="cal-grid">';
+  ['一','二','三','四','五','六','日'].forEach(function(w){h+='<div class="cal-w">'+w+'</div>';});
+  for(var i=0;i<firstDow;i++)h+='<div class="cal-d blank"></div>';
+  for(var d=1;d<=days;d++){
+    var ds=y+'-'+('0'+m).slice(-2)+'-'+('0'+d).slice(-2);
+    var meta=checkinMeta(ds);
+    var cls='cal-d'+(meta.checked?(meta.goalMet?' hit':' checked'):'')+(ds===t?' today':'');
+    var dot=meta.checked?'<div class="dots"><i style="background:'+(meta.goalMet?C.zhu:C.dai)+'"></i></div>':'';
+    var tip=ds+' · '+(meta.checked?fmtDur(meta.sec)+(meta.goalMet?' · 已达标':''):'未打卡');
+    h+='<div class="'+cls+'" title="'+tip+'" onclick="openDayCheckin(\''+ds+'\')"><span>'+d+'</span>'+dot+'</div>';
+  }
+  h+='</div><div class="cal-legend"><span><i style="background:'+C.zhu+'"></i>达标</span>'+
+    '<span><i style="background:'+C.dai+'"></i>已打卡</span><span><i style="background:#EFE7D2"></i>未打卡</span></div>'+
+    '<div class="cal-hint">打卡 = 当天有专注记录（时长 &gt; 0，含手动补记）；达日目标 '+goal+' 分钟标红。今日未学不打断连续。</div>';
+  return h;
+}
+function openCheckinCalendar(){
+  sheet('打卡日历',checkinCalendarHtml(),'<button class="btn primary" onclick="closeSheet()">完成</button>');
+}
+function openDayCheckin(ds){
+  var meta=checkinMeta(ds),sessions=sessionsOn(ds);
+  var bySub={};
+  sessions.forEach(function(s){
+    var k=s.subjectId||'none';bySub[k]=(bySub[k]||0)+(s.seconds||0);
+  });
+  var rows=Object.keys(bySub).map(function(id){
+    var s=subjById(id),n=bySub[id];
+    return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid '+C.line+'">'+
+      '<span><span class="dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+(s?s.color:C.ink2)+';margin-right:6px"></span>'+esc(s?s.name:'未分类')+'</span>'+
+      '<span class="num">'+fmtDur(n)+'</span></div>';
+  }).join('');
+  var body='<div class="cal-detail"><span class="n">'+streakForDay(ds)+'</span>'+
+    '<span class="l">截至当天连续打卡天数<br>'+(meta.checked?'已打卡':'未打卡')+'</span></div>'+
+    '<div class="fld"><label>当日专注</label><div class="tiny" style="font-size:14px;color:'+C.ink+'">'+fmtDur(meta.sec)+
+      ' · '+pomodorosOn(ds)+' 个番茄'+(meta.goalMet?' · 已达标':'')+'</div></div>'+
+    (rows?'<div class="fld"><label>科目分布</label>'+rows+'</div>':
+      '<div class="placeholder" style="padding:14px">这一天没有专注记录</div>');
+  sheet(ds+' · 打卡详情',body,
+    '<button class="btn ghost" onclick="openCheckinCalendar()">返回日历</button>'+
+    '<button class="btn primary" onclick="closeSheet()">完成</button>');
+}
+/* 某天为止的连续打卡天数（用于详情展示，不依赖今天是否已打卡） */
+function streakForDay(day){
+  var n=0,d=day,grace=(day===today());  /* 只有今天尚未打卡时才宽限一天 */
+  for(var i=0;i<400;i++){
+    if(checkinMeta(d).checked)n++;
+    else{if(i===0&&grace){d=shiftDay(-1);continue;}break;}
+    var dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()-1);d=dstr(dt);
+  }
+  return n;
+}
 function openDayPlans(ds){
   var ps=plansOn(ds);
   var body='<div class="tiny muted" style="margin-bottom:10px">'+ds+'</div>';
@@ -1848,13 +2006,6 @@ function saveProfile(){
 function pageGoals(){
   var tm=todayMin(),wm=weekMin(),dg=S.goals.dailyMinutes,wg=S.goals.weeklyMinutes;
   var rings='<div class="rings">'+ringCard('日目标',tm,dg,C.dai)+ringCard('周目标',wm,wg,C.zhu)+'</div>';
-  /* 热力图 近28天 */
-  var heat='';
-  for(var i=27;i>=0;i--){
-    var m=minutesOn(shiftDay(-i));
-    var bg=m===0?'#EFE7D2':m<20?'#CBD6E2':m<40?'#8FA7C0':m<60?'#5E7A9C':C.dai;
-    heat+='<i title="'+shiftDay(-i)+' · '+m+'分" style="background:'+bg+'"></i>';
-  }
   /* 分科目进度 */
   var sp='';
   if(!S.subjects.length){sp='<div class="placeholder" style="padding:16px">还没有科目，先到「科目管理」新建</div>';}
@@ -1878,7 +2029,7 @@ function pageGoals(){
       '<button class="btn primary" onclick="openGoalEditor()">编辑目标</button></div>'+
     rings+
     '<div class="card"><div class="sec-title">连续打卡 <span style="color:'+C.zhu+';font-weight:600" class="num">'+streak()+' 天</span></div>'+
-      '<div class="tiny muted" style="margin-bottom:6px">近 4 周学习热力图 · 颜色越深时长越长</div><div class="heat">'+heat+'</div></div>'+
+      checkinCalendarHtml()+'</div>'+
     '<div class="card"><div class="sec-title">分科目进度 <span class="more" onclick="openGoalEditor()">编辑目标 ›</span></div>'+sp+'</div>';
 }
 function openGoalEditor(){
@@ -2496,10 +2647,13 @@ function askAIMistake(id){
   var sb=subjById(m.subjectId);
   var q='帮我讲解这道'+(sb?sb.name+'':'')+'错题：'+m.title+
     (m.reason?'\n我的错因：'+m.reason:'')+(m.knowledge&&m.knowledge.length?'\n知识点：'+m.knowledge.join('、'):'')+'\n请给出解题思路和易错点。';
-  var chat={id:uid(),title:m.title||'错题提问',createdAt:today(),messages:[{role:'user',text:q,time:nowClock()}]};
-  S.chats.unshift(chat);save();closeSheet();
+  var chat={id:uid(),title:m.title||'错题提问',createdAt:today(),
+    promptName:getChatPrompt(null).name||aiPrompts()[0].name,
+    messages:[{role:'user',text:q,img:m.img||'',time:nowClock()}]};
+  S.chats.unshift(chat);if(S.chats.length>50)S.chats.pop();
+  save();closeSheet();
   chatOpenId=chat.id;push('ai');
-  setTimeout(function(){aiReply(chat.id);},500);
+  aiReply(chat.id);
 }
 function exportMistPDF(){
   /* 只导出当前筛选结果里被勾选的错题 */
@@ -2593,7 +2747,8 @@ function exportReviewTXT(id){
 }
 /* ============ AI 助手（框架 + 模拟回应） ============ */
 function newChat(){
-  var c={id:uid(),title:'新对话',createdAt:today(),messages:[]};
+  var c={id:uid(),title:'新对话',createdAt:today(),
+    promptName:getChatPrompt(null).name||aiPrompts()[0].name,messages:[]};
   S.chats.unshift(c);if(S.chats.length>50)S.chats.pop();
   chatOpenId=c.id;save();render();
 }
@@ -2620,33 +2775,111 @@ function md(text){
   h=h.replace(/(^|\n)(\d+)\.\s/g,'$1$2. ');
   return h;
 }
+function aiGuideHtml(cfg){
+  if(cfg.apiKey&&cfg.baseUrl&&cfg.model)return '';
+  return '<div class="ai-guide">还没配置 AI 接口，当前用本地模拟回应。<span onclick="push(\'settings\')">去设置 →</span></div>';
+}
 function pageAI(){
+  var cfg=S.aiConfig||aiCfgBlank(),prompts=aiPrompts();
   if(!S.chats.length){
-    return '<div class="page-head"><span class="title">AI 助手</span></div>'+
+    return '<div class="page-head"><span class="title">AI 助手</span></div>'+aiGuideHtml(cfg)+
       '<div class="empty"><div class="ic">✦</div><div>还没有对话<br>问一道题、让它帮你复盘都可以</div>'+
       '<button class="btn primary" onclick="newChat()">＋ 新建对话</button></div>';
   }
   if(!chatOpenId||!S.chats.filter(function(c){return c.id===chatOpenId;}).length)chatOpenId=S.chats[0].id;
   var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];
   var msgs=chat.messages.map(function(m){
-    if(m.role==='user')return '<div class="msg user"><div class="av">我</div><div class="bubble">'+md(m.text)+'</div></div>';
-    return '<div class="msg ai"><div class="av">✦</div><div class="bubble">'+md(m.text)+'</div></div>';
+    var bubble='<div class="bubble">'+md(m.text)+(m.img?'<img src="'+m.img+'" onclick="previewImg(this.src)">':'')+'</div>';
+    return m.role==='user'?'<div class="msg user"><div class="av">我</div>'+bubble+'</div>':
+      '<div class="msg ai"><div class="av">✦</div>'+bubble+'</div>';
   }).join('');
+  if(window.__aiThinking===chat.id)
+    msgs+='<div class="msg ai"><div class="av">✦</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span> 正在思考…</div></div>';
+  var curPrompt=getChatPrompt(chat);
+  var promptOpts=prompts.map(function(p){
+    return '<option value="'+esc(p.name)+'"'+(p.name===curPrompt.name?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');
+  var ctxLen=chat.messages.reduce(function(a,m){return a+(m.text||'').length;},0);
+  var ctx='<div class="ai-ctx">上下文 '+chat.messages.length+' 条 · 约 '+ctxLen+' 字'+
+    (chat.messages.length>=4?' · <span onclick="compressChat()">压缩</span>':'')+
+    ' · <span onclick="viewChatCtx()">查看</span></div>';
   return '<div class="chat-wrap">'+
     '<div class="page-head" style="flex:none;margin:6px 0 4px"><span class="back" onclick="back()">‹</span><span class="title">'+esc(chat.title)+'</span>'+
       '<span class="more" style="color:'+C.dai+';font-size:12px;cursor:pointer" onclick="chatMenu()">会话 ▾</span></div>'+
-    (chat.messages.length>=4?'<div class="insight" style="margin-bottom:8px;flex:none">已进行 '+chat.messages.length+' 条消息 · '+
-      '<span style="cursor:pointer;text-decoration:underline" onclick="compressChat()">压缩上下文</span></div>':'')+
+    '<div class="ai-bar"><span class="label">提示词</span><select id="aiPromptSel" onchange="setChatPrompt(this.value)">'+promptOpts+'</select>'+
+      '<button class="btn ghost sm" onclick="openAIPrompts()">预设</button></div>'+
+    aiGuideHtml(cfg)+ctx+
     '<div class="chat-list" id="chatList">'+msgs+'</div>'+
     '<div class="chat-input"><textarea id="chatText" placeholder="输入问题，Ctrl+Enter 发送" onkeydown="if(event.ctrlKey&&event.key===\'Enter\'){sendChat();}"></textarea>'+
       '<button class="btn primary" style="padding:0 18px;flex:none" onclick="sendChat()">发送</button></div>'+
     '</div>';
+}
+function openAIPrompts(){
+  var ps=aiPrompts(),def=(S.aiConfig||{}).defaultPrompt||ps[0].name;
+  var h='<div class="tiny muted" style="margin-bottom:8px;line-height:1.7">'+
+    '这里是全局预设库。每个会话在「AI 助手」里单独选择提示词，互不影响；点名称可设为新会话默认。</div>'+
+    '<div class="pr-head"><span>预设名称</span><span>操作</span></div>';
+  ps.forEach(function(p,i){
+    var isDef=p.name===def;
+    h+='<div class="pr-row'+(isDef?' def':'')+'"><span class="n" onclick="setDefaultPrompt('+i+')">'+
+      '<b>'+esc(p.name)+'</b>'+(isDef?'<em>默认</em>':'')+'<small>'+esc(p.text.slice(0,32))+(p.text.length>32?'…':'')+'</small></span>'+
+      '<span class="d" onclick="editAIPrompt('+i+')">改</span>'+
+      '<span class="d" onclick="delAIPrompt('+i+')">删</span></div>';
+  });
+  sheet('提示词预设',h,'<button class="btn ghost" onclick="closeSheet()">完成</button>'+
+    '<button class="btn primary" onclick="editAIPrompt(-1)">＋ 新增预设</button>');
+}
+function setDefaultPrompt(i){
+  var p=aiPrompts()[i];if(!p)return;
+  S.aiConfig.defaultPrompt=p.name;save();openAIPrompts();toast('已设为新会话默认提示词');
+}
+function editAIPrompt(i){
+  var ps=aiPrompts(),p=ps[i]||{name:'',text:''};
+  window.__aiEditIdx=i;
+  var body='<div class="fld"><label>名称</label><input id="prName" value="'+esc(p.name)+'" placeholder="例如：考公解题助手"></div>'+
+    '<div class="fld"><label>提示词内容</label><textarea id="prText" style="width:100%;min-height:120px;border:1px solid var(--line);'+
+    'border-radius:10px;padding:10px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);resize:vertical;line-height:1.6">'+esc(p.text)+'</textarea></div>';
+  sheet(i<0?'新增提示词':'编辑提示词',body,
+    '<button class="btn ghost" onclick="openAIPrompts()">返回</button><button class="btn primary" onclick="saveAIPrompt()">保存</button>');
+}
+function saveAIPrompt(){
+  var n=(document.getElementById('prName')||{}).value, t=(document.getElementById('prText')||{}).value;
+  n=(n||'').trim();t=(t||'').trim();
+  if(!n||!t){toast('名称和内容都要填');return;}
+  var ps=aiPrompts().slice(),i=window.__aiEditIdx;
+  var old=(i>=0&&i<ps.length)?ps[i].name:'';
+  if(i>=0&&i<ps.length)ps[i]={name:n,text:t};else ps.push({name:n,text:t});
+  S.aiConfig.prompts=ps;
+  if(old&&old!==n){
+    if(S.aiConfig.defaultPrompt===old)S.aiConfig.defaultPrompt=n;
+    (S.chats||[]).forEach(function(c){if(c.promptName===old)c.promptName=n;});
+  }
+  save();openAIPrompts();toast('已保存预设');
+}
+function delAIPrompt(i){
+  var ps=aiPrompts().slice();
+  if(ps.length<=1){toast('至少保留一条预设');return;}
+  var old=ps[i].name;
+  confirmDo('删除预设「'+old+'」？','使用这个预设的会话会回到新会话默认提示词，对话记录不受影响。',function(){
+    ps.splice(i,1);S.aiConfig.prompts=ps;
+    if(S.aiConfig.defaultPrompt===old)S.aiConfig.defaultPrompt=ps[0].name;
+    save();openAIPrompts();toast('已删除');});
+}
+function viewChatCtx(){
+  var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];if(!chat)return;
+  var p=getChatPrompt(chat);
+  var text='【提示词 · '+p.name+'】'+p.text+'\n\n'+chat.messages.map(function(m){
+    return (m.role==='user'?'我：':'AI：')+(m.text||'')+(m.img?'[附图]':'');}).join('\n\n');
+  sheet('当前上下文','<div class="tiny muted" style="line-height:1.7;white-space:pre-wrap;background:#fff;'+
+    'border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-height:52vh;overflow:auto">'+esc(text)+'</div>',
+    '<button class="btn ghost" onclick="closeSheet()">关闭</button><button class="btn primary" onclick="copyText(window.__ctxText||\'\',\'已复制上下文\')">复制</button>');
+  window.__ctxText=text;
 }
 function chatMenu(){
   var h='<div class="sess-item" onclick="newChat()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="nm">＋ 新建对话</span></div>';
   S.chats.forEach(function(c){
     h+='<div class="sess-item" onclick="openChat(\''+c.id+'\')"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+
       '<span class="nm" style="font-size:'+(c.id===chatOpenId?'13.5px;color:'+C.dai+';font-weight:600':'13px')+'">'+esc(c.title)+'</span>'+
+      '<span class="pn">'+esc(getChatPrompt(c).name||'默认')+'</span>'+
       '<span class="del" onclick="event.stopPropagation();renameChat(\''+c.id+'\')">改名</span>'+
       '<span class="del" onclick="event.stopPropagation();delChat(\''+c.id+'\')">删除</span></div>';
   });
@@ -2660,27 +2893,79 @@ function sendChat(){
   chat.messages.push({role:'user',text:text,time:nowClock()});
   if(chat.messages.length===1)chat.title=text.slice(0,14);
   inp.value='';save();render();
-  setTimeout(function(){aiReply(chat.id);},600);
+  aiReply(chat.id);
 }
-/* 模拟 AI 回应：按关键词匹配模板，个人版不接真实 API */
+/* App 内用原生 HTTP 绕过 WebView 跨域，浏览器里退回 fetch */
+function httpGetJson(url,headers){
+  if(isNative()){
+    return capCall('CapacitorHttp','request',{url:url,method:'GET',headers:headers||{}})
+      .then(function(r){
+        if(r&&r.statusCode&&(r.statusCode<200||r.statusCode>=300))throw new Error('HTTP '+r.statusCode);
+        return (r&&typeof r.data==='string')?JSON.parse(r.data):(r&&r.data)||r;});
+  }
+  return fetch(url,{headers:headers||{}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+}
+/* 真实接口：OpenAI 兼容 /chat/completions；失败时降级为本地模拟，不吞错 */
+function callAIAPI(chat,cfg){
+  var p=getChatPrompt(chat);
+  var msgs=[{role:'system',content:p.text}];
+  chat.messages.slice(-20).forEach(function(m){
+    var c=m.text||'';
+    if(m.img&&/vl|vision|4o|gemini|plus/i.test(cfg.model||''))
+      c=[{type:'text',text:c},{type:'image_url',image_url:{url:m.img}}];
+    msgs.push({role:m.role==='user'?'user':'assistant',content:c});
+  });
+  var url=String(cfg.baseUrl).replace(/\/+$/,'')+'/chat/completions';
+  var headers={'Content-Type':'application/json','Authorization':'Bearer '+cfg.apiKey};
+  var body={model:cfg.model,messages:msgs,temperature:0.7};
+  /* App 内走原生 HTTP，绕过 WebView 跨域限制；浏览器里用 fetch */
+  if(isNative()){
+    return capCall('CapacitorHttp','request',{url:url,method:'POST',headers:headers,data:body})
+      .then(function(r){
+        if(r&&r.statusCode&&(r.statusCode<200||r.statusCode>=300))throw new Error('HTTP '+r.statusCode);
+        var j=(r&&typeof r.data==='string')?JSON.parse(r.data):(r&&r.data)||r;
+        var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+        if(!t)throw new Error('返回内容为空');return t;});
+  }
+  return fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(j){
+      var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(!t)throw new Error('返回内容为空');return t;});
+}
+/* 本地模拟：只作无接口时的兜底，按当前提示词与问题关键词匹配 */
+function aiMockReply(q,chat){
+  var pn=getChatPrompt(chat).name||'';
+  if(/错题/.test(pn)||/错题|复习|记不住/.test(q))
+    return '错题要**按节奏复习**才有效：\n1. 当天弄懂错因和正解\n2. 按 1/3/7 天重做一遍\n3. 能独立讲清楚才算掌握\n\n在错题本里点「已复习」，我会自动帮你排下次复习时间。';
+  if(/计划/.test(pn)||/计划|安排|效率|拖延/.test(q))
+    return '给你一个**专注安排建议**：\n1. 把最难的任务放在精力最好的时段\n2. 用 25 分钟番茄切分，中间休息 5 分钟\n3. 每天最多定 3 项必须完成的计划\n\n先完成最重要的那一件，比做满十条清单更有用。';
+  if(/复盘/.test(pn)||/复盘|总结|进步/.test(q))
+    return '一份好的**每日复盘**包含四部分：\n1. 完成情况：今天做了什么\n2. 困难不足：卡在哪里\n3. 改进措施：下次怎么做\n4. 明日重点：最重要的一件事\n\n坚持两周，你就能看到自己的进步轨迹。';
+  if(/主旨|中心|阅读/.test(q))
+    return '**主旨概括题**可以这样解：\n1. 先看首句和尾句，中心句常在两端\n2. 找高频词，它往往指向主题\n3. 排除只概括局部、或以偏概全的选项\n\n记住：例子、数据、引用都是佐证，不是主旨。';
+  return '我理解你想问的是「'+q.slice(0,20)+(q.length>20?'…':'')+'」。\n\n建议你先拆分问题，从最关键的一步入手。如果能告诉我具体科目或题型，我可以给更针对性的方法。\n\n（当前为本地模拟回应，配置真实 AI 接口后可获得完整能力）';
+}
 function aiReply(chatId){
   var chat=S.chats.filter(function(c){return c.id===chatId;})[0];if(!chat)return;
-  var last=chat.messages[chat.messages.length-1];
-  var q=(last&&last.text)||'';
-  var ans='';
-  if(/主旨|中心|阅读/.test(q)){
-    ans='**主旨概括题**可以这样解：\n1. 先看首句和尾句，中心句常在两端\n2. 找高频词，它往往指向主题\n3. 排除只概括局部、或以偏概全的选项\n\n记住：例子、数据、引用都是佐证，不是主旨。';
-  }else if(/错题|复习|记不住/.test(q)){
-    ans='错题要**按节奏复习**才有效：\n1. 当天弄懂错因和正解\n2. 按 1/3/7 天重做一遍\n3. 能独立讲清楚才算掌握\n\n在错题本里点「已复习」，我会自动帮你排下次复习时间。';
-  }else if(/计划|安排|效率|拖延/.test(q)){
-    ans='给你一个**专注安排建议**：\n1. 把最难的任务放在精力最好的时段\n2. 用 25 分钟番茄切分，中间休息 5 分钟\n3. 每天最多定 3 项必须完成的计划\n\n先完成最重要的那一件，比做满十条清单更有用。';
-  }else if(/复盘|总结|进步/.test(q)){
-    ans='一份好的**每日复盘**包含四部分：\n1. 完成情况：今天做了什么\n2. 困难不足：卡在哪里\n3. 改进措施：下次怎么做\n4. 明日重点：最重要的一件事\n\n坚持两周，你就能看到自己的进步轨迹。';
-  }else{
-    ans='我理解你想问的是「'+q.slice(0,20)+(q.length>20?'…':'')+'」。\n\n建议你先拆分问题，从最关键的一步入手。如果能告诉我具体科目或题型，我可以给更针对性的方法。\n\n（当前为本地模拟回应，配置真实 AI 接口后可获得完整能力）';
+  var cfg=S.aiConfig||aiCfgBlank();
+  var last=chat.messages[chat.messages.length-1]||{};
+  var q=last.text||'';
+  function finish(ans){
+    if(window.__aiThinking===chatId)window.__aiThinking='';
+    chat.messages.push({role:'ai',text:ans,time:nowClock()});
+    save();render();scrollChat();
   }
-  chat.messages.push({role:'ai',text:ans,time:nowClock()});
-  save();render();scrollChat();
+  if(cfg.apiKey&&cfg.baseUrl&&cfg.model){
+    window.__aiThinking=chatId;
+    if(curPage()==='ai')render();
+    callAIAPI(chat,cfg).then(finish).catch(function(err){
+      finish('⚠️ 接口调用失败（'+(err&&err.message||'网络或跨域受限')+'），已用本地模拟回应继续：\n\n'+aiMockReply(q,chat));
+    });
+  }else{
+    finish(aiMockReply(q,chat));
+  }
 }
 function compressChat(){
   var chat=S.chats.filter(function(c){return c.id===chatOpenId;})[0];if(!chat)return;
@@ -2697,7 +2982,8 @@ function pageSettings(){
       '<div class="menu-item" onclick="exportStudyPDF()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg><span>导出学习数据（报告 / PDF）</span><span class="arw">›</span></div>'+
       '<div class="menu-item" onclick="push(\'archive\')"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg><span>归档（已存 '+ac.length+' 条）</span><span class="arw">›</span></div></div>'+
     '<div class="card"><div class="sec-title">AI 接口</div>'+
-      '<div class="menu-item" onclick="openAICfg()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg><span>'+(cfg.apiKey?'已配置 · '+(cfg.provider||'')+(cfg.model?' · '+cfg.model:''):'未配置（当前用模拟回应）')+'</span><span class="arw">›</span></div>'+
+      '<div class="menu-item" onclick="openAICfg()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg><span>'+((cfg.apiKey&&cfg.baseUrl&&cfg.model)?'已配置 · '+(cfg.provider||'')+(cfg.model?' · '+cfg.model:''):'未配置（当前用模拟回应）')+'</span><span class="arw">›</span></div>'+
+      '<div class="menu-item" onclick="openAIPrompts()"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/><path d="M18 15l2 2-2 2"/></svg><span>提示词预设（'+aiPrompts().length+' 条）</span><span class="arw">›</span></div>'+
       '<div class="tiny muted" style="padding:8px 14px">仅适合个人设备使用，本地存储非加密保险箱</div></div>'+
     '<div class="card"><div class="sec-title">数据</div>'+
       '<div class="menu-item" onclick="exportDataJSON()"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg><span>导出备份（JSON）</span><span class="arw">›</span></div>'+
@@ -2909,8 +3195,7 @@ function pullAIModels(btn){
   var url=d.baseUrl.replace(/\/+$/,'')+'/models';
   if(btn){btn.textContent='拉取中…';btn.disabled=true;}
   var headers={};if(d.apiKey)headers['Authorization']='Bearer '+d.apiKey;
-  fetch(url,{headers:headers}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(j){
+  httpGetJson(url,headers).then(function(j){
       var ids=(j.data||[]).map(function(m){return m.id;}).filter(Boolean);
       if(!ids.length)throw new Error('返回列表为空');
       S.aiConfig.models=ids;save();

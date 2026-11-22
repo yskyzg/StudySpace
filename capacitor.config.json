@@ -9,6 +9,9 @@
   "plugins": {
     "LocalNotifications": {
       "iconColor": "#33577F"
+    },
+    "CapacitorHttp": {
+      "enabled": true
     }
   }
 }
