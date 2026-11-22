@@ -594,7 +594,82 @@ var statRange=7,statSubject='',statType=''; /* 统计页：科目 + 题型联动
 var mistSubject='',mistType='',mistBatch=false,mistSel={}; /* 错题本 */
 var revFilter='all';                    /* 复盘 */
 var chatOpenId=null;                   /* AI 助手当前会话 */
-function resetEmpty(){confirmDo('清空全部数据？','将删除所有科目、学习记录、计划、目标与归档，回到空白状态。此操作不可撤销。',function(){S=makeEmpty();archMonth=null;save();render();toast('已清空，现在是空白状态');});}
+/* ============ 选择性清理数据 ============ */
+var CLEAN_ITEMS=[
+  {k:'all',n:'清空所有数据',d:'科目、计时、目标、计划、错题、复盘、归档、周报、设置全部恢复初始状态',danger:true},
+  {k:'sessions',n:'清理计时数据',d:'清空全部专注记录；学习统计、首页趋势、热力图、周报同步更新'},
+  {k:'goals',n:'清理学习目标数据',d:'日/周目标恢复默认，清空全部分科目标'},
+  {k:'subjects',n:'清理科目数据',d:'只删科目定义与分科目标；已有计时/错题记录保留并归为「未分类」'},
+  {k:'mistakes',n:'清空错题数据',d:'清空全部错题与复习进度；错题趋势、待复习提醒同步更新'},
+  {k:'reviews',n:'清空复盘数据',d:'清空全部每日 / 每周复盘'},
+  {k:'weekly',n:'清空周报数据',d:'清空已保存周报；周报页由计时数据实时生成，会随「清理计时数据」同步变空'}
+];
+function openCleanData(){window.__cleanSel={};renderCleanSheet();}
+function renderCleanSheet(){
+  var sel=window.__cleanSel||{},n=0;
+  CLEAN_ITEMS.forEach(function(o){if(sel[o.k])n++;});
+  var body='<div class="tiny muted" style="margin-bottom:10px;line-height:1.7">勾选要清理的项目，确认后立即生效且不可撤销。</div>';
+  CLEAN_ITEMS.forEach(function(o){
+    var on=!!sel[o.k];
+    body+='<div class="set-row" style="border-bottom:1px solid '+C.line+';padding:11px 2px" onclick="toggleCleanSel(\''+o.k+'\')">'+
+      '<span class="lbl"'+(o.danger?' style="color:'+C.zhe+'"':'')+'>'+o.n+'<small>'+o.d+'</small></span>'+
+      '<span class="chk'+(on?' on':'')+'" style="'+(on?'background:'+(o.danger?C.zhe:C.dai)+';border-color:'+(o.danger?C.zhe:C.dai):'')+'">'+(on?'✓':'')+'</span></div>';
+  });
+  sheet('清理数据',body,
+    '<button class="btn '+(n?'danger':'ghost')+' block" onclick="doCleanData()">确认清理（已选 '+n+' 项）</button>');
+}
+function toggleCleanSel(k){
+  var sel=window.__cleanSel=window.__cleanSel||{};
+  if(k==='all'){var on=!sel.all;window.__cleanSel={all:on};}
+  else{sel.all=false;sel[k]=!sel[k];}
+  renderCleanSheet();
+}
+function doCleanData(){
+  var sel=window.__cleanSel||{},keys=[];
+  CLEAN_ITEMS.forEach(function(o){if(sel[o.k])keys.push(o.k);});
+  if(!keys.length){toast('请先选择要清理的项目');return;}
+  var all=keys.indexOf('all')>=0;
+  var names=all?'全部数据':keys.map(function(k){
+    var f=CLEAN_ITEMS.filter(function(o){return o.k===k;})[0];return f?f.n:k;}).join('、');
+  confirmDo(all?'清空所有数据？':'确认清理？',
+    '将清理：'+names+'。此操作不可撤销，请先确认已备份需要保留的数据。',
+    function(){performCleanup(keys);});
+}
+/* 停表并清掉当前会话状态：清理科目/全部数据时必须调用，避免继续记到已不存在的科目 */
+function haltTimerForCleanup(fullReset){
+  var invalid=!subjById(T.subjectId);
+  T.running=false;
+  T.elapsed=0;T.overtime=0;T.baseOvertime=0;T.baseElapsed=0;T.runStart=0;
+  T.phase='focus';resetAlertFlags();closeAlert();window.__alertQueue=[];
+  cancelNotify();
+  if(fullReset){
+    T.mode='down';T.focusMin=25;T.restMin=5;T.subjectId=null;
+  }else if(invalid){T.subjectId=null;}
+  T.remain=T.focusMin*60;T.baseRemain=T.remain;
+}
+function performCleanup(keys){
+  var all=keys.indexOf('all')>=0;
+  if(all){
+    S=makeEmpty();
+    haltTimerForCleanup(true);
+    archMonth=null;weekOffset=0;
+  }else{
+    keys.forEach(function(k){
+      if(k==='sessions')S.sessions=[];
+      else if(k==='goals'){S.goals={dailyMinutes:120,weeklyMinutes:600};S.subjectGoals={};}
+      else if(k==='subjects'){S.subjects=[];S.subjectGoals={};haltTimerForCleanup(false);}
+      else if(k==='mistakes')S.mistakes=[];
+      else if(k==='reviews')S.reviews=[];
+      else if(k==='weekly')S.weeklyReports=[];
+    });
+    weekOffset=0;
+  }
+  /* 所有筛选/选中态同步复位，避免清理后统计页仍停在旧科目/旧题型 */
+  statSubject='';statType='';mistSubject='';mistType='';mistBatch=false;mistSel={};revFilter='all';
+  window.__cleanSel={};
+  save();saveFocus();render();
+  toast(all?'已清空全部数据，现在是空白状态':'已清理 '+keys.length+' 项数据');
+}
 
 /* ============ 统计 ============ */
 /* 统计：可选 subjectId 过滤，不传则为全体科目 */
@@ -2630,7 +2705,7 @@ function pageSettings(){
     '<div class="card"><div class="sec-title">关于</div>'+
       '<div class="menu-item" onclick="push(\'about\')"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><span>关于 StudySpace</span><span class="arw">›</span></div></div>'+
     '<div class="card"><div class="sec-title" style="color:'+C.zhe+'">危险区</div>'+
-      '<div class="menu-item" onclick="resetEmpty()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清空全部数据</span><span class="arw">›</span></div></div>';
+      '<div class="menu-item" onclick="openCleanData()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清理数据（可选择清理项）</span><span class="arw">›</span></div></div>';
 }
 /* 关于页：版本信息 / 开源协议 / 免责协议 / 使用方法（内容待补） */
 function pageAbout(){
