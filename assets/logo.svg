@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>StudySpace</title>
+  <!-- 计时圆环：黛蓝主色 -->
+  <circle cx="512" cy="512" r="352" fill="none" stroke="#33577F" stroke-width="76"/>
+  <!-- 起点：朱红 -->
+  <circle cx="512" cy="160" r="46" fill="#BE3E2B"/>
+  <!-- 打开的书 -->
+  <path d="M512 430 C 446 386, 348 384, 286 422 L 286 636 C 348 598, 446 600, 512 646 Z" fill="#33577F"/>
+  <path d="M512 430 C 578 386, 676 384, 738 422 L 738 636 C 676 598, 578 600, 512 646 Z" fill="#33577F"/>
+  <!-- 书脊 -->
+  <rect x="502" y="430" width="20" height="216" rx="10" fill="#FFFDF7"/>
+  <!-- 书页文字线 -->
+  <path d="M330 486 H458 M330 536 H458 M566 486 H694 M566 536 H694" stroke="#FFFDF7" stroke-width="12" stroke-linecap="round" opacity="0.72"/>
+  <!-- 藤黄点缀 -->
+  <circle cx="512" cy="486" r="21" fill="#C4972C"/>
+</svg>

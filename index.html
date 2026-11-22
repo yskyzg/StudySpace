@@ -57,6 +57,10 @@ body{
 .page-head .title{font-size:16px;font-weight:600;flex:1;text-align:center;margin-right:40px}
 .hero-title{font-size:20px;font-weight:600;color:var(--dai);margin:4px 0 2px}
 .hero-sub{font-size:11.5px;color:var(--ink2);margin-bottom:14px}
+/* 页面主操作固定在内容顶部，条目再多也不用翻到底 */
+.page-actions{display:flex;gap:8px;margin:0 0 12px;padding:6px 0;position:sticky;top:0;z-index:8;
+  background:linear-gradient(180deg,var(--paper) 72%,rgba(246,241,229,0))}
+.page-actions .btn{flex:1 1 0;min-width:0;padding:0 10px;min-height:42px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
   padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
 .sec-title{font-size:14px;font-weight:600;margin:2px 0 10px;display:flex;align-items:center;justify-content:space-between}
@@ -127,6 +131,9 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .dial-center .phase{font-size:12px;color:var(--ink2)}
 .dial-center .time{font-size:46px;font-weight:600;letter-spacing:1px;margin:2px 0}
 .dial-center .subj{font-size:12px;color:var(--dai);display:flex;align-items:center;gap:6px}
+.dial-center .total{font-size:11px;color:var(--zhu);margin-top:1px;min-height:14px}
+.dial-center.over .phase{color:var(--zhu);font-weight:600}
+.dial-center.over .time{color:var(--zhu);font-size:40px}
 .focus-actions{display:flex;gap:10px;margin-bottom:8px}
 .focus-actions .btn{flex:1 1 0;min-width:0;padding:0 8px}
 .record-link{display:block;text-align:center;color:var(--dai);font-size:12px;padding:8px;cursor:pointer}
@@ -653,15 +660,58 @@ function push(page,arg){archOpenPop=null;R.stack.push({page:page,arg:arg});rende
 function back(){archOpenPop=null;if(R.stack.length)R.stack.pop();render();}
 function curPage(){return R.stack.length?R.stack[R.stack.length-1].page:null;}
 
+/* ============ 硬件返回键：浮层 → 页面栈 → 切首页 → 双击退出 ============ */
+function handleBack(){
+  if(typeof closePicker==='function'&&document.getElementById('pickerPop')){closePicker();return;}
+  if(typeof archOpenPop!=='undefined'&&archOpenPop){archOpenPop=null;render();return;}
+  var sr=document.getElementById('sheetRoot'),cr=document.getElementById('confirmRoot');
+  if((sr&&sr.innerHTML)||(cr&&cr.innerHTML)){closeSheet();return;}
+  if(R.stack.length){back();return;}
+  if(R.tab!=='home'){goTab('home');return;}
+  var now=Date.now();
+  if(now-(window.__lastBack||0)<2200){
+    window.__lastBack=0;
+    capCall('App','exitApp',{}).catch(function(){});
+  }else{
+    window.__lastBack=now;toast('再按一次退出 StudySpace');
+  }
+}
+function initBackButton(){
+  if(isNative()){
+    var C=window.Capacitor;
+    try{
+      if(C&&typeof C.addListener==='function')C.addListener('App','backButton',function(){handleBack();});
+      else if(C&&typeof C.nativeCallback==='function')
+        C.nativeCallback('App','addListener',{eventName:'backButton'},function(){handleBack();});
+    }catch(e){}
+  }else{
+    try{
+      history.pushState({studyspace:1},'');
+      window.addEventListener('popstate',function(){
+        history.pushState({studyspace:1},'');handleBack();
+      });
+    }catch(e){}
+  }
+}
+initBackButton();
+
 /* ============ 计时器（基于时间戳：息屏/后台也能持续计时） ============ */
 /* runStart: 本段计时开始时刻(ms)；baseElapsed/baseRemain: 开始时刻的累计值
    每次 tick 用 Date.now()-runStart 反推真实流逝秒数，不依赖 setInterval 的触发次数。
    浏览器/系统在后台会冻结 setInterval，但时间戳照常走，回前台一次性补算。 */
 var T={mode:'down',subjectId:null,focusMin:25,restMin:5,running:false,phase:'focus',remain:25*60,elapsed:0,
-       runStart:0,baseElapsed:0,baseRemain:25*60};
+       runStart:0,baseElapsed:0,baseRemain:25*60,overtime:0,baseOvertime:0};
 var timerId=null;
 function fmtSec(s){s=Math.max(0,Math.floor(s));var m=Math.floor(s/60),ss=s%60;return ('0'+m).slice(-2)+':'+('0'+ss).slice(-2);}
 function phaseTotal(){return (T.phase==='rest'?T.restMin:T.focusMin)*60;}
+/* 主按钮文案：没开始 / 暂停中 / 运行中 —— 暂停后明确显示「继续」 */
+function timerActionLabel(){
+  if(T.running)return '暂停';
+  var started=T.elapsed>0||T.overtime>0||
+    (T.mode==='down'&&T.remain<(T.phase==='focus'?T.focusMin:T.restMin)*60);
+  if(!started)return '开始专注';
+  return T.phase==='focus'?'继续专注':'继续休息';
+}
 /* 把「从本段开始累计流逝的秒数」换算成当前显示值。
    runStart 固定为本段开始时刻，delta 是累计值（不是每帧增量），
    所以息屏/后台被冻结多少次都不丢秒；必要时跨多个专注/休息段。 */
@@ -677,16 +727,31 @@ function advanceTimer(now){
       break;
     }
     var dur=T.baseRemain;
-    if(!(dur>0)){dur=phaseTotal();T.baseRemain=dur;}   /* 防止 0 时长导致死循环 */
+    if(T.phase==='focus'&&!(dur>0)){
+      /* 超时后暂停再继续：remain 已为 0，继续正向累计超出部分，不重起一轮倒计时 */
+      T.overtime=T.baseOvertime+delta;
+      T.remain=0;
+      T.elapsed=T.baseElapsed+delta;
+      break;
+    }
+    if(!(dur>0)){dur=phaseTotal();T.baseRemain=dur;}   /* 休息段兜底，防止 0 时长死循环 */
     if(delta<dur){
       T.remain=dur-delta;
       T.elapsed=T.baseElapsed+(T.phase==='focus'?delta:0);
+      T.overtime=0;
       break;
     }
-    /* 本段走完：记录专注、切换阶段，溢出秒数继续推进到下一段 */
+    if(T.phase==='focus'){
+      /* 倒计时到点不自动切休息：超出部分继续正向累计，结束时一次记录总时长 */
+      T.overtime=delta-dur;
+      T.remain=0;
+      T.elapsed=T.baseElapsed+dur+T.overtime;
+      break;
+    }
+    /* 休息走完自动回到下一轮专注（不记录专注时长） */
     delta-=dur;
-    if(T.phase==='focus'){recordSession(T.baseElapsed+dur);T.phase='rest';}
-    else{T.phase='focus';}
+    T.phase='focus';
+    T.overtime=0;
     T.baseElapsed=0;
     T.baseRemain=phaseTotal();
     T.runStart+=dur*1000;                  /* 精确推进到下一段起点，保留毫秒余量 */
@@ -699,7 +764,8 @@ function syncTimer(){
   var changed=advanceTimer(Date.now());
   if(changed){
     persistTimer();
-    if(document.getElementById('toast'))toast(T.phase==='rest'?'专注完成！已自动记录，进入休息':'休息结束，开始下一轮专注');
+    rescheduleNotify();
+    if(document.getElementById('toast'))toast('休息结束，开始下一轮专注');
   }else if(!T._lastPersist||Date.now()-T._lastPersist>5000){
     persistTimer();T._lastPersist=Date.now(); /* 轻量落盘，被系统杀掉也能续上 */
   }
@@ -714,35 +780,50 @@ document.addEventListener('visibilitychange',function(){
 window.addEventListener('pagehide',persistTimer);
 window.addEventListener('pageshow',function(){syncTimer();});
 function updateTimerUI(){
-  var tm=document.getElementById('dialTime');if(tm)tm.textContent=fmtSec(T.mode==='down'?T.remain:T.elapsed);
+  var over=T.mode==='down'&&T.phase==='focus'&&T.overtime>0;
+  var s=T.subjectId?subjById(T.subjectId):null;
+  var tm=document.getElementById('dialTime');
+  if(tm)tm.textContent=over?'+'+fmtSec(T.overtime):fmtSec(T.mode==='down'?T.remain:T.elapsed);
+  var dc=document.querySelector('.dial-center');if(dc)dc.classList.toggle('over',over);
+  var tt=document.getElementById('dialTotal');
+  if(tt)tt.textContent=over?('总计 '+fmtDur(T.elapsed)):(T.mode==='up'?'已专注 '+fmtDur(T.elapsed):'');
   var ring=document.getElementById('dialProg');if(ring){
     var total=(T.mode==='down')?(T.phase==='focus'?T.focusMin:T.restMin)*60:T.focusMin*60;
-    var pct=T.mode==='down'?(1-T.remain/total):(T.elapsed/total);
+    var pct=over?1:(T.mode==='down'?(1-T.remain/total):(T.elapsed/total));
     pct=Math.max(0,Math.min(1,pct));
     var CIRC=2*Math.PI*105;
     ring.setAttribute('stroke-dashoffset',CIRC*(1-pct));
+    ring.style.stroke=over?C.zhu:(s?s.color:C.dai);
   }
-  var ph=document.getElementById('dialPhase');if(ph)ph.textContent=T.phase==='focus'?(T.mode==='down'?'专注中':'正向计时'):'休息中';
-  var mn=document.getElementById('miniTime');if(mn)mn.textContent=fmtSec(T.mode==='down'?T.remain:T.elapsed);
-  var mn2=document.getElementById('miniName');if(mn2)mn2.textContent=(T.phase==='focus'?'专注':'休息')+(T.subjectId&&subjById(T.subjectId)?' · '+subjById(T.subjectId).name:'');
-  var btn=document.getElementById('mainTimerBtn');if(btn)btn.textContent=T.running?'暂停':'开始专注';
-  var dot=document.getElementById('miniDot');if(dot&&T.subjectId&&subjById(T.subjectId))dot.style.background=subjById(T.subjectId).color;
+  var ph=document.getElementById('dialPhase');
+  if(ph)ph.textContent=over?'已超时':(T.phase==='focus'?(T.mode==='down'?'专注中':'正向计时'):'休息中');
+  var mn=document.getElementById('miniTime');
+  if(mn)mn.textContent=over?'超时 +'+fmtSec(T.overtime):fmtSec(T.mode==='down'?T.remain:T.elapsed);
+  var mn2=document.getElementById('miniName');
+  if(mn2)mn2.textContent=(T.phase==='focus'?'专注':'休息')+(T.subjectId&&subjById(T.subjectId)?' · '+subjById(T.subjectId).name:'');
+  var btn=document.getElementById('mainTimerBtn');if(btn)btn.textContent=timerActionLabel();
+  var rec=document.getElementById('recordLink');
+  if(rec)rec.textContent=over?('结束并记录 '+fmtDur(T.elapsed)+' ›'):'结束并记录已专注时长 ›';
+  var dot=document.getElementById('miniDot');if(dot&&s)dot.style.background=s.color;
 }
 function toggleTimer(){
   if(!T.running){
     if(!T.subjectId){toast('先选一个科目');return;}
+    var resuming=timerActionLabel()!=='开始专注';
     T.running=true;T.runStart=Date.now();
-    T.baseElapsed=T.elapsed;T.baseRemain=T.remain;
+    T.baseElapsed=T.elapsed;T.baseRemain=T.remain;T.baseOvertime=T.overtime;
     if(!timerId)timerId=setInterval(tick,1000);
-    toast('开始计时');
+    toast(resuming?'继续计时':'开始计时');
+    rescheduleNotify();          /* 预排系统提醒，息屏也能按时响 */
   }else{
     syncTimer();                 /* 暂停前先补算到当前时刻 */
-    T.running=false;toast('已暂停');
+    T.running=false;toast('已暂停，点按钮继续');
+    cancelNotify();              /* 暂停后不再提醒 */
   }
   saveFocus();render();
 }
-function resetTimer(){T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;
-  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;saveFocus();render();toast('已重置');}
+function resetTimer(){T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
+  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;cancelNotify();saveFocus();render();toast('已重置');}
 function recordSession(sec){
   if(sec<1){return false;}
   if(!T.subjectId){toast('没有科目，未记录');return false;}
@@ -753,13 +834,14 @@ function recordSession(sec){
 function manualRecord(){
   if(!T.subjectId){toast('先选一个科目');return;}
   if(T.running)syncTimer();              /* 先补算真实时长 */
-  var sec=Math.floor(T.elapsed);
+  var sec=Math.floor(T.elapsed),over=T.overtime;
   if(sec<1){toast('还没有专注时长，先开始计时');return;}
   T.running=false;                       /* 真正结束计时，避免后台继续累加 */
-  var ok=recordSession(sec);
-  T.elapsed=0;T.remain=T.focusMin*60;T.phase='focus';
+  var ok=recordSession(sec);              /* 记录设定时长 + 超时部分的合计 */
+  T.elapsed=0;T.remain=T.focusMin*60;T.phase='focus';T.overtime=0;T.baseOvertime=0;
   T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;
-  saveFocus();render();toast(ok?'已记录本次专注 '+fmtDur(sec):'未记录');
+  cancelNotify();saveFocus();render();
+  toast(ok?('已记录专注 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')):'未记录');
 }
 if(!timerId)timerId=setInterval(tick,1000);
 
@@ -794,6 +876,28 @@ function capCall(plugin,method,opts){
     return C.Plugins[plugin][method](opts||{});
   if(typeof C.nativePromise==='function')return C.nativePromise(plugin,method,opts||{});
   return Promise.reject(new Error('no-bridge'));
+}
+/* ============ 专注结束系统提醒：预排到系统闹钟，息屏/后台也能响 ============ */
+var NOTIFY_ID={focus:4101,rest:4102};
+function cancelNotify(){
+  if(!isNative())return Promise.resolve();
+  return capCall('LocalNotifications','cancel',
+    {notifications:[{id:NOTIFY_ID.focus},{id:NOTIFY_ID.rest}]}).catch(function(){});
+}
+function rescheduleNotify(){
+  if(!isNative()||!T.running||T.mode!=='down'||T.remain<=0)return;
+  var focus=T.phase==='focus',s=T.subjectId?subjById(T.subjectId):null;
+  capCall('LocalNotifications','requestPermissions',{}).then(function(r){
+    if(r&&r.display&&r.display!=='granted')return;
+    var at=new Date(Date.now()+Math.ceil(T.remain)*1000);
+    return capCall('LocalNotifications','schedule',{notifications:[{
+      id:focus?NOTIFY_ID.focus:NOTIFY_ID.rest,
+      title:focus?'专注完成':'休息结束',
+      body:focus?((s?s.name:'StudySpace')+' · 本次专注结束，起来活动一下'):
+                  '休息结束，继续下一轮专注',
+      schedule:{at:at,allowWhileIdle:true}
+    }]});
+  }).catch(function(){});
 }
 function copyText(t,tip){
   var done=function(){toast(tip||'已复制');};
@@ -1116,7 +1220,7 @@ function persistTimer(){
   try{localStorage.setItem(KEY+'_focus',JSON.stringify({
     subjectId:T.subjectId,focusMin:T.focusMin,restMin:T.restMin,mode:T.mode,
     running:T.running,phase:T.phase,elapsed:T.elapsed,remain:T.remain,
-    baseElapsed:T.baseElapsed,baseRemain:T.baseRemain,runStart:T.runStart
+    baseElapsed:T.baseElapsed,baseRemain:T.baseRemain,runStart:T.runStart,overtime:T.overtime,baseOvertime:T.baseOvertime
   }));}catch(e){}
 }
 function loadFocus(){
@@ -1128,15 +1232,18 @@ function loadFocus(){
     if(typeof f.baseElapsed==='number')T.baseElapsed=f.baseElapsed;
     if(typeof f.baseRemain==='number')T.baseRemain=f.baseRemain;
     if(typeof f.elapsed==='number')T.elapsed=f.elapsed;
+    if(typeof f.overtime==='number')T.overtime=f.overtime;
+    if(typeof f.baseOvertime==='number')T.baseOvertime=f.baseOvertime;
     if(f.runStart)T.runStart=f.runStart;
     if(typeof f.remain==='number')T.remain=f.remain;else T.remain=T.focusMin*60;
     /* 恢复运行态：用时间戳补算离开期间流逝的时间（含息屏/后台/重启） */
     if(f.running&&f.runStart){T.running=true;syncTimer();}
+    if(T.running&&T.mode==='down'&&T.remain>0)rescheduleNotify();
   }catch(e){}
 }
 loadFocus();
-function setMode(m){T.mode=m;T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;
-  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;saveFocus();render();}
+function setMode(m){T.mode=m;T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
+  T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;cancelNotify();saveFocus();render();}
 function step(field,delta,min,max){
   T[field]=Math.max(min,Math.min(max,T[field]+delta));
   if(field==='focusMin'&&!T.running&&T.phase==='focus')T.remain=T.focusMin*60;
@@ -1153,15 +1260,18 @@ function setTimerField(field,val,min,max){
 }
 function pageFocus(){
   var s=subjById(T.subjectId);
+  var over=T.mode==='down'&&T.phase==='focus'&&T.overtime>0;
   var total=(T.mode==='down')?(T.phase==='focus'?T.focusMin:T.restMin)*60:T.focusMin*60;
-  var pct=T.mode==='down'?(1-T.remain/total):(T.elapsed/total);
+  var pct=over?1:(T.mode==='down'?(1-T.remain/total):(T.elapsed/total));
   var CIRC=2*Math.PI*105;
   var dial='<svg class="dial" viewBox="0 0 230 230">'+
     '<circle class="track" cx="115" cy="115" r="105"/>'+
-    '<circle class="prog" id="dialProg" cx="115" cy="115" r="105" stroke="'+(s?s.color:C.dai)+'" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+(CIRC*(1-Math.max(0,Math.min(1,pct))))+'"/>'+
+    '<circle class="prog" id="dialProg" cx="115" cy="115" r="105" style="stroke:'+(over?C.zhu:(s?s.color:C.dai))+'" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+(CIRC*(1-Math.max(0,Math.min(1,pct))))+'"/>'+
     '</svg>'+
-    '<div class="dial-center"><div class="phase" id="dialPhase">'+(T.phase==='focus'?(T.mode==='down'?'专注中':'正向计时'):'休息中')+'</div>'+
-    '<div class="time num" id="dialTime">'+fmtSec(T.mode==='down'?T.remain:T.elapsed)+'</div>'+
+    '<div class="dial-center'+(over?' over':'')+'">'+
+    '<div class="phase" id="dialPhase">'+(over?'已超时':(T.phase==='focus'?(T.mode==='down'?'专注中':'正向计时'):'休息中'))+'</div>'+
+    '<div class="time num" id="dialTime">'+(over?'+'+fmtSec(T.overtime):fmtSec(T.mode==='down'?T.remain:T.elapsed))+'</div>'+
+    '<div class="total" id="dialTotal">'+(over?'总计 '+fmtDur(T.elapsed):(T.mode==='up'?'已专注 '+fmtDur(T.elapsed):''))+'</div>'+
     '<div class="subj">'+(s?'<span class="dot" style="background:'+s.color+'"></span>'+esc(s.name):'<span class="muted">未选科目</span>')+'</div></div>';
   var dist='';
   var smax=Math.max(1,S.subjects.reduce(function(a,x){return Math.max(a,subjectSec(x.id,today()));},0));
@@ -1175,9 +1285,9 @@ function pageFocus(){
     '<div class="m'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</div></div>'+
     '<div style="margin-bottom:14px">'+pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
     '<div class="dial-wrap">'+dial+'</div>'+
-    '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+(T.running?'暂停':'开始专注')+'</button>'+
+    '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+timerActionLabel()+'</button>'+
     '<button class="btn ghost" onclick="resetTimer()">重置</button></div>'+
-    '<div class="record-link" onclick="manualRecord()">结束并记录已专注时长 ›</div>'+
+    '<div class="record-link" id="recordLink" onclick="manualRecord()">'+(over?'结束并记录 '+fmtDur(T.elapsed)+' ›':'结束并记录已专注时长 ›')+'</div>'+
     '<div class="card"><div class="fold-head" id="foldHead" onclick="toggleFold()"><span style="font-weight:600;font-size:13.5px">计时设置</span><span class="arw">›</span></div>'+
     '<div class="fold-body" id="foldBody">'+
       '<div class="set-row"><span>专注时长（分钟）</span><span class="stepper"><button onclick="step(\'focusMin\',-5,1,180)">−</button><input class="v num" type="number" id="focusMinV" min="1" max="180" value="'+T.focusMin+'" onchange="setTimerField(\'focusMin\',this.value,1,180)"><button onclick="step(\'focusMin\',5,1,180)">+</button></span></div>'+
@@ -1194,7 +1304,6 @@ function pickPlanSubject(id){
   if(ct)window.__planCustom=ct.value;
   window.__planSubject=id;renderPlanSheet();
 }
-function pickMistakeSubject(id){window.__mistakeSubject=id;render();}
 /* 计划新增弹窗：科目 → 题型（下拉选已设题型 / 自定义手输 / 不选），预计时间 */
 function planTypeDropdown(){
   var s=window.__planSubject?subjById(window.__planSubject):null;
@@ -1360,16 +1469,14 @@ function pagePlan(){
   }
   var oldCnt=S.plans.filter(function(p){return p.date<today();}).length;
   return '<div class="hero-title" style="font-size:18px">计划</div><div class="hero-sub">今天日期 · 完成率 '+rate+'%</div>'+
+    '<div class="page-actions"><button class="btn primary" onclick="openNewPlan()">＋ 新增计划</button>'+
+      '<button class="btn ghost" onclick="archivePlans()"'+(!oldCnt?' disabled style="opacity:.45"':'')+'>归档以往计划</button></div>'+
     '<div class="card"><div class="sec-title">待完成 <span class="more">'+undone.length+' 项</span></div>'+
       (undone.length?undone.map(item).join(''):
         (done.length?'<div class="placeholder" style="padding:16px">今天的任务都完成了 ✓</div>':
                      '<div class="placeholder" style="padding:16px">今天还没有计划<br><button class="btn ghost sm" style="margin-top:8px" onclick="openNewPlan()">＋ 新增计划</button></div>'))+'</div>'+
     (done.length?'<div class="card"><div class="sec-title">已完成 <span class="more">'+done.length+' 项</span></div>'+done.map(item).join('')+'</div>':'')+
-    '<div class="card">'+planCalendarHtml()+'</div>'+
-    '<div class="card" style="padding:12px 14px"><div class="row" style="justify-content:space-between">'+
-      '<span class="tiny muted">以往记录 '+(oldCnt?oldCnt+' 条可归档':'已全部归档')+'</span>'+
-      '<button class="btn ghost sm" onclick="archivePlans()"'+(oldCnt?'':' disabled style="opacity:.45"')+'>归档以往计划</button></div></div>'+
-    '<button class="btn primary block" onclick="openNewPlan()">＋ 新增计划</button>';
+    '<div class="card">'+planCalendarHtml()+'</div>';
 }
 
 /* ============ 页面：我的 ============ */
@@ -1442,12 +1549,12 @@ function pageGoals(){
     });
   }
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">学习目标</span></div>'+
+    '<div class="page-actions"><button class="btn ghost" onclick="archiveGoals()">归档目标</button>'+
+      '<button class="btn primary" onclick="openGoalEditor()">编辑目标</button></div>'+
     rings+
     '<div class="card"><div class="sec-title">连续打卡 <span style="color:'+C.zhu+';font-weight:600" class="num">'+streak()+' 天</span></div>'+
       '<div class="tiny muted" style="margin-bottom:6px">近 4 周学习热力图 · 颜色越深时长越长</div><div class="heat">'+heat+'</div></div>'+
-    '<div class="card"><div class="sec-title">分科目进度 <span class="more" onclick="openGoalEditor()">编辑目标 ›</span></div>'+sp+'</div>'+
-    '<div class="focus-actions"><button class="btn ghost" onclick="archiveGoals()">归档目标</button>'+
-    '<button class="btn primary" onclick="openGoalEditor()">编辑目标</button></div>';
+    '<div class="card"><div class="sec-title">分科目进度 <span class="more" onclick="openGoalEditor()">编辑目标 ›</span></div>'+sp+'</div>';
 }
 function openGoalEditor(){
   var rows='';
@@ -1499,10 +1606,10 @@ function pageSubjects(){
       '<span class="nm">'+esc(s.name)+'<br><span class="types">一级科目 · '+(ts.length?ts.length+' 个题型':'未设题型（选填）')+'</span></span>'+
       '<span class="edit" onclick="openTypeManager(\''+s.id+'\')">题型</span>'+
       '<span class="edit" onclick="openSubjectEditor(\''+s.id+'\')">编辑</span></div>';
-  }).join(''):'<div class="empty"><div class="ic">◌</div><div>还没有科目<br>建一个开始吧</div><button class="btn primary" onclick="openSubjectEditor()">＋ 新建一级科目</button></div>';
+  }).join(''):'<div class="empty"><div class="ic">◌</div><div>还没有科目<br>点上方按钮建一个开始吧</div></div>';
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">科目管理</span></div>'+
+    '<div class="page-actions"><button class="btn primary" onclick="openSubjectEditor()">＋ 新建一级科目</button></div>'+
     '<div class="card"><div class="sec-title">一级科目 <span class="more">'+S.subjects.length+' 个</span></div>'+list+'</div>'+
-    (S.subjects.length?'<button class="btn primary block" onclick="openSubjectEditor()">＋ 新建一级科目</button>':'')+
     '<div class="tiny muted" style="margin-top:12px;line-height:1.7">一级科目下可设置题型（非必须）。题型可在新增计划时选用或自定义。颜色从 12 色通用色板循环分配。</div>';
 }
 /* 题型管理：一级科目下的题型，可增删，非必须 */
@@ -1640,6 +1747,23 @@ function homeMiniBars(items){
     s+='<text class="ax" x="'+(x+bw/2)+'" y="'+(H-5)+'" text-anchor="middle">'+d.label+'</text>';});
   return s+'</svg>';
 }
+/* 环形扇区：单一项占 100% 时整圆弧的起终点重合，SVG 会省略弧线不画，拆成两段半圆 */
+function donutSlice(cx,cy,r,ir,a1,a2,color){
+  var ang=a2-a1;
+  if(ang>=Math.PI*2-1e-6){
+    var xr=cx+r,xl=cx-r,xri=cx+ir,xli=cx-ir;
+    return '<path d="M'+xr+' '+cy+' A'+r+' '+r+' 0 0 1 '+xl+' '+cy+
+      ' A'+r+' '+r+' 0 0 1 '+xr+' '+cy+' L'+xri+' '+cy+
+      ' A'+ir+' '+ir+' 0 0 0 '+xli+' '+cy+' A'+ir+' '+ir+' 0 0 0 '+xri+' '+cy+
+      ' Z" fill="'+color+'" stroke="#FFFDF7" stroke-width="1"/>';
+  }
+  var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+  var xi1=cx+ir*Math.cos(a2),yi1=cy+ir*Math.sin(a2),xi2=cx+ir*Math.cos(a1),yi2=cy+ir*Math.sin(a1);
+  var large=ang>Math.PI?1:0;
+  return '<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+
+    ' L'+xi1+' '+yi1+' A'+ir+' '+ir+' 0 '+large+' 0 '+xi2+' '+yi2+
+    ' Z" fill="'+color+'" stroke="#FFFDF7" stroke-width="1"/>';
+}
 function svgPie(parts){
   /* parts:[{label,val,color}] 环形饼图 */
   var total=parts.reduce(function(a,p){return a+p.val;},0);
@@ -1649,20 +1773,17 @@ function svgPie(parts){
   parts.forEach(function(p){
     if(p.val<=0)return;
     var ang=p.val/total*Math.PI*2,a2=acc+ang;
-    var x1=cx+r*Math.cos(acc),y1=cy+r*Math.sin(acc),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
-    var xi1=cx+ir*Math.cos(a2),yi1=cy+ir*Math.sin(a2),xi2=cx+ir*Math.cos(acc),yi2=cy+ir*Math.sin(acc);
-    var large=ang>Math.PI?1:0;
-    var path='<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+' L'+xi1+' '+yi1+' A'+ir+' '+ir+' 0 '+large+' 0 '+xi2+' '+yi2+' Z" fill="'+p.color+'"/>';
-    s+=path;
+    s+=donutSlice(cx,cy,r,ir,acc,a2,p.color);
     var mid=acc+ang/2,hx=cx+(r+ir)/2*Math.cos(mid),hy=cy+(r+ir)/2*Math.sin(mid);
     s+=chartHit(hx,hy,(r-ir)/2,(p.tip||(p.label+' · '+p.val+' 分钟'))+' · '+Math.round(p.val/total*100)+'%');
     acc=a2;
   });
   s+='<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="17" font-weight="600" fill="'+C.dai+'">'+total+'</text>';
+  s+='<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" font-size="9" fill="'+C.ink2+'">分钟 · 共 '+parts.filter(function(p){return p.val>0;}).length+' 项</text>';
   parts.forEach(function(p,i){var y=40+i*20;
     s+='<rect class="legend-hit" x="180" y="'+(y-11)+'" width="130" height="18" fill="transparent" data-tip="'+esc((p.tip||(p.label+' · '+p.val+' 分钟'))+' · '+Math.round(p.val/total*100)+'%')+'" onmouseenter="showChartTip(this,event)" onmouseleave="hideChartTip()" ontouchstart="showChartTip(this,event)" onclick="showChartTip(this,event)"/>';
     s+='<rect x="188" y="'+(y-9)+'" width="10" height="10" rx="3" fill="'+p.color+'"/>';
-    s+='<text class="ax" x="204" y="'+y+'" font-size="10">'+esc(p.label)+' '+Math.round(p.val/total*100)+'%</text>';});
+    s+='<text class="ax" x="204" y="'+y+'" font-size="10">'+esc(p.label)+' '+p.val+'分 · '+Math.round(p.val/total*100)+'%</text>';});
   return s+'</svg>';
 }
 /* ============ 每周学习周报 ============ */
@@ -1910,14 +2031,13 @@ function pageMistakes(){
       '<span class="s pk-trigger picker-anchor" id="mistSubjPick" onclick="mistSubjectPicker()">'+esc(subjName)+'</span>'+
       '<span class="s pk-trigger picker-anchor" id="mistTypePick" onclick="mistTypePicker()">'+esc(typeName)+'</span>'+
       '<span class="s'+(mistBatch?' on':'')+'" onclick="toggleMistBatch()">'+(mistBatch?'完成':'批量')+'</span></div>'+
+    (!mistBatch?'<div class="page-actions"><button class="btn primary" onclick="openMistakeEditor()">＋ 记一道错题</button></div>':'')+
     (mistBatch?'<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">'+
       '<button class="btn ghost sm" onclick="selectAllMist()">'+(allSel?'取消全选':'全选')+'</button>'+
       '<button class="btn primary sm" onclick="exportMistPDF()">保存所选（'+selCount+'）</button>'+
       '<span class="tiny muted">已选 '+selCount+' / '+list.length+' 道'+((mistSubject||mistType)?'（当前筛选）':'')+'</span></div>':'')+
     (list.length?list.map(card).join(''):'<div class="empty"><div class="ic">✎</div><div>'+
-      (S.mistakes.length?'没有符合筛选条件的错题':'还没有错题<br>遇到错题记下来，按 1/3/7 天复习')+'</div>'+
-      '<button class="btn primary" onclick="openMistakeEditor()">＋ 记一道错题</button></div>')+
-    (S.mistakes.length&&!mistBatch?'<button class="btn primary block" onclick="openMistakeEditor()">＋ 新增错题</button>':'');
+      (S.mistakes.length?'没有符合筛选条件的错题':'还没有错题<br>遇到错题记下来，按 1/3/7 天复习')+'</div></div>');
 }
 function toggleMistBatch(){mistBatch=!mistBatch;mistSel={};render();}
 /* 全选 / 取消全选只作用于当前筛选结果，并清掉筛选外的残留选择 */
@@ -2074,13 +2194,12 @@ function pageReviews(){
     '<div class="seg"><span class="s'+(revFilter==='all'?' on':'')+'" onclick="setRevFilter(\'all\')">全部</span>'+
       '<span class="s'+(revFilter==='daily'?' on':'')+'" onclick="setRevFilter(\'daily\')">每日</span>'+
       '<span class="s'+(revFilter==='weekly'?' on':'')+'" onclick="setRevFilter(\'weekly\')">每周</span></div>'+
+    '<div class="page-actions"><button class="btn primary" onclick="openReviewEditor()">＋ 写复盘</button></div>'+
     (list.length?list.map(function(r){
       return '<div class="review-card" onclick="openReviewEditor(\''+r.id+'\')">'+
         '<div class="d">'+esc(r.date||'')+' · '+(r.type==='weekly'?'每周复盘':'每日复盘')+'</div>'+
         '<div class="t">'+esc((r.done||'').slice(0,60)||'（未填写完成情况）')+'</div></div>';
-    }).join(''):'<div class="empty"><div class="ic">✍</div><div>还没有复盘<br>每天花两分钟回顾，进步看得见</div>'+
-      '<button class="btn primary" onclick="openReviewEditor()">＋ 写复盘</button></div>')+
-    (S.reviews.length?'<button class="btn primary block" onclick="openReviewEditor()">＋ 写复盘</button>':'');
+    }).join(''):'<div class="empty"><div class="ic">✍</div><div>还没有复盘<br>每天花两分钟回顾，进步看得见</div></div>');
 }
 /* 当日只读摘要 */
 function daySummary(date){

@@ -42,15 +42,17 @@
 
 打开电脑上的 `E:\09 code\Review\www` 文件夹，把**里面的内容**（不是 www 文件夹本身）全部上传到刚建的仓库：
 
-必须上传的（全选一起拖进去即可）：
+必须上传的（`assets` 和 `.github` 若拖不进去，用下面的「新建文件」办法）：
 - `index.html` ← 最重要，这就是你的 App 内容
 - `package.json`
 - `capacitor.config.json`
+- `assets` 文件夹（里面只有 `logo.svg`，桌面图标和启动图靠它生成）
 - `.github` 文件夹（自动打包的"说明书"）← 别忘了这个隐藏文件夹
 - `.gitignore`
 
 > ⚠️ **每次改完功能重新上传时，`index.html`、`package.json`、`capacitor.config.json` 三个都要覆盖。**
-> `capacitor.config.json` 决定 App 名字（StudySpace），`package.json` 决定打包时装哪些插件。只传 `index.html` 会出现「名字还是旧的」「导出/分享功能不生效」这类问题。
+> `capacitor.config.json` 决定 App 名字（StudySpace），`package.json` 决定打包时装哪些插件。只传 `index.html` 会出现「名字还是旧的」「导出/分享、通知、返回键不生效」这类问题。
+> `assets/logo.svg` 决定桌面图标和启动图。网页上不能直接传文件夹，就用「Create new file」新建一个叫 `assets/logo.svg` 的文件，把 `www/assets/logo.svg` 的内容复制进去。
 
 建议一起上传的：
 - `PRD_番茄学习助手_APK重构.md`（产品文档）
@@ -163,6 +165,12 @@ A：点导出后**不会跳到新页面**，App 内会弹出「导出完成」�
 学习数据导出的是 `.html` 报告文件，用浏览器打开后点「打印 / 另存为 PDF」即可得到 PDF；错题集导出同样是 `.html`。
 > 注：文件导出/分享依赖 `@capacitor/filesystem` 和 `@capacitor/share` 两个插件，所以 `package.json` 必须一并上传，漏传就打不出带这两个能力的包。
 
+**Q：专注结束时有提醒吗？息屏了也会响吗？**
+A：有。点「开始专注」时系统会弹出通知权限请求，**请点「允许」**（只弹一次）。之后 App 会把提醒预排到系统闹钟，即使手机息屏、App 被切到后台也会按时响。暂停或结束时会取消这条提醒。如果当时点了「拒绝」，去手机「设置 → 通知」里给 StudySpace 打开通知权限，再重新开始一次专注即可。
+
+**Q：按手机返回键会直接退出吗？**
+A：不会。返回键按「关下拉 → 关弹窗 → 退回上一层 → 回到首页」的顺序处理；已经在首页时，需要**连续按两次**才会退出，第一次只提示「再按一次退出 StudySpace」。
+
 ---
 
 ## 五、文件夹结构：你的原项目 和 APK 项目是完全分开的
@@ -176,6 +184,7 @@ E:\09 code\Review\              ← 你的原项目（已上传 GitHub，我们�
     ├── index.html                App 本体（改功能就是改这里）
     ├── package.json              打包工具清单
     ├── capacitor.config.json     App 名字、配置
+    ├── assets\logo.svg           应用图标与启动图源图（文本，可网页上传）
     ├── .gitignore               新建的（不是改你原来那个）
     ├── .github\workflows\
     │   └── build-apk.yml         自动打包说明书
@@ -187,7 +196,8 @@ E:\09 code\Review\              ← 你的原项目（已上传 GitHub，我们�
 - 根目录那些文件全是你原来的，我**没有改动任何一个**（包括 `.gitignore`）。
 - `www` 是独立的 APK 项目，以后单独上传到新仓库。
 - `www/index.html` 是**完全重写的 App 本体**（单文件，含全部页面和功能），和根目录那个旧网站已经不是同一份内容；根目录那份原样留着当历史备份。
-- 导出/分享能力由 `package.json` 里的 `@capacitor/filesystem`、`@capacitor/share` 提供，`cap sync` 时会自动装进安卓工程，不用手动改安卓代码。
+- 导出/分享由 `@capacitor/filesystem`、`@capacitor/share` 提供，硬件返回键由 `@capacitor/app` 提供，专注结束提醒由 `@capacitor/local-notifications` 提供；这些都在 `package.json` 里，`cap sync` 时自动装进安卓工程，不用手动改安卓代码。
+- 桌面图标和启动图不放在安卓工程里，而是由 `assets/logo.svg` 在 GitHub Actions 构建时用 `@capacitor/assets` 自动生成，所以换图标只改这一个 SVG 即可。
 
 ---
 
@@ -213,7 +223,7 @@ jobs:
       - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 安装 Java 17
         uses: actions/setup-java@v4
@@ -243,6 +253,20 @@ jobs:
       - name: 重新生成 Android 工程
         run: rm -rf android && npx cap add android
 
+      # 用 assets/logo.svg 生成各密度桌面图标与启动图，
+      # 覆盖 cap add android 自带的 Capacitor 默认机器人图标。
+      - name: 生成 StudySpace 图标与启动图
+        run: |
+          if [ -f assets/logo.svg ]; then
+            npx @capacitor/assets generate --android --assetPath assets \
+              --iconBackgroundColor '#F6F1E5' \
+              --iconBackgroundColorDark '#F6F1E5' \
+              --splashBackgroundColor '#F6F1E5' \
+              --splashBackgroundColorDark '#F6F1E5'
+          else
+            echo "::warning::未找到 assets/logo.svg，本次使用默认图标"
+          fi
+
       - name: 同步网页资源
         run: npx cap sync android
 
@@ -255,7 +279,7 @@ jobs:
       - name: 上传 APK
         uses: actions/upload-artifact@v4
         with:
-          name: 番茄学习助手-APK
+          name: StudySpace-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
 ```
