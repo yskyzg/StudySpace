@@ -3,7 +3,7 @@
 > 一个离线优先的番茄专注与学习管理 App。
 > 单文件 Web 应用 + Capacitor 打包成 Android APK，数据全部保存在手机本机。
 
-**当前版本：v1.1.0** ｜ 协议：MIT License ｜ 平台：Android 8.0+（APK）／任意现代浏览器（网页版）
+**当前版本：v1.2.0** ｜ 协议：MIT License ｜ 平台：Android 8.0+（APK）／任意现代浏览器（网页版）
 
 ---
 
