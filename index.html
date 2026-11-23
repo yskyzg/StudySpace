@@ -503,8 +503,53 @@ div.bar{height:8px;background:rgba(255,255,255,.28);border-radius:6px;overflow:h
 .arch-item-acts{display:flex;align-items:center;flex:none}
 .arch-undo{font-size:10px;color:var(--dai);background:var(--dai3);border-radius:20px;
   padding:2px 9px;cursor:pointer;white-space:nowrap}
+.day-toggle{font-size:10px;color:var(--dai);background:var(--dai3);border:1px solid #D6E2F0;
+  border-radius:20px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex:none}
+.todo-item.done .day-toggle{color:var(--ink2);background:var(--paper2);border-color:var(--line)}
 .lp-quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .lp-quick span{font-size:11px;color:var(--dai);background:var(--dai3);border-radius:20px;padding:5px 10px;cursor:pointer}
+/* 首页 / 计划页：逾期未完成与「接下来」分组 */
+.task-group{display:flex;align-items:center;gap:6px;margin:10px 0 2px;font-size:11px;font-weight:600;color:var(--dai)}
+.task-group:first-child{margin-top:2px}
+.task-group.warn{color:var(--zhe)}
+.task-group .tg-line{flex:1;height:1px;background:var(--line)}
+.task-date{display:inline-block;font-size:9.5px;color:var(--zhe);background:var(--zhubg);
+  border-radius:20px;padding:1px 7px;white-space:nowrap;margin-right:4px}
+.task-date.future{color:var(--dai);background:var(--dai3)}
+.todo-item .tt{min-width:0}
+.todo-item .tt .sub{display:block;font-size:10.5px;color:var(--ink2);line-height:1.6;margin-top:2px}
+/* 计划月历：长期计划截止日 + 已归档计划标记 */
+.cal-d.lp-due{border-color:#D9B45C;background:var(--tengbg)}
+.cal-d.lp-due.today{background:var(--dai);border-color:#EACB82;color:#fff}
+.cal-d .lp-mark{position:absolute;top:2px;right:3px;font-style:normal;font-size:8px;line-height:1;color:var(--teng)}
+.cal-d.today .lp-mark{color:#F6D485}
+.cal-d .lp-mark.done{color:var(--qing)}
+.cal-legend{flex-wrap:wrap;row-gap:5px}
+.cal-legend .lgd-lp{font-style:normal;color:var(--teng);font-size:9px}
+.arch-tag{font-size:9.5px;color:var(--teng);background:var(--tengbg);border-radius:20px;
+  padding:1px 7px;flex:none;white-space:nowrap}
+/* 科目·明细：可点柱状图 + 年/月/日筛选 + 汇总与记录 */
+.bars .b.clickable{cursor:pointer}
+.bars .b.clickable:active .col{opacity:.7}
+.bars .b.on .col{box-shadow:0 0 0 2px var(--dai);opacity:1}
+.bars .b.on .lb{color:var(--dai);font-weight:600}
+.sd-hint{font-size:10.5px;color:var(--ink2);margin-top:8px;text-align:center;line-height:1.6}
+.sd-picked{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--dai3);border:1px solid #D6E2F0;
+  border-radius:10px;padding:9px 10px;margin-top:10px;font-size:11.5px;color:var(--dai);line-height:1.5}
+.sd-picked>span:first-child{flex:1;min-width:0}
+.sd-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:4px}
+.sd-sum .b{background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:9px 3px;text-align:center}
+.sd-sum .b b{display:block;font-size:15px;font-weight:600;color:var(--dai);line-height:1.3}
+.sd-sum .b span{font-size:9.5px;color:var(--ink2)}
+.sd-sub{font-size:11px;font-weight:600;color:var(--ink);margin:14px 0 2px}
+.sd-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+.sd-row:last-child{border-bottom:none}
+.sd-row .t{flex:1;min-width:0;line-height:1.6}
+.sd-row .t small{display:block;font-size:10px;color:var(--ink2)}
+.sd-row .v{flex:none;font-size:11.5px;color:var(--ink2);text-align:right;line-height:1.6}
+.sd-row .tag{font-size:9px;border-radius:20px;padding:1px 6px;white-space:nowrap}
+.sd-row .tag.ok{color:var(--qing);background:var(--qingbg)}
+.sd-row .tag.todo{color:var(--dai);background:var(--dai3)}
 .cal-detail{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);
   border-radius:12px;background:var(--card);margin-bottom:10px}
 .cal-detail .n{font-size:19px;font-weight:600;color:var(--dai)}
@@ -749,6 +794,8 @@ var _saveTimer=setInterval(function(){if(typeof S!=='undefined')save();},15000);
 var S=load();
 /* 各页筛选状态 */
 var statRange=7,statSubject='',statType=''; /* 统计页：科目 + 题型联动 */
+var statMode='recent',statMonth=today().slice(0,7); /* 统计页：近期（7/30 天）或年+月任意历史月份 */
+var sdSubject=null,sdYear='',sdMonth='',sdDay=''; /* 科目明细：年 / 月 / 日三级筛选 */
 var mistSubject='',mistType='',mistBatch=false,mistSel={}; /* 错题本 */
 var revFilter='all';                    /* 复盘 */
 var chatOpenId=null;                   /* AI 助手当前会话 */
@@ -820,7 +867,13 @@ function performCleanup(keys){
     keys.forEach(function(k){
       if(k==='sessions')S.sessions=[];
       else if(k==='goals'){S.goals={dailyMinutes:120,weeklyMinutes:600};S.subjectGoals={};}
-      else if(k==='plans'){S.plans=[];S.longPlans=[];}
+      else if(k==='plans'){
+        S.plans=[];S.longPlans=[];
+        /* 归档里「未完成」的欠债快照也一并清掉，避免清空计划后首页仍冒出逾期提醒；
+           已完成的历史归档按约定保留。 */
+        S.archives=(S.archives||[]).filter(function(a){
+          return !(a.kind==='plan'&&a.data&&!a.data.done);});
+      }
       else if(k==='subjects'){S.subjects=[];S.subjectGoals={};haltTimerForCleanup(false);}
       else if(k==='mistakes')S.mistakes=[];
       else if(k==='reviews')S.reviews=[];
@@ -831,7 +884,9 @@ function performCleanup(keys){
     if(keys.indexOf('sessions')>=0)tomDate=null;
   }
   /* 所有筛选/选中态同步复位，避免清理后统计页仍停在旧科目/旧题型 */
-  statSubject='';statType='';mistSubject='';mistType='';mistBatch=false;mistSel={};revFilter='all';
+  statSubject='';statType='';statMode='recent';statMonth=today().slice(0,7);statRange=7;
+  mistSubject='';mistType='';mistBatch=false;mistSel={};revFilter='all';
+  sdSubject=null;sdYear='';sdMonth='';sdDay='';
   lpDoneOpen=false;
   window.__cleanSel={};
   save();saveFocus();render();
@@ -943,6 +998,49 @@ function archiveGoals(){
     save();render();toast('已归档学习目标');
   });
 }
+/* ============ 计划数据统一读取：当前计划 + 归档里的完整快照 ============ */
+/* 归档后计划仍要在月历、当日详情、逾期提醒里可见，所以统一从这里取数；__archived 标记来源 */
+function archivedPlanList(ds){
+  var out=[];
+  (S.archives||[]).forEach(function(a){
+    if(a.kind!=='plan'||!a.data)return;
+    var p=cloneData(a.data);if(!p)return;
+    p.date=p.date||a.date||'';
+    if(ds&&p.date!==ds)return;
+    p.__archId=a.id;p.__archived=true;
+    out.push(p);
+  });
+  return out;
+}
+function plansOn(ds){return S.plans.filter(function(p){return p.date===ds;}).concat(archivedPlanList(ds));}
+function allPlans(){return S.plans.concat(archivedPlanList(''));}
+/* 逾期未完成：原定日期早于今天且未完成，按日期由早到晚，首页与计划页都排在最前 */
+function overduePlans(){
+  var t=today();
+  return allPlans().filter(function(p){return p.date<t&&!p.done;})
+    .sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+}
+/* 未来计划按日期分组（只取当前列表里未完成的），用于「接下来」预览 */
+function futurePlanGroups(){
+  var t=today(),map={};
+  S.plans.forEach(function(p){if(p.date>t&&!p.done){(map[p.date]=map[p.date]||[]).push(p);}});
+  return Object.keys(map).sort().map(function(d){return {date:d,list:map[d]};});
+}
+/* 当天到期的长期计划：进行中 / 已完成 / 已归档都标在月历上 */
+function longPlansDueOn(ds){
+  var live=longPlans().filter(function(p){return p.targetDate===ds;});
+  var arch=[];
+  (S.archives||[]).forEach(function(a){
+    if(a.kind==='longplan'&&a.data&&a.data.targetDate===ds){
+      var p=cloneData(a.data);if(p){p.__archived=true;arch.push(p);}
+    }
+  });
+  return live.concat(arch);
+}
+function planDetailLine(p){
+  var s=subjById(p.subjectId);
+  return (s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
+}
 /* 今天的计划上下文：把已归档的「今天已完成」也算进完成率与空状态，避免归档后显示成「还没计划」 */
 function todayPlanCtx(){
   var t=today();
@@ -971,27 +1069,26 @@ function archiveLongPlan(id){
     lpDoneOpen=false;save();render();toast('已归档，可在「归档」查看');
   });
 }
-/* 可归档范围：以往计划 + 今天已完成的日常计划 + 已完成的长期计划 */
+/* 可归档范围：今天及以往「已完成」的日常计划 + 已完成的长期计划。
+   以往「未完成」的计划属于欠债，保留在首页／计划页提醒补做，不被归档吞掉。 */
 function archivablePlans(){
   var t=today();
-  return {daily:S.plans.filter(function(p){return p.date<t||(p.date===t&&p.done);}),
+  return {daily:S.plans.filter(function(p){return p.done&&p.date<=t;}),
           long:(S.longPlans||[]).filter(function(p){return p.done;})};
 }
-/* 归档整理：一次性把上面三类移入归档，页面常用区域只留进行中的计划 */
+/* 归档整理：一次性把上面两类移入归档，页面常用区域只留进行中的计划 */
 function archivePlans(){
   var a=archivablePlans(),n=a.daily.length+a.long.length;
   if(!n){toast('没有可归档的计划');return;}
   var parts=[];
-  if(a.daily.length)parts.push(a.daily.length+' 条以往／今天已完成的日常计划');
+  if(a.daily.length)parts.push(a.daily.length+' 条今天／以往已完成的日常计划');
   if(a.long.length)parts.push(a.long.length+' 条已完成的长期计划');
   confirmDo('归档整理 '+n+' 条计划？',
-    parts.join('、')+'将移入「归档」（按年月可查，也能看全部；可恢复或删除），并从计划页、首页移除。进行中的计划保持原位，数据完整保留，不会删除。',
+    parts.join('、')+'将移入「归档」（按年月可查，也能看全部；可恢复或删除），并从计划页、首页移除。进行中的计划、以及以往未完成的计划保持原位（首页会提醒补做）。归档后月历仍能看到每天的计划，数据完整保留，不会删除。',
     function(){
       a.daily.forEach(function(p){
-        var s=subjById(p.subjectId);
-        var line=(s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
         S.archives.push({id:uid(),kind:'plan',month:String(p.date).slice(0,7),date:p.date,
-          title:p.title,detail:line,data:cloneData(p)});
+          title:p.title,detail:planDetailLine(p),data:cloneData(p)});
       });
       a.long.forEach(pushLongPlanArchive);
       var rm={};a.daily.forEach(function(p){rm[p.id]=1;});
@@ -1697,9 +1794,10 @@ function renderTabbar(){
 /* ============ 页面：首页 ============ */
 function pageHome(){
   var tSec=todaySec(),tm=minutes(tSec),goal=S.goals.dailyMinutes,pct=goal?tSec/(goal*60):0,done=pct>=1;
-  /* 归档掉的「今天已完成」也算今天有过计划，空状态继续显示「今天的任务都完成了 ✓」 */
-  var planCtx=todayPlanCtx();
-  var todo=planCtx.undone.slice(0,3);
+  /* 首页计划时间轴：逾期未完成（排最前，注明原定日期）→ 今天 → 今日完成后预览最近一天 */
+  var planCtx=todayPlanCtx(),t=today();
+  var od=overduePlans(),todayTodo=planCtx.undone;
+  var future=futurePlanGroups(),nextDay=(!od.length&&!todayTodo.length)?future[0]:null;
   var emptyPlanHtml=planCtx.total?
     '<div class="placeholder" style="padding:20px">今天的任务都完成了 ✓'+
       (planCtx.archivedDone?'<br><span class="tiny muted">'+planCtx.archivedDone+' 项已完成计划已归档</span>':'')+'</div>':
@@ -1715,12 +1813,42 @@ function pageHome(){
     '<div class="tiny muted" style="margin-bottom:2px">学习时长（分钟）· 全体科目 · 点柱看精确时长</div>'+homeMiniBars(minBars)+
     '<div class="tiny muted" style="margin:10px 0 2px">新增错题（道）· 全体科目</div>'+homeMiniBars(misBars):
     '<div class="placeholder" style="padding:24px">完成第一个番茄后，这里会有数据</div>';
-  var todoHtml=todo.length?todo.map(function(p){
-    var s=subjById(p.subjectId);
+  /* mode: overdue / today / future */
+  function homeTaskRow(p,mode){
+    var s=subjById(p.subjectId),tag='';
+    if(mode==='overdue')tag='<span class="task-date">原定 '+String(p.date).slice(5).replace('-','/')+
+      ' · 逾期 '+dayDiff(t,p.date)+' 天</span>';
+    else if(mode==='future')tag='<span class="task-date future">'+String(p.date).slice(5).replace('-','/')+
+      ' · '+weekCn(p.date)+'</span>';
     return '<div class="todo-item"><div class="chk" onclick="togglePlan(\''+p.id+'\')"></div>'+
       '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span>'+
-      '<span class="tt">'+esc(p.title)+'</span><span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span></div>';
-  }).join(''):emptyPlanHtml;
+      '<span class="tt">'+esc(p.title)+'<span class="sub">'+tag+(s?esc(s.name):'未分类')+
+        ' · 预计 '+(p.estMin||0)+' 分'+(p.__archived?' · 已归档':'')+'</span></span>'+
+      '<span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span></div>';
+  }
+  function groupHead(txt,n,warn,extra){
+    return '<div class="task-group'+(warn?' warn':'')+'"><span>'+txt+(n?' · '+n+' 项':'')+'</span>'+
+      '<span class="tg-line"></span>'+(extra?'<span>'+extra+'</span>':'')+'</div>';
+  }
+  var todoHtml='';
+  if(od.length){
+    todoHtml+=groupHead('逾期未完成',od.length,true,'优先补做');
+    todoHtml+=od.slice(0,3).map(function(p){return homeTaskRow(p,'overdue');}).join('');
+    if(od.length>3)todoHtml+='<div class="tiny muted" style="padding:6px 0">还有 '+(od.length-3)+' 项逾期，点右上「全部」查看</div>';
+  }
+  if(todayTodo.length){
+    todoHtml+=groupHead('今天',todayTodo.length,false,'');
+    todoHtml+=todayTodo.slice(0,3).map(function(p){return homeTaskRow(p,'today');}).join('');
+    if(todayTodo.length>3)todoHtml+='<div class="tiny muted" style="padding:6px 0">还有 '+(todayTodo.length-3)+' 项，点右上「全部」查看</div>';
+  }
+  if(nextDay){
+    todoHtml+=groupHead('接下来 · '+nextDay.date.slice(5).replace('-','/')+' '+weekCn(nextDay.date),
+      nextDay.list.length,false,'今日已完成');
+    todoHtml+=nextDay.list.slice(0,3).map(function(p){return homeTaskRow(p,'future');}).join('');
+    todoHtml+='<div class="tiny muted" style="padding:6px 0 0">到 '+nextDay.date.slice(5).replace('-','/')+
+      ' 会自动变成当天计划'+(future.length>1?'；后面还有 '+(future.length-1)+' 天有计划':'')+'</div>';
+  }
+  if(!todoHtml)todoHtml=emptyPlanHtml;
   var nick=(S.profile&&S.profile.nickname)||'学习者';
   var hr=new Date().getHours();
   var greet=hr<6?'夜深了':hr<11?'早上好':hr<14?'中午好':hr<18?'下午好':'晚上好';
@@ -1741,11 +1869,12 @@ function pageHome(){
 function smartTips(){
   if(!S.subjects.length)return [{t:'还没有科目。先建立科目，就能开始专注与记录目标了。',go:'去建立 ›',page:'subjects'}];
   if(!S.sessions.length)return [{t:'还没有专注记录。完成第一个番茄后，这里会根据你的数据给出提醒。',go:'去专注 ›',page:'focus'}];
-  var out=[],due=dueMistakes(),undone=S.plans.filter(function(p){return p.date===today()&&!p.done;});
+  var out=[],due=dueMistakes(),
+      undone=overduePlans().concat(S.plans.filter(function(p){return p.date===today()&&!p.done;}));
   if(due.length)out.push({t:'有 '+due.length+' 道错题今天该复习，按 1/3/7 天节奏重做效果最好：'+
     due.slice(0,2).map(function(m){return m.title||'错题';}).join('、')+(due.length>2?' 等':'')+'。',
     go:'去复习 ›',page:'mistakes'});
-  if(undone.length)out.push({t:'今天还有 '+undone.length+' 项计划待完成，先做最重要的一件：'+
+  if(undone.length)out.push({t:'还有 '+undone.length+' 项计划待完成（含逾期），先做最重要的一件：'+
     (undone[0].title||'未命名计划')+'。',go:'去计划 ›',page:'plan'});
   var goal=(S.goals&&S.goals.dailyMinutes)||120,sec=todaySec();
   if(sec<goal*60)out.push({t:'今日专注 '+fmtDur(sec)+'，距 '+goal+' 分钟目标还差 '+fmtDur(goal*60-sec)+'。',
@@ -1775,8 +1904,13 @@ function expandTip(){
   b.innerHTML=html;
 }
 function togglePlan(id){
-  var p=S.plans.filter(function(x){return x.id===id;})[0];if(!p)return;
-  p.done=!p.done;save();render();toast(p.done?'已完成':'已取消完成');
+  var p=S.plans.filter(function(x){return x.id===id;})[0];
+  if(p){p.done=!p.done;save();render();toast(p.done?'已完成':'已取消完成');return;}
+  /* 逾期欠债可能来自归档快照：勾选结果写回归档，明细同步更新 */
+  var a=(S.archives||[]).filter(function(x){return x.kind==='plan'&&x.data&&x.data.id===id;})[0];
+  if(!a)return;
+  a.data.done=!a.data.done;a.detail=planDetailLine(a.data);
+  save();render();toast(a.data.done?'已完成，归档记录已同步':'已取消完成');
 }
 
 /* ============ 页面：专注 ============ */
@@ -1883,10 +2017,12 @@ function toggleEndAgain(){
 }
 function pickPlanSubject(id){
   /* 重绘前暂存已填内容，避免切换科目时丢失 */
-  var t=document.getElementById('npTitle'),mn=document.getElementById('npMin'),ct=document.getElementById('npCustomType');
+  var t=document.getElementById('npTitle'),mn=document.getElementById('npMin'),ct=document.getElementById('npCustomType'),
+      dt=document.getElementById('npDate');
   if(t)window.__draftPlanTitle=t.value;
   if(mn)window.__draftEst=Math.max(5,Math.min(240,parseInt(mn.value)||45));
   if(ct)window.__planCustom=ct.value;
+  if(dt&&dt.value)window.__draftPlanDate=dt.value;
   window.__planSubject=id;renderPlanSheet();
 }
 /* 计划新增弹窗：科目 → 题型（下拉选已设题型 / 自定义手输 / 不选），预计时间 */
@@ -1935,19 +2071,24 @@ function renderPlanSheet(){
     '<div class="fld"><label>科目（下拉选择）</label>'+pickerBtn('planPick',s?s.name:'',s?s.color:'','picker(\'planPick\',\'pickPlanSubject\',\''+(window.__planSubject||'')+'\')','请选择科目')+'</div>'+
     '<div class="fld"><label>题型（选填 · 可选该科已设题型或自定义）</label>'+planTypeDropdown()+
       '<input id="npCustomType" placeholder="输入自定义题型（未录入分类）" style="margin-top:8px;display:'+(window.__planType==='__custom__'?'block':'none')+'" value="'+esc(custom)+'"></div>'+
-    '<div class="fld"><label>预计时间（分钟）</label><span class="stepper"><button onclick="npStep(-5)">−</button><input class="v num" type="number" id="npMin" min="5" max="240" value="'+est+'" onchange="npClamp()"><button onclick="npStep(5)">+</button></span></div>',
+    '<div class="fld"><label>预计时间（分钟）</label><span class="stepper"><button onclick="npStep(-5)">−</button><input class="v num" type="number" id="npMin" min="5" max="240" value="'+est+'" onchange="npClamp()"><button onclick="npStep(5)">+</button></span></div>'+
+    '<div class="fld"><label>计划日期（到这天自动进首页「今天该做」）</label>'+
+      '<input type="date" id="npDate" value="'+esc(window.__draftPlanDate||today())+'"></div>'+
+    '<div class="tiny muted" style="margin-top:-4px;line-height:1.6">未来计划平时不占首页位置；今天的任务完成后会先看到最近一天，到了设定日期自动变成当天计划。</div>',
     (editing?'<button class="btn danger" onclick="delPlan(\''+window.__editPlan+'\')">删除</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="savePlan()">保存</button>');
 }
 function openNewPlan(){
-  window.__editPlan=null;
+  window.__editPlan=null;window.__editArchPlan=null;
   window.__planSubject=(S.subjects[0]&&S.subjects[0].id)||null;
   window.__planType='';window.__planCustom='';window.__draftEst=45;window.__draftPlanTitle='';window.__draftPlanDate=today();
   renderPlanSheet();
 }
 function openPlanEditor(id){
-  var p=S.plans.filter(function(x){return x.id===id;})[0];if(!p)return;
+  var p=S.plans.filter(function(x){return x.id===id;})[0],a=null;
+  if(!p){a=(S.archives||[]).filter(function(x){return x.kind==='plan'&&x.data&&x.data.id===id;})[0];if(!a)return;p=a.data;}
   window.__editPlan=id;
+  window.__editArchPlan=a?a.id:null;
   window.__planSubject=p.subjectId||null;
   var sb=p.subjectId?subjById(p.subjectId):null;
   var known=sb&&sb.types&&sb.types.indexOf(p.type)>=0;
@@ -1961,9 +2102,12 @@ function openPlanEditor(id){
 function npStep(d){var e=document.getElementById('npMin');var v=Math.max(5,Math.min(240,(parseInt(e.value)||5)+d));e.value=v;}
 function npClamp(){var e=document.getElementById('npMin');if(!e)return;var v=parseInt(e.value);if(isNaN(v))v=45;e.value=Math.max(5,Math.min(240,v));}
 function delPlan(id){
+  var archId=window.__editArchPlan;
   confirmDo('删除这条计划？','删除后不可恢复。',function(){
-    S.plans=S.plans.filter(function(x){return x.id!==id;});
-    window.__editPlan=null;save();closeSheet();render();toast('已删除计划');
+    if(archId)S.archives=(S.archives||[]).filter(function(x){return x.id!==archId;});
+    else S.plans=S.plans.filter(function(x){return x.id!==id;});
+    window.__editPlan=null;window.__editArchPlan=null;
+    save();closeSheet();render();toast('已删除计划');
   });
 }
 function savePlan(){
@@ -1978,15 +2122,25 @@ function savePlan(){
   }
   var est=Math.max(5,Math.min(240,parseInt(document.getElementById('npMin').value)||45));
   var wasEdit=!!window.__editPlan;
-  var planDate=window.__draftPlanDate||today();
+  var dtEl=document.getElementById('npDate');
+  var planDate=(dtEl&&dtEl.value)?dtEl.value:(window.__draftPlanDate||today());
   if(wasEdit){
-    var p=S.plans.filter(function(x){return x.id===window.__editPlan;})[0];
-    if(p){p.title=t;p.subjectId=window.__planSubject;p.type=type||'';p.estMin=est;p.doneMin=Math.min(p.doneMin||0,est);p.date=planDate;}
+    var p=S.plans.filter(function(x){return x.id===window.__editPlan;})[0],a=null;
+    if(!p&&window.__editArchPlan){
+      a=(S.archives||[]).filter(function(x){return x.id===window.__editArchPlan;})[0];
+      if(a&&a.data)p=a.data;
+    }
+    if(p){
+      p.title=t;p.subjectId=window.__planSubject;p.type=type||'';p.estMin=est;
+      p.doneMin=Math.min(p.doneMin||0,est);p.date=planDate;
+      if(a){a.title=t;a.date=planDate;a.month=planDate.slice(0,7);a.detail=planDetailLine(p);}
+    }
   }else{
     S.plans.push({id:uid(),title:t,subjectId:window.__planSubject,type:type||'',
       estMin:est,doneMin:0,done:false,date:planDate});
   }
-  window.__planType='';window.__planCustom='';window.__editPlan=null;window.__draftPlanTitle='';window.__draftPlanDate=null;
+  window.__planType='';window.__planCustom='';window.__editPlan=null;window.__editArchPlan=null;
+  window.__draftPlanTitle='';window.__draftPlanDate=null;
   save();closeSheet();render();toast(wasEdit?'已保存计划':'已添加计划');
 }
 
@@ -2226,7 +2380,7 @@ function planMonthShift(n){
   var y=parseInt(curPlanMonth().slice(0,4),10),m=parseInt(curPlanMonth().slice(5,7),10)+n;
   var d=new Date(y,m-1,1);planCalMonth=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);render();
 }
-function plansOn(ds){return S.plans.filter(function(p){return p.date===ds;});}
+/* plansOn / allPlans / overduePlans / longPlansDueOn 定义在上方「计划数据统一读取」区块 */
 function planCalendarHtml(){
   var ym=curPlanMonth(),y=parseInt(ym.slice(0,4),10),m=parseInt(ym.slice(5,7),10);
   var firstDow=(new Date(y,m-1,1).getDay()+6)%7;   /* 周一为 0 */
@@ -2238,18 +2392,29 @@ function planCalendarHtml(){
   for(var i=0;i<firstDow;i++)h+='<div class="cal-d blank"></div>';
   for(var d=1;d<=days;d++){
     var ds=y+'-'+('0'+m).slice(-2)+'-'+('0'+d).slice(-2);
+    /* 归档后仍取完整快照，月历上每天的计划不会消失 */
     var ps=plansOn(ds);
     var doneN=ps.filter(function(p){return p.done;}).length;
+    var archN=ps.filter(function(p){return p.__archived;}).length;
+    var lp=longPlansDueOn(ds);
+    var lpAllDone=lp.length>0&&lp.every(function(p){return p.done;});
     var dots='';
     if(ps.length){
       dots='<div class="dots">'+(doneN?'<i style="background:'+C.qing+'"></i>':'')+
-        (doneN<ps.length?'<i style="background:'+C.dai+'"></i>':'')+'</div>';
+        (doneN<ps.length?'<i style="background:'+C.dai+'"></i>':'')+
+        (archN?'<i style="background:'+C.teng+'"></i>':'')+'</div>';
     }
-    h+='<div class="cal-d'+(ds===t?' today':'')+(ps.length?' has':'')+'" title="'+ds+(ps.length?' · '+ps.length+' 项计划':'')+'" onclick="openDayPlans(\''+ds+'\')">'+
+    var mark=lp.length?'<i class="lp-mark'+(lpAllDone?' done':'')+'">◆</i>':'';
+    var tip=ds+(ps.length?' · '+ps.length+' 项计划'+(archN?'（含归档 '+archN+'）':''):'')+
+      (lp.length?' · 长期计划截止：'+lp.map(function(p){return p.title||'未命名';}).join('、'):'');
+    h+='<div class="cal-d'+(ds===t?' today':'')+(ps.length?' has':'')+(lp.length?' lp-due':'')+
+      '" title="'+esc(tip)+'" onclick="openDayPlans(\''+ds+'\')">'+mark+
       '<span>'+d+'</span>'+dots+'</div>';
   }
   h+='</div><div class="cal-legend"><span><i style="background:'+C.dai+'"></i>待完成</span>'+
-    '<span><i style="background:'+C.qing+'"></i>已完成</span><span>点日期查看当天计划</span></div>';
+    '<span><i style="background:'+C.qing+'"></i>已完成</span>'+
+    '<span><i style="background:'+C.teng+'"></i>已归档</span>'+
+    '<span><i class="lgd-lp">◆</i>长期计划截止</span><span>点日期查看当天计划</span></div>';
   return h;
 }
 
@@ -2320,18 +2485,40 @@ function streakForDay(day){
   }
   return n;
 }
+/* 月历当日详情里直接完成 / 取消完成：过去、未来、已归档的计划都能在这里改状态 */
+function togglePlanInDay(id,ds){
+  togglePlan(id);       /* 兼容当前列表与归档快照 */
+  openDayPlans(ds);     /* 立刻重绘弹层，勾选状态与顶部统计同步更新 */
+}
 function openDayPlans(ds){
-  var ps=plansOn(ds);
-  var archN=(S.archives||[]).filter(function(a){return a.kind==='plan'&&a.date===ds;}).length;
-  var body='<div class="tiny muted" style="margin-bottom:10px">'+ds+'</div>';
-  if(!ps.length){body+='<div class="placeholder" style="padding:18px">'+
-    (archN?'这天的计划已归档，可在「归档」查看':'这一天还没有计划')+'</div>';}
+  /* plansOn() 已含归档快照：归档后月历和当天详情都能继续看到完整计划 */
+  var ps=plansOn(ds),lp=longPlansDueOn(ds);
+  var archN=ps.filter(function(p){return p.__archived;}).length;
+  var doneN=ps.filter(function(p){return p.done;}).length;
+  var body='<div class="tiny muted" style="margin-bottom:6px">'+ds+' · '+weekCn(ds)+
+    (ps.length?' · 共 '+ps.length+' 项 / 已完成 '+doneN+' 项':'')+'</div>'+
+    (ps.length?'<div class="tiny muted" style="margin-bottom:8px;line-height:1.6">点左侧勾选框或右侧按钮，可标记完成或取消完成；标题可编辑。</div>':'');
+  if(!ps.length)body+='<div class="placeholder" style="padding:18px">这一天还没有计划</div>';
   else{
     body+=ps.map(function(p){
       var s=subjById(p.subjectId);
-      return '<div class="todo-item'+(p.done?' done':'')+'"><span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span>'+
+      return '<div class="todo-item'+(p.done?' done':'')+'">'+
+        '<div class="chk'+(p.done?' on':'')+'" onclick="togglePlanInDay(\''+p.id+'\',\''+ds+'\')">'+(p.done?'✓':'')+'</div>'+
+        '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span>'+
         '<span class="tt" onclick="closeSheet();openPlanEditor(\''+p.id+'\')" style="cursor:pointer">'+esc(p.title)+'<br>'+
-        '<span class="tiny muted">'+(p.done?'已完成':'待完成')+' · 预计 '+(p.estMin||0)+' 分</span></span></div>';
+        '<span class="tiny muted">'+(p.done?'已完成':'待完成')+' · 预计 '+(p.estMin||0)+' 分 · '+(s?esc(s.name):'未分类')+
+        (p.__archived?' <span class="arch-tag">已归档</span>':'')+'</span></span>'+
+        '<span class="day-toggle" onclick="togglePlanInDay(\''+p.id+'\',\''+ds+'\')">'+(p.done?'↺ 取消完成':'✓ 完成')+'</span>'+
+        (p.__archived?'<span class="arch-undo" title="恢复到计划页" onclick="event.stopPropagation();restoreArchive(\''+p.__archId+'\')">↩</span>':'')+
+        '</div>';
+    }).join('');
+  }
+  if(lp.length){
+    body+='<div class="sd-sub">◆ 当天到期的长期计划</div>'+lp.map(function(p){
+      var m=lpMeta(p);
+      return '<div class="sd-row"><span class="dot" style="background:'+C.teng+';width:8px;height:8px;flex:none;margin-top:5px"></span>'+
+        '<span class="t">'+esc(p.title||'未命名长期计划')+
+        '<small>目标 '+esc(p.targetDate||'')+' · '+m.badge+' · 完成 '+m.progress+'%'+(p.__archived?' · 已归档':'')+'</small></span></div>';
     }).join('');
   }
   sheet(ds+' · 当日计划',body,
@@ -2342,28 +2529,52 @@ function openDayPlans(ds){
 function openArchForDate(ds){archMonth=String(ds).slice(0,7);archOpenPop=null;closeSheet();push('archive');}
 function openNewPlanFor(ds){openNewPlan();window.__draftPlanDate=ds;renderPlanSheet();}
 function pagePlan(){
-  var ctx=todayPlanCtx();
+  var ctx=todayPlanCtx(),t=today();
   var undone=ctx.undone,done=ctx.done,rate=ctx.rate;
-  function item(p){
-    var s=subjById(p.subjectId);
+  var od=overduePlans(),fg=futurePlanGroups();
+  function gh(txt,n,extra){
+    return '<div class="task-group"><span>'+txt+(n?' · '+n+' 项':'')+'</span><span class="tg-line"></span>'+
+      (extra?'<span>'+extra+'</span>':'')+'</div>';
+  }
+  /* mode: overdue / today / future / done */
+  function item(p,mode){
+    var s=subjById(p.subjectId),tag='';
+    if(mode==='overdue')tag='<span class="task-date">原定 '+String(p.date).slice(5).replace('-','/')+
+      ' · 逾期 '+dayDiff(t,p.date)+' 天</span>';
+    else if(mode==='future')tag='<span class="task-date future">'+String(p.date).slice(5).replace('-','/')+
+      ' · '+weekCn(p.date)+'</span>';
+    if(p.__archived)tag+='<span class="arch-tag">已归档</span>';
     return '<div class="todo-item'+(p.done?' done':'')+'"><div class="chk'+(p.done?' on':'')+'" onclick="togglePlan(\''+p.id+'\')">'+(p.done?'✓':'')+'</div>'+
-      '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span><span class="tt" onclick="openPlanEditor(\''+p.id+'\')" style="cursor:pointer">'+esc(p.title)+'<br><span class="tiny muted">'+(s?esc(s.name):'未分类')+' · '+esc(p.type||'未选题型')+' · 预计 '+(p.estMin||0)+' 分</span></span>'+
+      '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span><span class="tt" onclick="openPlanEditor(\''+p.id+'\')" style="cursor:pointer">'+esc(p.title)+'<br><span class="tiny muted">'+
+      (tag?tag+'<br>':'')+(s?esc(s.name):'未分类')+' · '+esc(p.type||'未选题型')+' · 预计 '+(p.estMin||0)+' 分</span></span>'+
       '<span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span>'+
       '<span class="edit" style="color:'+C.dai+';font-size:12px;cursor:pointer;padding:6px" onclick="openPlanEditor(\''+p.id+'\')">编辑</span></div>';
   }
+  var odCard=od.length?'<div class="card"><div class="sec-title" style="color:var(--zhe)">逾期未完成 <span class="more">'+od.length+' 项 · 优先补做</span></div>'+
+    od.map(function(p){return item(p,'overdue');}).join('')+
+    '<div class="tiny muted" style="margin-top:8px;line-height:1.6">这些计划保留在常用区域，完成后可随时「归档整理」收走。</div></div>':'';
+  var fgCnt=fg.reduce(function(n,g){return n+g.list.length;},0);
+  var futureCard=fg.length?'<div class="card"><div class="sec-title">即将到来 <span class="more">'+fg.length+' 天 · '+fgCnt+' 项</span></div>'+
+    fg.slice(0,4).map(function(g){
+      return gh(g.date+' '+weekCn(g.date),g.list.length,'到期自动进首页')+
+        g.list.map(function(p){return item(p,'future');}).join('');
+    }).join('')+(fg.length>4?'<div class="tiny muted" style="padding-top:8px">还有 '+(fg.length-4)+' 天，可在下方月历查看</div>':'')+'</div>':'';
   var a=archivablePlans(),archCnt=a.daily.length+a.long.length;
   var acTot=(S.archives||[]).length;
-  return '<div class="hero-title" style="font-size:18px">计划</div><div class="hero-sub">今天日期 · 完成率 '+rate+'%</div>'+
+  return '<div class="hero-title" style="font-size:18px">计划</div><div class="hero-sub">今天 '+t+' · 完成率 '+rate+'%'+(od.length?' · 逾期 '+od.length+' 项':'')+'</div>'+
+    odCard+
     '<div class="page-actions"><button class="btn primary" onclick="openNewPlan()">＋ 新增计划</button>'+
       '<button class="btn ghost" onclick="archivePlans()"'+(!archCnt?' disabled style="opacity:.45"':'')+'>归档整理'+(archCnt?'（'+archCnt+'）':'')+'</button></div>'+
     (acTot?'<div class="plan-arch-bar"><span>已归档 '+acTot+' 条 · 数据完整保留</span>'+
       '<span onclick="push(\'archive\')">查看归档 ›</span></div>':'')+
     '<div class="card"><div class="sec-title">待完成 <span class="more">'+undone.length+' 项</span></div>'+
-      (undone.length?undone.map(item).join(''):
+      (undone.length?undone.map(function(p){return item(p,'today');}).join(''):
         (ctx.total?'<div class="placeholder" style="padding:16px">今天的任务都完成了 ✓'+
                     (ctx.archivedDone?'<br><span class="tiny muted">'+ctx.archivedDone+' 项已完成计划已归档，可在「归档」查看</span>':'')+'</div>':
                      '<div class="placeholder" style="padding:16px">今天还没有计划<br><button class="btn ghost sm" style="margin-top:8px" onclick="openNewPlan()">＋ 新增计划</button></div>'))+'</div>'+
-    (done.length?'<div class="card"><div class="sec-title">已完成 <span class="more">'+done.length+' 项</span></div>'+done.map(item).join('')+'</div>':'')+
+    (done.length?'<div class="card"><div class="sec-title">已完成 <span class="more">'+done.length+' 项</span></div>'+
+      done.map(function(p){return item(p,'done');}).join('')+'</div>':'')+
+    futureCard+
     lpSectionHtml()+
     '<div class="card">'+planCalendarHtml()+'</div>';
 }
@@ -2468,16 +2679,145 @@ function saveGoalEditor(){
   });
   save();closeSheet();render();toast('目标已保存');
 }
+/* ===== 科目·明细：年 / 月 / 日筛选 + 可点柱状图 + 番茄钟 / 计划明细 ===== */
+function sdYears(){
+  var set={};set[today().slice(0,4)]=1;
+  S.sessions.forEach(function(x){if(x.date)set[String(x.date).slice(0,4)]=1;});
+  allPlans().forEach(function(p){if(p.date)set[String(p.date).slice(0,4)]=1;});
+  (S.archives||[]).forEach(function(a){
+    if(a.kind==='longplan'&&a.data&&a.data.targetDate)set[String(a.data.targetDate).slice(0,4)]=1;});
+  return Object.keys(set).sort().reverse();
+}
+function sdInit(id){
+  if(sdSubject===id)return;
+  sdSubject=id;sdYear=today().slice(0,4);sdMonth=today().slice(5,7);sdDay='';
+}
+function sdDaysIn(y,m){return new Date(Number(y),Number(m),0).getDate();}
+function sdRange(){
+  if(!sdMonth)return {from:sdYear+'-01-01',to:sdYear+'-12-31',label:sdYear+' 年',short:'全年'};
+  var mm=('0'+sdMonth).slice(-2),last=sdDaysIn(sdYear,sdMonth);
+  if(!sdDay)return {from:sdYear+'-'+mm+'-01',to:sdYear+'-'+mm+'-'+('0'+last).slice(-2),
+    label:sdYear+' 年 '+Number(sdMonth)+' 月',short:'整月'};
+  var dd=('0'+sdDay).slice(-2);
+  return {from:sdYear+'-'+mm+'-'+dd,to:sdYear+'-'+mm+'-'+dd,label:sdYear+'-'+mm+'-'+dd,short:dd+' 日'};
+}
+function sdSecBetween(id,from,to){
+  var n=0;S.sessions.forEach(function(x){
+    if(x.subjectId===id&&x.date&&String(x.date)>=from&&String(x.date)<=to)n+=(x.seconds||0);});
+  return n;
+}
+function sdData(id,r){
+  var sessions=S.sessions.filter(function(x){
+    return x.subjectId===id&&x.date&&String(x.date)>=r.from&&String(x.date)<=r.to;})
+    .sort(function(a,b){return (String(b.date)+(b.time||'')).localeCompare(String(a.date)+(a.time||''));});
+  var plans=allPlans().filter(function(p){
+    return p.subjectId===id&&p.date&&String(p.date)>=r.from&&String(p.date)<=r.to;})
+    .sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+  return {sessions:sessions,plans:plans,
+    sec:sessions.reduce(function(a,x){return a+(x.seconds||0);},0),
+    pomo:sessions.reduce(function(a,x){return a+(x.pomodoros||1);},0),
+    done:plans.filter(function(p){return p.done;}).length};
+}
+function sdSetYear(y){sdYear=y;sdDay='';closePicker();render();}
+function sdSetMonth(m){sdMonth=m;sdDay='';closePicker();render();}
+function sdSetDay(d){sdDay=d;closePicker();render();}
+function sdPickBar(k){if(!sdMonth)sdMonth=k;else sdDay=k;closePicker();render();}
+function sdGoCurrent(){sdYear=today().slice(0,4);sdMonth=today().slice(5,7);sdDay='';render();}
+function sdYearPicker(){
+  makePicker('sdYearPick',sdYears().map(function(y){
+    return {label:y+' 年',sel:y===sdYear,onclick:"sdSetYear('"+y+"')"};}));
+}
+function sdMonthPicker(){
+  var opts=[{label:'全年',sel:!sdMonth,onclick:"sdSetMonth('')"}];
+  for(var m=1;m<=12;m++){var mm=('0'+m).slice(-2);
+    opts.push({label:m+' 月',sel:sdMonth===mm,onclick:"sdSetMonth('"+mm+"')"});}
+  makePicker('sdMonthPick',opts);
+}
+function sdDayPicker(){
+  var opts=[{label:sdMonth?'整月':'整年',sel:!sdDay,onclick:"sdSetDay('')"}];
+  if(sdMonth){
+    var last=sdDaysIn(sdYear,sdMonth);
+    for(var d=1;d<=last;d++){var dd=('0'+d).slice(-2);
+      opts.push({label:d+' 日',sel:sdDay===dd,onclick:"sdSetDay('"+dd+"')"});}
+  }
+  makePicker('sdDayPick',opts);
+}
+function sdBarsHtml(id,s){
+  var items=[],i,key,from,to,sec;
+  if(!sdMonth){
+    for(i=1;i<=12;i++){
+      key=('0'+i).slice(-2);from=sdYear+'-'+key+'-01';
+      to=sdYear+'-'+key+'-'+('0'+sdDaysIn(sdYear,i)).slice(-2);
+      sec=sdSecBetween(id,from,to);
+      items.push({key:key,label:i+'月',sec:sec,tip:sdYear+' 年 '+i+' 月 · '+fmtDur(sec)});
+    }
+  }else{
+    var mm=('0'+sdMonth).slice(-2),last=sdDaysIn(sdYear,sdMonth);
+    for(i=1;i<=last;i++){
+      key=('0'+i).slice(-2);from=sdYear+'-'+mm+'-'+key;to=from;
+      sec=sdSecBetween(id,from,to);
+      /* 一个月 30 根柱：日期标签每 3 天显示一次（选中日与今天始终显示），避免挤成一团 */
+      var showLb=(i===1||i%5===0||i===last||key===sdDay||from===today());
+      items.push({key:key,label:showLb?String(i):'',sec:sec,today:from===today(),
+        tip:from+' · '+fmtDur(sec)+' · '+plansOn(from).filter(function(p){return p.subjectId===id;}).length+' 项计划'});
+    }
+  }
+  var mx=Math.max(30,Math.max.apply(null,items.map(function(x){return minutes(x.sec);}).concat([0])));
+  var bars=items.map(function(x){
+    var h=Math.max(3,Math.round(minutes(x.sec)/mx*76));
+    var on=(!!sdMonth&&sdDay===x.key);
+    return '<div class="b clickable'+(on?' on':'')+(x.today?' today':'')+'" '+
+      'onclick="sdPickBar(\''+x.key+'\')" title="'+esc(x.tip)+'">'+
+      '<div class="col" style="height:'+h+'px;background:'+(on?C.dai:s.color)+'"></div>'+
+      '<div class="lb">'+x.label+'</div></div>';
+  }).join('');
+  return '<div class="bars"'+(sdMonth?' style="gap:2px"':'')+'>'+bars+'</div><div class="sd-hint">'+
+    (sdMonth?'点某一天的柱子，查看当天时长、番茄数与计划数；点「整月」看整个月':'点某个月的柱子，展开该月每天的明细')+'</div>';
+}
 function pageSubjectDetail(id){
-  var s=subjById(id);if(!s)return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">明细</span></div><div class="empty">科目不存在</div>';
-  var bars='';var mx=Math.max(30,subjectMin(id,shiftDay(0)));
-  for(var i=6;i>=0;i--){var m=subjectMin(id,shiftDay(-i));bars+='<div class="b'+(i===0?' today':'')+'"><div class="col" style="height:'+Math.max(3,Math.round(m/mx*76))+'px;background:'+s.color+'"></div><div class="lb">'+(i===0?'今':shiftDay(-i).slice(8))+'</div></div>';}
-  var recs=sessionsOn(today()).filter(function(x){return x.subjectId===id;});
-  var g=S.subjectGoals[id];
+  var s=subjById(id);
+  if(!s)return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">明细</span></div><div class="empty">科目不存在</div>';
+  sdInit(id);
+  var r=sdRange(),d=sdData(id,r),g=S.subjectGoals[id];
+  var filter='<div class="seg">'+
+    '<span class="s pk-trigger picker-anchor" id="sdYearPick" onclick="sdYearPicker()">'+sdYear+' 年</span>'+
+    '<span class="s pk-trigger picker-anchor" id="sdMonthPick" onclick="sdMonthPicker()">'+(sdMonth?Number(sdMonth)+' 月':'全年')+'</span>'+
+    '<span class="s pk-trigger picker-anchor" id="sdDayPick" onclick="sdDayPicker()">'+(sdDay?Number(sdDay)+' 日':(sdMonth?'整月':'整年'))+'</span></div>';
+  var picked='';
+  if(sdDay){
+    picked='<div class="sd-picked" style="justify-content:space-between"><span>◆ 已选 '+r.label+' · '+fmtDur(d.sec)+
+      ' · '+d.pomo+' 个番茄 · '+d.plans.length+' 项计划（完成 '+d.done+'）</span>'+
+      '<span style="flex:none;text-decoration:underline;cursor:pointer" onclick="sdSetDay(\'\')">看整月</span></div>';
+  }
+  var sessRows=d.sessions.length?d.sessions.map(function(x){
+    return '<div class="sd-row"><span class="dot" style="background:'+s.color+';width:8px;height:8px;flex:none;margin-top:6px"></span>'+
+      '<span class="t">'+fmtDur(x.seconds||0)+' · '+(x.pomodoros||1)+' 个番茄'+
+      '<small>'+esc(x.date||'')+' '+esc(x.time||'')+(x.manual?' · 手补记录':'')+
+      (x.note?' · '+esc(x.note):'')+'</small></span>'+
+      '<span class="v">'+(sdDay?esc(x.time||''):esc(String(x.date||'').slice(5)))+'</span></div>';
+  }).join(''):'<div class="placeholder" style="padding:14px">这个时间范围没有番茄记录</div>';
+  var planRows=d.plans.length?d.plans.map(function(p){
+    return '<div class="sd-row"><span class="t">'+esc(p.title||'未命名计划')+
+      '<small>'+esc(p.date)+' · '+esc(p.type||'未选题型')+' · 预计 '+(p.estMin||0)+' 分 / 已专注 '+(p.doneMin||0)+' 分'+
+      (p.__archived?' · 已归档':'')+'</small></span>'+
+      '<span class="tag '+(p.done?'ok':'todo')+'">'+(p.done?'已完成':'待完成')+'</span></div>';
+  }).join(''):'<div class="placeholder" style="padding:14px">这个时间范围没有该科目的计划</div>';
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">'+esc(s.name)+' · 明细</span></div>'+
-    '<div class="card"><div class="sec-title">近 7 天时长 <span class="more num">本周 '+fmtDur(subjectWeekSec(id))+'</span></div><div class="bars">'+bars+'</div>'+
-    (g?'<div class="tiny muted" style="margin-top:10px">目标：每日 '+g.dailyMinutes+' 分 · 每周 '+g.weeklyMinutes+' 分</div>':'<div class="tiny muted" style="margin-top:10px">未设置分科目标</div>')+'</div>'+
-    '<div class="card"><div class="sec-title">今日记录 <span class="more">精确到秒</span></div>'+(recs.length?recs.map(function(x){return '<div class="todo-item"><span class="dot" style="background:'+s.color+'"></span><span class="tt">专注 '+fmtDur(x.seconds)+'<br><span class="tiny muted">'+esc(x.time||'')+'</span></span><span class="pg num">'+x.pomodoros+' 🍅</span></div>';}).join(''):'<div class="placeholder" style="padding:16px">今天还没有该科目记录</div>')+'</div>';
+    '<div class="page-actions"><button class="btn ghost" onclick="sdGoCurrent()">回到本月</button>'+
+      '<button class="btn primary" onclick="push(\'goals\')">分科目进度 ›</button></div>'+
+    filter+
+    '<div class="card"><div class="sec-title">'+(sdMonth?sdYear+' 年 '+Number(sdMonth)+' 月':sdYear+' 年')+
+      ' · 每日时长 <span class="more num">本周 '+fmtDur(subjectWeekSec(id))+'</span></div>'+
+      sdBarsHtml(id,s)+picked+
+      (g?'<div class="tiny muted" style="margin-top:10px">目标：每日 '+g.dailyMinutes+' 分 · 每周 '+g.weeklyMinutes+' 分</div>':
+           '<div class="tiny muted" style="margin-top:10px">未设置分科目标</div>')+'</div>'+
+    '<div class="card"><div class="sec-title">'+esc(r.label)+' · 记录 <span class="more">'+r.short+'</span></div>'+
+      '<div class="sd-sum"><div class="b"><b>'+minutes(d.sec)+'</b><span>专注分钟</span></div>'+
+      '<div class="b"><b>'+d.pomo+'</b><span>番茄个数</span></div>'+
+      '<div class="b"><b>'+d.plans.length+'</b><span>计划数</span></div>'+
+      '<div class="b"><b>'+d.done+'</b><span>已完成计划</span></div></div>'+
+      '<div class="sd-sub">番茄钟明细 · '+d.sessions.length+' 条</div>'+sessRows+
+      '<div class="sd-sub">计划详情 · '+d.plans.length+' 项</div>'+planRows+'</div>';
 }
 
 /* ============ 页面：科目管理 ============ */
@@ -2723,7 +3063,69 @@ function pageWeekly(){
     '<div class="card"><div class="sec-title">AI 周点评 <span class="more">自动生成</span></div>'+
       '<div class="insight">'+genWeekAdvice(w)+'</div></div>';
 }
-function setStatRange(n){statRange=n;render();}
+function setStatRange(n){statRange=n;statMode='recent';render();}
+/* 统计页时间范围：近期（7 / 30 天）或「年 + 月」两级选择任意历史月份，两种模式互斥。
+   年份列表 = 所有有数据的年份 + 最近 12 年，不截断老数据，时间再长也能翻到以前。 */
+function statYears(){
+  var set={};
+  function add(ds){if(ds)set[String(ds).slice(0,4)]=1;}
+  S.sessions.forEach(function(x){add(x.date);});
+  S.mistakes.forEach(function(x){add(x.date);});
+  allPlans().forEach(function(p){add(p.date);});
+  (S.archives||[]).forEach(function(a){add(a.month||a.date);});
+  var y=new Date().getFullYear();
+  for(var i=0;i<12;i++)set[String(y-i)]=1;
+  return Object.keys(set).sort().reverse();
+}
+function pickStatRecent(n){statRange=n;statMode='recent';closePicker();render();}
+function pickStatYear(y){
+  statMonth=y+'-'+(statMonth.slice(5,7)||today().slice(5,7));
+  statMode='month';closePicker();render();
+}
+function pickStatMonth(m){
+  statMonth=statMonth.slice(0,4)+'-'+m;
+  statMode='month';closePicker();render();
+}
+function statRecentPicker(){
+  makePicker('statRecentPick',[
+    {label:'近 7 天',sel:statMode==='recent'&&statRange===7,onclick:'pickStatRecent(7)'},
+    {label:'近 30 天',sel:statMode==='recent'&&statRange===30,onclick:'pickStatRecent(30)'}
+  ]);
+}
+function statYearPicker(){
+  makePicker('statYearPick',statYears().map(function(y){
+    return {label:y+' 年',sel:statMonth.slice(0,4)===y,onclick:"pickStatYear('"+y+"')"};}));
+}
+function statMonthPicker(){
+  var opts=[];
+  for(var m=1;m<=12;m++){var mm=('0'+m).slice(-2);
+    opts.push({label:m+' 月',sel:statMonth.slice(5,7)===mm,onclick:"pickStatMonth('"+mm+"')"});}
+  makePicker('statMonthPick',opts);
+}
+function statDays(){
+  var out=[];
+  function mk(day,label){
+    var sec=secondsOn(day,statSubject);
+    return {label:label,val:minutes(sec),sec:sec,day:day,
+      tip:day.slice(5).replace('-','/')+' · '+fmtDur(sec)};
+  }
+  if(statMode==='month'&&statMonth){
+    var y=Number(statMonth.slice(0,4)),m=Number(statMonth.slice(5,7));
+    var last=new Date(y,m,0).getDate(),t=today();
+    for(var d=1;d<=last;d++){
+      var ds=y+'-'+('0'+m).slice(-2)+'-'+('0'+d).slice(-2);
+      if(ds>t)break;                    /* 未来日期不进图表 */
+      out.push(mk(ds,String(d)));
+    }
+  }else{
+    for(var i=statRange-1;i>=0;i--){var day=shiftDay(-i);out.push(mk(day,day.slice(5).replace('-','/')));}
+  }
+  return out;
+}
+function statPeriodText(){
+  if(statMode==='month'&&statMonth)return statMonth.slice(0,4)+' 年 '+Number(statMonth.slice(5,7))+' 月';
+  return '近 '+statRange+' 天';
+}
 function pickStatSubject(id){statSubject=id;statType='';closePicker();render();}  /* 换科目时重置题型 */
 function statSubjectPicker(){
   var opts=[{label:'全部科目',sel:!statSubject,onclick:"pickStatSubject('')"}];
@@ -2754,14 +3156,12 @@ function pickStatType(v){statType=v;closePicker();render();}
 function pageStats(){
   /* 统一筛选：科目 + 题型。错题类按题型，专注类按科目 */
   function mIn(m){return (!statSubject||m.subjectId===statSubject)&&(!statType||m.type===statType);}
-  var mistakeSet=S.mistakes.filter(mIn);
-
-  var days=[];
-  for(var i=statRange-1;i>=0;i--){
-    var day=shiftDay(-i),sec=secondsOn(day,statSubject);
-    days.push({label:day.slice(5).replace('-','/'),val:minutes(sec),sec:sec,day:day,
-      tip:day.slice(5).replace('-','/')+' · '+fmtDur(sec)});
-  }
+  var days=statDays();
+  /* 统一时间范围：所有图表（含饼图、错题分布、时段分布）都只取所选区间，不再混入全历史数据 */
+  var from=days.length?days[0].day:today(),to=days.length?days[days.length-1].day:today();
+  /* 选到未来月份时日期列表为空，所有图表必须为空，不能回退显示今天的数据 */
+  function inRange(d){return days.length>0&&!!d&&String(d)>=from&&String(d)<=to;}
+  var mistakeSet=S.mistakes.filter(function(m){return mIn(m)&&inRange(m.date);});
   var totalSec=days.reduce(function(a,d){return a+d.sec;},0);
   var totalMin=minutes(totalSec);
   var totalPomo=0,daysActive=0;
@@ -2771,7 +3171,9 @@ function pageStats(){
   }
 
   /* 科目占比 */
-  var bySub={};S.sessions.forEach(function(s){if(statSubject&&s.subjectId!==statSubject)return;
+  var bySub={};S.sessions.forEach(function(s){
+    if(statSubject&&s.subjectId!==statSubject)return;
+    if(!inRange(s.date))return;
     bySub[s.subjectId]=(bySub[s.subjectId]||0)+s.seconds;});
   var pie=Object.keys(bySub).map(function(id){var sb=subjById(id);var nm=sb?sb.name:'未分类';
     return {label:nm,val:minutes(bySub[id]),color:sb?sb.color:C.ink2,
@@ -2809,6 +3211,7 @@ function pageStats(){
              {label:'傍晚',val:0,color:C.teng},{label:'深夜',val:0,color:C.zhu}];
   S.sessions.forEach(function(s){
     if(statSubject&&s.subjectId!==statSubject)return;
+    if(!inRange(s.date))return;
     var h=parseInt((s.time||'10:00').slice(0,2),10);
     if(h<12)slots[0].val+=s.seconds;else if(h<17)slots[1].val+=s.seconds;else if(h<21)slots[2].val+=s.seconds;else slots[3].val+=s.seconds;});
   slots.forEach(function(p){p.tip=p.label+' · '+fmtDur(p.val);p.val=minutes(p.val);});
@@ -2817,14 +3220,17 @@ function pageStats(){
   var topSub=pie[0]?pie[0].label:'—';
   var subjName=statSubject?(subjById(statSubject)?subjById(statSubject).name:'未分类'):'全部科目';
   var filterTxt=subjName+(statType?' · '+statType:'');
-  var insight='近 '+statRange+' 天，'+esc(filterTxt)+'累计学习 <b>'+fmtDur(totalSec)+'</b>（约 '+totalPomo+' 个番茄）'+
+  var insight=esc(statPeriodText())+'（统计 '+days.length+' 天），'+esc(filterTxt)+'累计学习 <b>'+fmtDur(totalSec)+'</b>（约 '+totalPomo+' 个番茄）'+
     (topSub!=='—'?'，<b>'+topSub+'</b> 用时最多':'')+
     (daysActive?'，平均每个学习日 <b>'+fmtDur(avgSec)+'</b>':'')+'。';
 
   var grpLabel=(statSubject||statType)?'按题型':'按科目';
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">学习统计</span></div>'+
-    '<div class="seg"><span class="s'+(statRange===7?' on':'')+'" onclick="setStatRange(7)">近 7 天</span>'+
-      '<span class="s'+(statRange===30?' on':'')+'" onclick="setStatRange(30)">近 30 天</span></div>'+
+    '<div class="seg">'+
+      '<span class="s pk-trigger picker-anchor'+(statMode==='recent'?' on':'')+'" id="statRecentPick" onclick="statRecentPicker()">近期</span>'+
+      '<span class="s pk-trigger picker-anchor'+(statMode==='month'?' on':'')+'" id="statYearPick" onclick="statYearPicker()">'+statMonth.slice(0,4)+' 年</span>'+
+      '<span class="s pk-trigger picker-anchor'+(statMode==='month'?' on':'')+'" id="statMonthPick" onclick="statMonthPicker()">'+Number(statMonth.slice(5,7))+' 月</span></div>'+
+    '<div class="tiny muted" style="margin:-6px 0 10px;line-height:1.6">「近期」下拉选近 7 天 / 近 30 天；右侧「年」「月」分别可选任意历史月份（年份含全部有数据年份，长期可翻）。所有图表都按所选范围统计。</div>'+
     '<div class="seg" style="margin-top:-6px">'+
       '<span class="s pk-trigger picker-anchor" id="statSubjPick" onclick="statSubjectPicker()">'+esc(subjName)+'</span>'+
       '<span class="s pk-trigger picker-anchor" id="statTypePick" onclick="statTypePicker()">'+(statType?esc(statType):'全部题型')+'</span></div>'+
