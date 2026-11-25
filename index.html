@@ -165,7 +165,7 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .todo-item.done .tt{text-decoration:line-through;color:var(--ink2)}
 .todo-item .tt{flex:1;font-size:13px;min-width:0}
 .todo-item .pg{font-size:12px;color:var(--ink2)}
-/* 计划项右侧的「去专注」：直接起表并把会话绑到这一条 */
+/* 计划项右侧的「去专注」：跳专注页并绑定这一条，起表时机由用户决定 */
 .go-focus{flex:none;font-size:11.5px;color:var(--dai);background:var(--dai3);
   border:1px solid #D6E2F0;border-radius:20px;padding:6px 10px;cursor:pointer;white-space:nowrap}
 .go-focus:active{background:#D8E4F2}
@@ -1397,12 +1397,15 @@ function todaySec(){return secondsOn(today());}
 function todayMin(){return minutes(todaySec());}
 function weekSec(){var t=0;for(var i=0;i<7;i++)t+=secondsOn(shiftDay(-i));return t;}
 function weekMin(){return minutes(weekSec());}
-/* 打卡判定：当天有专注记录 **或完成任意一项当天计划** 即打卡；
+/* 打卡判定（只认已经发生的事实）：
+   ① 当天有真实专注记录（时长 > 0，含手补番茄）；或 ② 当天计划已勾选完成。
+   只是设了计划、点了开始专注但没落记录，都不算打卡。
    达标（标红）仍只看专注时长有没有到日目标。今天还没学习不算断。 */
 function planDoneOn(day){
   return plansOn(day).filter(function(p){return p.done;}).length;
 }
-/* 完成计划 / 记录专注时落一条打卡来源，避免清理某类数据后状态说不清 */
+/* 完成计划 / 记录专注时留一条来源标记，供「清理数据」按来源撤销；
+   标记本身不参与打卡判定，判定始终回到真实记录与完成状态，避免残留标记误判 */
 function markCheckin(day,source){
   if(!day||day>today())return;                 /* 未来的计划提前打勾不算今天的打卡 */
   S.checkins=S.checkins||{};
@@ -1410,9 +1413,9 @@ function markCheckin(day,source){
 }
 function checkinMeta(day){
   var sec=secondsOn(day),goal=(S.goals&&S.goals.dailyMinutes)||0;
-  var planDone=planDoneOn(day),recorded=!!(S.checkins&&S.checkins[day]);
+  var planDone=planDoneOn(day);
   return {sec:sec,planDone:planDone,
-    checked:sec>0||planDone>0||recorded,
+    checked:sec>0||planDone>0,
     goalMet:sec>0&&goal>0&&sec>=goal*60};
 }
 function streak(){
@@ -2510,7 +2513,7 @@ function smartTips(){
   if(sec<goal*60)out.push({t:'今日专注 '+fmtDur(sec)+'，距 '+goal+' 分钟目标还差 '+fmtDur(goal*60-sec)+'。',
     go:'去专注 ›',page:'focus'});
   var st=streak();
-  if(st>=3)out.push({t:'已连续打卡 '+st+' 天（有专注记录或完成计划即算）。打开打卡日历看看是哪几天。',
+  if(st>=3)out.push({t:'已连续打卡 '+st+' 天（当天有专注记录或完成计划才算）。打开打卡日历看看是哪几天。',
     go:'看日历 ›',page:'goals'});
   if(!out.length)out.push({t:'今天的任务都完成了，可以复盘一下今天的收获，沉淀成自己的方法。',
     go:'去复盘 ›',page:'reviews'});
@@ -2559,7 +2562,9 @@ function findPlanEntry(id){
 }
 function focusBoundPlan(){return findPlanEntry(T.planId);}
 function shortPlanTitle(p){var s=String((p&&p.title)||'计划');return s.length>12?s.slice(0,12)+'…':s;}
-/* 从计划项「去专注」：绑定 + 跳到专注页 + 直接起表（已在计时则只改绑，不打断） */
+/* 从计划项「去专注」：只绑定 + 跳到专注页，不替用户起表。
+   计时模式（倒计时 / 正计时）与什么时候开始，都由用户在专注页自己选。
+   已在计时则只改绑、不打断；暂停中则保留进度，由用户决定继续还是重置。 */
 function focusOnPlan(id){
   var e=findPlanEntry(id);
   if(!e){toast('这条计划已不存在');return;}
@@ -2569,7 +2574,7 @@ function focusOnPlan(id){
   if(!T.subjectId){toast('这个计划的科目已删除，请先重新选科目');render();return;}
   if(T.running){toast('专注中，本次会话已关联到「'+shortPlanTitle(e.p)+'」');render();return;}
   if(T.elapsed>0){toast('已关联「'+shortPlanTitle(e.p)+'」，点「继续专注」接着计时');render();return;}
-  toggleTimer();
+  toast('已关联「'+shortPlanTitle(e.p)+'」· 选好计时模式再点开始');render();
 }
 /* 专注页自选计划：可以不选（id 传空串即解除关联） */
 function pickFocusPlan(id){
@@ -2694,7 +2699,7 @@ function pageFocus(){
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
     '<div class="picker-focus">'+pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
     '<div class="plan-pick"><div class="tiny muted">本次关联计划'+
-      noteIcon('可以不选。选中后，这段专注结束时会自动把该计划打勾；也可以从计划项右侧的「去专注」直接过来。')+'</div>'+
+      noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，模式与开始时机由你自己定。')+'</div>'+
       pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
         'openFocusPlanPicker()','本次不关联计划')+'</div>'+
     '<div class="focus-stage"><div class="dial-wrap">'+dial+'</div></div>'+
@@ -3142,7 +3147,7 @@ function checkinCalendarHtml(){
   var firstDow=(new Date(y,m-1,1).getDay()+6)%7;   /* 周一为 0 */
   var days=new Date(y,m,0).getDate();
   var t=today(),goal=(S.goals&&S.goals.dailyMinutes)||0;
-  var h='<div class="sec-title"><span>打卡月历'+noteIcon('打卡 = 当天有专注记录（时长 > 0），或完成至少一项当天计划——勾一下就算，不用再单独打卡；达到日目标 '+
+  var h='<div class="sec-title"><span>打卡月历'+noteIcon('打卡 = 当天有真实专注记录（时长 > 0），或当天计划已勾选完成，不用再单独打卡；只是设了计划、或点了开始但没记录，都不算。达到日目标 '+
     goal+' 分钟标红。今天还没学习不算断。')+'</span><span class="cal-nav"><span onclick="checkinMonthShift(-1)">‹</span><b>'+
     y+' 年 '+m+' 月</b><span onclick="checkinMonthShift(1)">›</span></span></div>';
   h+='<div class="cal-grid">';
@@ -3238,7 +3243,7 @@ function openDayPlans(ds){
     (archN?'<button class="btn ghost" onclick="openArchForDate(\''+ds+'\')">归档 '+archN+' 条 ›</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">关闭</button>'+
     '<button class="btn primary" onclick="openNewPlanFor(\''+ds+'\')">＋ 当天新增计划</button>',
-    '点左侧勾选框或右侧「完成 / 取消完成」可改状态，「专注」直接起表并绑定这条计划；点标题可编辑。过去的、未来的、已归档的计划都能改。');
+    '点左侧勾选框或右侧「完成 / 取消完成」可改状态，「专注」会跳到专注页并绑定这条计划（自己选模式和开始时机）；点标题可编辑。过去的、未来的、已归档的计划都能改。');
 }
 function openArchForDate(ds){archMonth=String(ds).slice(0,7);archOpenPop=null;closeSheet();push('archive');}
 function openNewPlanFor(ds){openNewPlan();window.__draftPlanDate=ds;renderPlanSheet();}
