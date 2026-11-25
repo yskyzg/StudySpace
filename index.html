@@ -1225,9 +1225,20 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .fb-title{font-size:14px;font-weight:600;letter-spacing:.2px}
 .fb-note{margin-left:auto;font-size:10.5px;color:var(--ink3)}
 .seg.mode-seg{margin-bottom:13px}
-.ff-row{margin-bottom:10px}
-.ff-label{display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--ink2);margin-bottom:5px}
-.ff-row .picker-btn{height:42px}
+/* 科目 + 关联计划并排成一条紧凑选择栏，少占上半屏 */
+.focus-picks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.18fr);gap:8px;margin-bottom:10px}
+.focus-picks .fp{min-width:0}
+.focus-picks .fp-lb{display:flex;align-items:center;gap:2px;font-size:10.5px;line-height:1;
+  color:var(--ink2);margin-bottom:5px}
+.focus-picks .picker-btn{height:38px;padding:0 10px;gap:6px;font-size:12.5px;border-radius:var(--r-sm)}
+.focus-picks .picker-btn .dot{width:7px;height:7px;flex:0 0 7px}
+.focus-picks .picker-btn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.focus-picks .picker-btn .arw{font-size:9px}
+/* 右侧关联计划的浮层改为右对齐，长计划名不超出屏幕 */
+.focus-picks .picker-pop{max-width:calc(100vw - 32px)}
+.focus-picks .fp:last-child .picker-pop{left:auto;right:0}
+.focus-picks .picker-pop .pi{overflow:hidden}
+.focus-picks .picker-pop .pi>span:not(.dot):not(.ck){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .fb-stage{position:relative;padding:5px 0 2px}
 .fb-stage::before{content:'';position:absolute;left:50%;top:50%;width:222px;height:222px;
   transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
@@ -2931,12 +2942,13 @@ function pageFocus(){
     '<span class="fb-title">开始一段专注</span><span class="fb-note">可暂停 · 自动记录</span></div>'+
     '<div class="seg mode-seg"><span class="s'+(T.mode==='down'?' on':'')+'" onclick="setMode(\'down\')">倒计时</span>'+
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
-    '<div class="ff-row"><div class="ff-label">当前科目</div>'+
-      pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
-    '<div class="ff-row"><div class="ff-label">本次关联计划'+
-      noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
-      pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
-        'openFocusPlanPicker()','本次不关联计划')+'</div>'+
+    '<div class="focus-picks">'+
+      '<div class="fp"><div class="fp-lb">当前科目</div>'+
+        pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
+      '<div class="fp"><div class="fp-lb">关联计划'+
+        noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
+        pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
+          'openFocusPlanPicker()','本次不关联计划')+'</div></div>'+
     '<div class="fb-stage"><div class="dial-wrap">'+dial+'</div></div>'+
     '<div class="fb-hint">'+hint+'</div>'+
     '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+timerActionLabel()+'</button>'+
