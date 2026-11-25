@@ -163,8 +163,13 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .chk.on{background:var(--qing);border-color:var(--qing)}
 .chk.on::after{opacity:1;transform:rotate(-45deg) translateY(-1px) scale(1)}
 .todo-item.done .tt{text-decoration:line-through;color:var(--ink2)}
-.todo-item .tt{flex:1;font-size:13px}
+.todo-item .tt{flex:1;font-size:13px;min-width:0}
 .todo-item .pg{font-size:12px;color:var(--ink2)}
+/* 计划项右侧的「去专注」：直接起表并把会话绑到这一条 */
+.go-focus{flex:none;font-size:11.5px;color:var(--dai);background:var(--dai3);
+  border:1px solid #D6E2F0;border-radius:20px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.go-focus:active{background:#D8E4F2}
+.go-focus.done{color:var(--ink3);background:var(--paper2);border-color:var(--line)}
 .bars{display:flex;align-items:flex-end;gap:6px;height:96px;padding-top:6px}
 .bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
 .bars .b .col{width:100%;background:var(--dai2);border-radius:5px 5px 0 0;min-height:3px;transition:height .3s}
@@ -983,7 +988,10 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 /* 模式切换沿用统计页的分段槽，不再用两个描边方块 */
 .seg.mode-seg{margin-bottom:12px}
 .seg.mode-seg .s{padding:11px 6px;font-size:13px}
-.picker-focus{margin-bottom:14px}
+.picker-focus{margin-bottom:8px}
+/* 关联计划：标题行与科目选择器同宽，下面挂同一个下拉组件 */
+.plan-pick{margin-bottom:10px}
+.plan-pick .tiny{margin-bottom:5px;display:flex;align-items:center;gap:3px}
 /* 表盘：放进一块纸面舞台，圈内再加一层极淡同心圆，像仪表盘 */
 .focus-stage{position:relative;padding:6px 0 2px;margin-bottom:6px}
 .focus-stage::before{content:'';position:absolute;left:50%;top:50%;width:262px;height:262px;
@@ -1203,6 +1211,8 @@ function soundCfgBlank(){
 function makeEmpty(){
   return {subjects:[],goals:{dailyMinutes:120,weeklyMinutes:600},subjectGoals:{},
     sessions:[],plans:[],longPlans:[],mistakes:[],reviews:[],chats:[],archives:[],weeklyReports:[],
+    /* 打卡来源：'focus'=有专注记录，'plan'=完成计划；历史数据缺字段时由 migrate 补空 */
+    checkins:{},
     profile:{nickname:'学习者',purpose:''},aiConfig:aiCfgBlank(),soundCfg:soundCfgBlank()};
 }
 /* 迁移容错：老数据缺字段时补齐，保证升级不报错、不丢数据 */
@@ -1215,6 +1225,7 @@ function migrate(s){
   });
   s.reviews=s.reviews||[];s.chats=s.chats||[];s.archives=s.archives||[];
   s.weeklyReports=s.weeklyReports||[];s.subjectGoals=s.subjectGoals||{};
+  s.checkins=s.checkins||{};
   s.profile=s.profile||{nickname:'学习者',purpose:''};
   s.aiConfig=s.aiConfig||aiCfgBlank();
   s.soundCfg=s.soundCfg||soundCfgBlank();
@@ -1340,10 +1351,15 @@ function performCleanup(keys){
     archMonth=null;weekOffset=0;tomDate=null;lpDoneOpen=false;
   }else{
     keys.forEach(function(k){
-      if(k==='sessions')S.sessions=[];
+      if(k==='sessions'){
+        S.sessions=[];
+        /* 由专注挣来的打卡一并撤销；由完成计划挣来的保留 */
+        Object.keys(S.checkins||{}).forEach(function(d){if(S.checkins[d]==='focus')delete S.checkins[d];});
+      }
       else if(k==='goals'){S.goals={dailyMinutes:120,weeklyMinutes:600};S.subjectGoals={};}
       else if(k==='plans'){
         S.plans=[];S.longPlans=[];
+        Object.keys(S.checkins||{}).forEach(function(d){if(S.checkins[d]==='plan')delete S.checkins[d];});
         /* 归档里「未完成」的欠债快照也一并清掉，避免清空计划后首页仍冒出逾期提醒；
            已完成的历史归档按约定保留。 */
         S.archives=(S.archives||[]).filter(function(a){
@@ -1381,14 +1397,29 @@ function todaySec(){return secondsOn(today());}
 function todayMin(){return minutes(todaySec());}
 function weekSec(){var t=0;for(var i=0;i<7;i++)t+=secondsOn(shiftDay(-i));return t;}
 function weekMin(){return minutes(weekSec());}
-function streak(){
-  var n=0;for(var i=0;i<400;i++){if(secondsOn(shiftDay(-i))>0)n++;else{if(i===0)continue;break;}}return n;
+/* 打卡判定：当天有专注记录 **或完成任意一项当天计划** 即打卡；
+   达标（标红）仍只看专注时长有没有到日目标。今天还没学习不算断。 */
+function planDoneOn(day){
+  return plansOn(day).filter(function(p){return p.done;}).length;
 }
-/* 打卡判定：当天有专注记录即打卡；达日目标额外标红。
-   计划完成、错题复习不计入打卡；今天未计时不算断。 */
+/* 完成计划 / 记录专注时落一条打卡来源，避免清理某类数据后状态说不清 */
+function markCheckin(day,source){
+  if(!day||day>today())return;                 /* 未来的计划提前打勾不算今天的打卡 */
+  S.checkins=S.checkins||{};
+  if(!S.checkins[day]){S.checkins[day]=source;save();}
+}
 function checkinMeta(day){
   var sec=secondsOn(day),goal=(S.goals&&S.goals.dailyMinutes)||0;
-  return {sec:sec,checked:sec>0,goalMet:sec>0&&goal>0&&sec>=goal*60};
+  var planDone=planDoneOn(day),recorded=!!(S.checkins&&S.checkins[day]);
+  return {sec:sec,planDone:planDone,
+    checked:sec>0||planDone>0||recorded,
+    goalMet:sec>0&&goal>0&&sec>=goal*60};
+}
+function streak(){
+  var n=0;for(var i=0;i<400;i++){
+    if(checkinMeta(shiftDay(-i)).checked)n++;
+    else{if(i===0)continue;break;}
+  }return n;
 }
 function subjectSec(id,day){return sessionsOn(day).filter(function(s){return s.subjectId===id;}).reduce(function(a,s){return a+(s.seconds||0);},0);}
 function subjectMin(id,day){return minutes(subjectSec(id,day));}
@@ -1664,7 +1695,7 @@ initBackButton();
 /* runStart: 本段计时开始时刻(ms)；baseElapsed/baseRemain: 开始时刻的累计值
    每次 tick 用 Date.now()-runStart 反推真实流逝秒数，不依赖 setInterval 的触发次数。
    浏览器/系统在后台会冻结 setInterval，但时间戳照常走，回前台一次性补算。 */
-var T={mode:'down',subjectId:null,focusMin:25,restMin:5,running:false,phase:'focus',remain:25*60,elapsed:0,
+var T={mode:'down',subjectId:null,planId:null,focusMin:25,restMin:5,running:false,phase:'focus',remain:25*60,elapsed:0,
        runStart:0,baseElapsed:0,baseRemain:25*60,overtime:0,baseOvertime:0,
        _endFired:false,_15Fired:false,_5Fired:false};
 var timerId=null;
@@ -1731,6 +1762,9 @@ function advanceTimer(now){
         T._endFired=true;
         queueMilestones();
         queueAlert('end');
+        /* 倒计时到点即完成关联计划，不必等用户再点「结束并记录」 */
+        var dp=completeBoundPlan(T.elapsed);
+        if(dp)toast('专注结束，「'+shortPlanTitle(dp)+'」已自动打勾');
       }
       break;
     }
@@ -1819,7 +1853,10 @@ function resetTimer(){T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.e
 function recordSession(sec){
   if(sec<1){return false;}
   if(!T.subjectId){toast('没有科目，未记录');return false;}
-  S.sessions.push({id:uid(),subjectId:T.subjectId,seconds:sec,pomodoros:Math.max(1,Math.round(sec/1500)),date:today(),time:nowClock()});
+  var e=focusBoundPlan();
+  S.sessions.push({id:uid(),subjectId:T.subjectId,seconds:sec,pomodoros:Math.max(1,Math.round(sec/1500)),
+    date:today(),time:nowClock(),planId:T.planId||'',planTitle:e?String(e.p.title||''):''});
+  markCheckin(today(),'focus');
   save();return true;
 }
 /* 中途结束并记录：倒计时/正向均可，停表 + 落一条真实记录
@@ -1832,6 +1869,7 @@ function manualRecord(){
   var endFired=!!T._endFired,isDown=T.mode==='down';
   T.running=false;                       /* 真正结束计时，避免后台继续累加 */
   var ok=recordSession(sec);              /* 记录设定时长 + 超时部分的合计 */
+  var donePlan=ok?completeBoundPlan(sec):null;   /* 结束即把关联计划打勾 */
   T.elapsed=0;T.remain=T.focusMin*60;T.phase='focus';T.overtime=0;T.baseOvertime=0;
   T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
   cancelNotify();saveFocus();render();
@@ -1841,7 +1879,8 @@ function manualRecord(){
     playSound('end');
   }
   window.__alertQueue=[];                /* 清掉未消费的提醒，避免结束后又弹/又响 */
-  toast(ok?('已记录专注 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')):'未记录');
+  toast(ok?('已记录专注 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')+
+    (donePlan?' · 「'+shortPlanTitle(donePlan)+'」已打勾':'')):'未记录');
 }
 if(!timerId)timerId=setInterval(tick,1000);
 
@@ -2414,8 +2453,9 @@ function pageHome(){
     return '<div class="todo-item"><div class="chk" onclick="togglePlan(\''+p.id+'\')"></div>'+
       '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span>'+
       '<span class="tt">'+esc(p.title)+'<span class="sub">'+tag+(s?esc(s.name):'未分类')+
-        ' · 预计 '+(p.estMin||0)+' 分'+(p.__archived?' · 已归档':'')+'</span></span>'+
-      '<span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span></div>';
+        ' · 预计 '+(p.estMin||0)+' 分'+((p.doneMin||0)>0?' · 已专注 '+p.doneMin+' 分':'')+
+        (p.__archived?' · 已归档':'')+'</span></span>'+
+      '<span class="go-focus" onclick="event.stopPropagation();focusOnPlan(\''+p.id+'\')">▶ 去专注</span></div>';
   }
   function groupHead(txt,n,warn,extra){
     return '<div class="task-group'+(warn?' warn':'')+'"><span>'+txt+(n?' · '+n+' 项':'')+'</span>'+
@@ -2470,7 +2510,7 @@ function smartTips(){
   if(sec<goal*60)out.push({t:'今日专注 '+fmtDur(sec)+'，距 '+goal+' 分钟目标还差 '+fmtDur(goal*60-sec)+'。',
     go:'去专注 ›',page:'focus'});
   var st=streak();
-  if(st>=3)out.push({t:'已连续打卡 '+st+' 天（当天有专注记录即算）。打开打卡日历看看是哪几天。',
+  if(st>=3)out.push({t:'已连续打卡 '+st+' 天（有专注记录或完成计划即算）。打开打卡日历看看是哪几天。',
     go:'看日历 ›',page:'goals'});
   if(!out.length)out.push({t:'今天的任务都完成了，可以复盘一下今天的收获，沉淀成自己的方法。',
     go:'去复盘 ›',page:'reviews'});
@@ -2495,12 +2535,78 @@ function expandTip(){
 }
 function togglePlan(id){
   var p=S.plans.filter(function(x){return x.id===id;})[0];
-  if(p){p.done=!p.done;save();render();toast(p.done?'已完成':'已取消完成');return;}
+  if(p){
+    p.done=!p.done;
+    if(p.done)markCheckin(p.date||today(),'plan');   /* 勾完计划即打卡，不用再去点一次 */
+    save();render();toast(p.done?'已完成 · 今日已打卡':'已取消完成');return;
+  }
   /* 逾期欠债可能来自归档快照：勾选结果写回归档，明细同步更新 */
   var a=(S.archives||[]).filter(function(x){return x.kind==='plan'&&x.data&&x.data.id===id;})[0];
   if(!a)return;
   a.data.done=!a.data.done;a.detail=planDetailLine(a.data);
-  save();render();toast(a.data.done?'已完成，归档记录已同步':'已取消完成');
+  if(a.data.done)markCheckin(a.data.date||a.date||today(),'plan');
+  save();render();toast(a.data.done?'已完成，归档记录已同步 · 今日已打卡':'已取消完成');
+}
+
+/* ============ 计划 ↔ 番茄钟关联 ============ */
+/* 归档里的逾期计划是快照，必须取 a.data 本体，archivedPlanList() 返回的是 clone */
+function findPlanEntry(id){
+  if(!id)return null;
+  var p=S.plans.filter(function(x){return x.id===id;})[0];
+  if(p)return {p:p,a:null};
+  var a=(S.archives||[]).filter(function(x){return x.kind==='plan'&&x.data&&x.data.id===id;})[0];
+  return a?{p:a.data,a:a}:null;
+}
+function focusBoundPlan(){return findPlanEntry(T.planId);}
+function shortPlanTitle(p){var s=String((p&&p.title)||'计划');return s.length>12?s.slice(0,12)+'…':s;}
+/* 从计划项「去专注」：绑定 + 跳到专注页 + 直接起表（已在计时则只改绑，不打断） */
+function focusOnPlan(id){
+  var e=findPlanEntry(id);
+  if(!e){toast('这条计划已不存在');return;}
+  var sb=subjById(e.p.subjectId);
+  if(sb)T.subjectId=sb.id;
+  T.planId=id;saveFocus();goTab('focus');
+  if(!T.subjectId){toast('这个计划的科目已删除，请先重新选科目');render();return;}
+  if(T.running){toast('专注中，本次会话已关联到「'+shortPlanTitle(e.p)+'」');render();return;}
+  if(T.elapsed>0){toast('已关联「'+shortPlanTitle(e.p)+'」，点「继续专注」接着计时');render();return;}
+  toggleTimer();
+}
+/* 专注页自选计划：可以不选（id 传空串即解除关联） */
+function pickFocusPlan(id){
+  var e=id?findPlanEntry(id):null;
+  T.planId=e?id:null;saveFocus();closePicker();render();
+  toast(e?'已关联「'+shortPlanTitle(e.p)+'」':'本次不关联计划');
+}
+function openFocusPlanPicker(){
+  var opts=[{label:'不关联计划（默认）',value:'',sel:!T.planId,onclick:"pickFocusPlan('');closePicker()"}];
+  var list=allPlans().filter(function(p){return !p.done;}).sort(function(a,b){
+    var t=today();
+    function rank(p){return p.date===t?0:(p.date<t?1:2);}
+    return rank(a)-rank(b)||String(a.date).localeCompare(String(b.date));
+  }).slice(0,40);
+  list.forEach(function(p){
+    opts.push({label:esc(shortPlanTitle(p))+' · '+String(p.date||'').slice(5).replace('-','/'),
+      color:subjById(p.subjectId)?subjById(p.subjectId).color:'',sel:p.id===T.planId,
+      onclick:"pickFocusPlan('"+p.id+"');closePicker()"});
+  });
+  if(opts.length===1)opts.push({html:'<span class="muted">还没有待完成的计划，可先去计划页新增</span>',
+    onclick:"closePicker();goTab('plan')"});
+  makePicker('focusPlanPick',opts,null,null);
+}
+/* 专注结束：把绑定计划打勾（当前列表与归档快照都同步），并累计已专注分钟 */
+function completeBoundPlan(sec){
+  var e=focusBoundPlan();
+  if(!e||e.p.done)return null;
+  var p=e.p,used=Math.max(0,Math.round((sec||0)/60));
+  p.done=true;
+  p.doneMin=p.estMin>0?Math.min(p.estMin,(p.doneMin||0)+used):(p.doneMin||0)+used;
+  if(e.a){
+    e.a.data.done=true;e.a.detail=planDetailLine(p);
+    if(p.date){e.a.date=p.date;e.a.month=String(p.date).slice(0,7);}
+  }
+  markCheckin(p.date||today(),'plan');
+  save();
+  return p;
 }
 
 /* ============ 页面：专注 ============ */
@@ -2512,7 +2618,7 @@ function saveFocus(){persistTimer();}
 /* 持久化：把运行状态和时间戳一起存，重开 App 时按时间戳补算，息屏后台都不丢 */
 function persistTimer(){
   try{localStorage.setItem(KEY+'_focus',JSON.stringify({
-    subjectId:T.subjectId,focusMin:T.focusMin,restMin:T.restMin,mode:T.mode,
+    subjectId:T.subjectId,planId:T.planId,focusMin:T.focusMin,restMin:T.restMin,mode:T.mode,
     running:T.running,phase:T.phase,elapsed:T.elapsed,remain:T.remain,
     baseElapsed:T.baseElapsed,baseRemain:T.baseRemain,runStart:T.runStart,overtime:T.overtime,baseOvertime:T.baseOvertime,
     _endFired:T._endFired,_15Fired:T._15Fired,_5Fired:T._5Fired
@@ -2521,7 +2627,10 @@ function persistTimer(){
 function loadFocus(){
   try{
     var f=JSON.parse(localStorage.getItem(KEY+'_focus')||'{}');
-    if(f.subjectId)T.subjectId=f.subjectId;if(f.focusMin)T.focusMin=f.focusMin;
+    if(f.subjectId)T.subjectId=f.subjectId;
+    /* 关联计划允许为空（专注页可以不选） */
+    T.planId=f.planId||null;
+    if(f.focusMin)T.focusMin=f.focusMin;
     if(f.restMin)T.restMin=f.restMin;if(f.mode)T.mode=f.mode;
     if(f.phase)T.phase=f.phase;
     if(typeof f.baseElapsed==='number')T.baseElapsed=f.baseElapsed;
@@ -2559,6 +2668,7 @@ function setTimerField(field,val,min,max){
 }
 function pageFocus(){
   var s=subjById(T.subjectId);
+  var pe=focusBoundPlan(),pp=pe?pe.p:null;
   var over=T.mode==='down'&&T.phase==='focus'&&T.overtime>0;
   var total=(T.mode==='down')?(T.phase==='focus'?T.focusMin:T.restMin)*60:T.focusMin*60;
   var pct=over?1:(T.mode==='down'?(1-T.remain/total):(T.elapsed/total));
@@ -2583,6 +2693,10 @@ function pageFocus(){
     '<div class="seg mode-seg"><span class="s'+(T.mode==='down'?' on':'')+'" onclick="setMode(\'down\')">倒计时</span>'+
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
     '<div class="picker-focus">'+pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
+    '<div class="plan-pick"><div class="tiny muted">本次关联计划'+
+      noteIcon('可以不选。选中后，这段专注结束时会自动把该计划打勾；也可以从计划项右侧的「去专注」直接过来。')+'</div>'+
+      pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
+        'openFocusPlanPicker()','本次不关联计划')+'</div>'+
     '<div class="focus-stage"><div class="dial-wrap">'+dial+'</div></div>'+
     '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+timerActionLabel()+'</button>'+
     '<button class="btn ghost" onclick="resetTimer()">重置</button></div>'+
@@ -2756,7 +2870,7 @@ function pageTomatoes(){
       '<div class="tom-main"><div class="tom-l1"><span>'+fmtDur(x.seconds||0)+'</span>'+
       '<span class="tom-src '+(manual?'manual':'auto')+'">'+(manual?'手补记录':'专注记录')+'</span></div>'+
       '<div class="tom-l2">'+(sb?esc(sb.name):'未分类')+' · '+esc(x.time||'--:--')+' · '+(x.pomodoros||1)+' 个番茄'+
-      (x.note?' · '+esc(x.note):'')+'</div></div>'+
+      (x.planTitle?' · 计划「'+esc(x.planTitle)+'」':'')+(x.note?' · '+esc(x.note):'')+'</div></div>'+
       '<button class="tom-del" onclick="delSession(\''+x.id+'\')">删除</button></div>';
   }).join('');
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">番茄记录</span></div>'+
@@ -3028,8 +3142,8 @@ function checkinCalendarHtml(){
   var firstDow=(new Date(y,m-1,1).getDay()+6)%7;   /* 周一为 0 */
   var days=new Date(y,m,0).getDate();
   var t=today(),goal=(S.goals&&S.goals.dailyMinutes)||0;
-  var h='<div class="sec-title"><span>打卡月历'+noteIcon('打卡 = 当天有专注记录（时长 > 0）；达到日目标 '+goal+
-    ' 分钟标红。今日未学不打断连续。')+'</span><span class="cal-nav"><span onclick="checkinMonthShift(-1)">‹</span><b>'+
+  var h='<div class="sec-title"><span>打卡月历'+noteIcon('打卡 = 当天有专注记录（时长 > 0），或完成至少一项当天计划——勾一下就算，不用再单独打卡；达到日目标 '+
+    goal+' 分钟标红。今天还没学习不算断。')+'</span><span class="cal-nav"><span onclick="checkinMonthShift(-1)">‹</span><b>'+
     y+' 年 '+m+' 月</b><span onclick="checkinMonthShift(1)">›</span></span></div>';
   h+='<div class="cal-grid">';
   ['一','二','三','四','五','六','日'].forEach(function(w){h+='<div class="cal-w">'+w+'</div>';});
@@ -3039,7 +3153,8 @@ function checkinCalendarHtml(){
     var meta=checkinMeta(ds);
     var cls='cal-d'+(meta.checked?(meta.goalMet?' hit':' checked'):'')+(ds===t?' today':'');
     var dot=meta.checked?'<div class="dots"><i style="background:'+(meta.goalMet?C.zhu:C.dai)+'"></i></div>':'';
-    var tip=ds+' · '+(meta.checked?fmtDur(meta.sec)+(meta.goalMet?' · 已达标':''):'未打卡');
+    var tip=ds+' · '+(meta.checked?
+      (meta.sec>0?fmtDur(meta.sec):'完成 '+meta.planDone+' 项计划')+(meta.goalMet?' · 已达标':''):'未打卡');
     h+='<div class="'+cls+'" title="'+tip+'" onclick="openDayCheckin(\''+ds+'\')"><span>'+d+'</span>'+dot+'</div>';
   }
   h+='</div><div class="cal-legend"><span><i style="background:'+C.zhu+'"></i>达标</span>'+
@@ -3062,9 +3177,11 @@ function openDayCheckin(ds){
       '<span class="num">'+fmtDur(n)+'</span></div>';
   }).join('');
   var body='<div class="cal-detail"><span class="n">'+streakForDay(ds)+'</span>'+
-    '<span class="l">截至当天连续打卡天数<br>'+(meta.checked?'已打卡':'未打卡')+'</span></div>'+
+    '<span class="l">截至当天连续打卡天数<br>'+(meta.checked?'已打卡'+(meta.sec<=0&&meta.planDone>0?'（完成计划）':''):'未打卡')+'</span></div>'+
     '<div class="fld"><label>当日专注</label><div class="tiny" style="font-size:14px;color:'+C.ink+'">'+fmtDur(meta.sec)+
       ' · '+pomodorosOn(ds)+' 个番茄'+(meta.goalMet?' · 已达标':'')+'</div></div>'+
+    (meta.planDone?'<div class="fld"><label>已完成计划</label><div class="tiny" style="font-size:14px;color:'+C.ink+'">'+
+      meta.planDone+' 项'+(meta.sec<=0?' · 这一天靠完成计划打卡':'(同样计入打卡)')+'</div></div>':'')+
     (rows?'<div class="fld"><label>科目分布</label>'+rows+'</div>':
       '<div class="placeholder" style="padding:14px">这一天没有专注记录</div>');
   sheet(ds+' · 打卡详情',body,
@@ -3103,6 +3220,7 @@ function openDayPlans(ds){
         '<span class="tt" onclick="closeSheet();openPlanEditor(\''+p.id+'\')" style="cursor:pointer">'+esc(p.title)+'<br>'+
         '<span class="tiny muted">'+(p.done?'已完成':'待完成')+' · 预计 '+(p.estMin||0)+' 分 · '+(s?esc(s.name):'未分类')+
         (p.__archived?' <span class="arch-tag">已归档</span>':'')+'</span></span>'+
+        (p.done?'':'<span class="go-focus" onclick="closeSheet();focusOnPlan(\''+p.id+'\')">▶ 专注</span>')+
         '<span class="day-toggle" onclick="togglePlanInDay(\''+p.id+'\',\''+ds+'\')">'+(p.done?'↺ 取消完成':'✓ 完成')+'</span>'+
         (p.__archived?'<span class="arch-undo" title="恢复到计划页" onclick="event.stopPropagation();restoreArchive(\''+p.__archId+'\')">↩</span>':'')+
         '</div>';
@@ -3120,7 +3238,7 @@ function openDayPlans(ds){
     (archN?'<button class="btn ghost" onclick="openArchForDate(\''+ds+'\')">归档 '+archN+' 条 ›</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">关闭</button>'+
     '<button class="btn primary" onclick="openNewPlanFor(\''+ds+'\')">＋ 当天新增计划</button>',
-    '点左侧勾选框或右侧「完成 / 取消完成」可改状态；点标题可编辑。过去的、未来的、已归档的计划都能改。');
+    '点左侧勾选框或右侧「完成 / 取消完成」可改状态，「专注」直接起表并绑定这条计划；点标题可编辑。过去的、未来的、已归档的计划都能改。');
 }
 function openArchForDate(ds){archMonth=String(ds).slice(0,7);archOpenPop=null;closeSheet();push('archive');}
 function openNewPlanFor(ds){openNewPlan();window.__draftPlanDate=ds;renderPlanSheet();}
@@ -3142,8 +3260,9 @@ function pagePlan(){
     if(p.__archived)tag+='<span class="arch-tag">已归档</span>';
     return '<div class="todo-item'+(p.done?' done':'')+'"><div class="chk'+(p.done?' on':'')+'" onclick="togglePlan(\''+p.id+'\')">'+(p.done?'✓':'')+'</div>'+
       '<span class="dot" style="background:'+(s?s.color:C.ink2)+'"></span><span class="tt" onclick="openPlanEditor(\''+p.id+'\')" style="cursor:pointer">'+esc(p.title)+'<br><span class="tiny muted">'+
-      (tag?tag+'<br>':'')+(s?esc(s.name):'未分类')+' · '+esc(p.type||'未选题型')+' · 预计 '+(p.estMin||0)+' 分</span></span>'+
-      '<span class="pg num">'+(p.doneMin||0)+'/'+(p.estMin||0)+' 分</span>'+
+      (tag?tag+'<br>':'')+(s?esc(s.name):'未分类')+' · '+esc(p.type||'未选题型')+' · 预计 '+(p.estMin||0)+
+      ' 分'+((p.doneMin||0)>0?' · 已专注 '+p.doneMin+' 分':'')+'</span></span>'+
+      (p.done?'':'<span class="go-focus" onclick="event.stopPropagation();focusOnPlan(\''+p.id+'\')">▶ 去专注</span>')+
       '<span class="edit" style="color:'+C.dai+';font-size:12px;cursor:pointer;padding:6px" onclick="openPlanEditor(\''+p.id+'\')">编辑</span></div>';
   }
   var odCard=od.length?'<div class="card">'+
