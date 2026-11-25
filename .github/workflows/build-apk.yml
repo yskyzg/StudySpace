@@ -45,6 +45,18 @@ jobs:
           mkdir -p www
           cp index.html www/index.html
 
+      # 版本号只有一个来源：package.json 的 version。
+      # 先写进待打包的 www/index.html（App 关于页显示的版本），
+      # 后面再写 Android 的 versionName（系统「应用信息」显示的版本）；
+      # 任何一边没写进去就让构建失败，避免发出去一个版本对不上的包。
+      # 注意这步必须在 npx cap sync 之前，否则 android 资源里还是旧版本号。
+      - name: 写入 App 内显示版本（注入 www/index.html）
+        run: |
+          APP_VER=$(node -p "require('./package.json').version")
+          echo "package.json version = $APP_VER"
+          sed -i -E "s/var APP_VERSION='[^']*';/var APP_VERSION='$APP_VER';/" www/index.html
+          grep -q "var APP_VERSION='$APP_VER';" www/index.html || { echo "::error::index.html 的 APP_VERSION 未写入 $APP_VER"; exit 1; }
+
       - name: 重新生成 Android 工程
         run: rm -rf android && npx cap add android
 
@@ -61,6 +73,13 @@ jobs:
           else
             echo "::warning::未找到 assets/logo.svg，本次使用默认图标"
           fi
+
+      - name: 写入系统版本号（Android versionName）
+        run: |
+          APP_VER=$(node -p "require('./package.json').version")
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"$APP_VER\"/" android/app/build.gradle
+          grep -q "versionName \"$APP_VER\"" android/app/build.gradle || { echo "::error::android versionName 未写入 $APP_VER"; exit 1; }
+          grep -nE 'versionCode|versionName' android/app/build.gradle || true
 
       - name: 同步网页资源
         run: npx cap sync android

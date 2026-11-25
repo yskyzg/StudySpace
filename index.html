@@ -988,10 +988,14 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 /* 模式切换沿用统计页的分段槽，不再用两个描边方块 */
 .seg.mode-seg{margin-bottom:12px}
 .seg.mode-seg .s{padding:11px 6px;font-size:13px}
-.picker-focus{margin-bottom:8px}
-/* 关联计划：标题行与科目选择器同宽，下面挂同一个下拉组件 */
-.plan-pick{margin-bottom:10px}
-.plan-pick .tiny{margin-bottom:5px;display:flex;align-items:center;gap:3px}
+/* 当前科目 / 本次关联计划：并排紧凑双联，替代原来的上下两行 */
+.focus-picks{display:grid;grid-template-columns:1fr 1.12fr;gap:8px;margin-bottom:10px}
+.focus-picks .fp-lb{display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--ink2);margin-bottom:4px}
+.focus-picks .picker-btn{height:38px;padding:0 10px;gap:6px;font-size:12.5px}
+.focus-picks .picker-btn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.focus-picks .picker-btn .arw{font-size:9px}
+/* 右侧计划浮层右对齐，长名字不会被屏幕右边缘裁掉 */
+.focus-picks .fp-cell:last-child .picker-pop{left:auto;right:0}
 /* 表盘：放进一块纸面舞台，圈内再加一层极淡同心圆，像仪表盘 */
 .focus-stage{position:relative;padding:6px 0 2px;margin-bottom:6px}
 .focus-stage::before{content:'';position:absolute;left:50%;top:50%;width:262px;height:262px;
@@ -1108,39 +1112,46 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .subj-item:active,.arch-row:active,.tom-row:active{background:rgba(239,232,214,.45)}
 
 /* ---- T. 计划页重设计：今日概览 + 两行任务 + 统一分组 ---- */
-/* T1. 今日概览封面：深黛蓝，衬线大日期与完成率，操作按钮收进卡内不再吸顶挡内容 */
-.plan-hero{position:relative;overflow:hidden;border-radius:var(--r-xl);
-  background:linear-gradient(145deg,#3C6289 0%,#33577F 46%,#28486B 100%);
-  color:#fff;padding:18px 18px 16px;margin-bottom:14px;box-shadow:var(--sh-3)}
-.plan-hero::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(120% 90% at 88% -14%,rgba(255,255,255,.17),rgba(255,255,255,0) 58%)}
-.plan-hero::after{content:'';position:absolute;right:-34px;top:-52px;width:168px;height:168px;
-  border:1px solid rgba(255,255,255,.10);border-radius:50%;pointer-events:none}
-.ph-top{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.ph-date{display:flex;flex-direction:column;line-height:1}
-.ph-day{font-family:var(--serif);font-size:46px;font-weight:600;letter-spacing:-1.6px}
-.ph-day small{font-size:13px;font-weight:400;opacity:.72;margin-left:6px;letter-spacing:.4px}
-.ph-ym{font-size:11px;opacity:.72;margin-top:8px;letter-spacing:.6px}
+/* T1. 今日概览：轻量暖纸卡，取代原深蓝大色块；左侧藤黄竖标与分组卡同一套语言 */
+.plan-hero{position:relative;overflow:hidden;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,#FFFDF7 0%,#FBF5E6 100%);
+  border:1px solid var(--line);color:var(--ink);
+  padding:12px 14px 11px;margin-bottom:12px;box-shadow:var(--sh-2)}
+.plan-hero::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;
+  border-radius:0 3px 3px 0;background:var(--teng);pointer-events:none}
+.ph-top{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ph-date{display:flex;align-items:baseline;gap:7px;line-height:1;min-width:0}
+.ph-day{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:-1px;color:var(--ink);flex:none}
+.ph-day small{font-size:11px;font-weight:400;color:var(--ink2);margin-left:3px;letter-spacing:.4px}
+.ph-ym{font-size:10.5px;color:var(--ink2);letter-spacing:.3px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
 .ph-rate{text-align:right;line-height:1;flex:none}
-.ph-rate b{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:-1px}
-.ph-rate b em{font-size:14px;font-style:normal;font-weight:400;opacity:.8;margin-left:2px}
-.ph-rate span{display:block;font-size:10.5px;opacity:.68;margin-top:7px;letter-spacing:.8px}
-.ph-bar{position:relative;height:6px;border-radius:6px;background:rgba(255,255,255,.18);
-  margin:15px 0 12px;overflow:hidden}
-.ph-bar>i{display:block;height:100%;border-radius:6px;
-  background:linear-gradient(90deg,#F3DFA6,#E9C87B);box-shadow:0 0 12px rgba(243,223,166,.45)}
-.ph-stats{position:relative;display:flex;gap:8px}
-.ph-stats span{flex:1;text-align:center;padding:8px 3px;border-radius:var(--r-sm);
-  background:rgba(255,255,255,.10);font-size:10.5px;color:rgba(255,255,255,.82);white-space:nowrap}
-.ph-stats b{font-family:var(--serif);font-size:17px;color:#fff;margin-right:4px;font-weight:600}
-.ph-stats .od b{color:#F2C0AC}
-.ph-actions{position:relative;display:flex;gap:8px;margin-top:13px}
-.ph-actions button{flex:1;min-width:0;min-height:38px;border-radius:var(--r-md);font-family:inherit;
-  font-size:12.5px;font-weight:600;letter-spacing:.2px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.14);color:#fff;
+.ph-rate b{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.5px;color:var(--dai)}
+.ph-rate b em{font-size:12px;font-style:normal;font-weight:400;opacity:.78;margin-left:1px}
+.ph-rate span{display:block;font-size:10px;color:var(--ink2);margin-top:4px;letter-spacing:.5px}
+/* 完成率口径切换：总计划（默认）/ 今日计划，紧贴上排下方 */
+.ph-scope{position:relative;display:flex;gap:2px;background:var(--paper2);
+  border-radius:var(--r-sm);padding:2px;margin-top:9px}
+.ph-scope span{flex:1;text-align:center;font-size:10.5px;line-height:1;color:var(--ink2);
+  padding:5px 2px;border-radius:7px;cursor:pointer;white-space:nowrap;
+  transition:background .16s var(--ease),color .16s var(--ease)}
+.ph-scope span.on{background:var(--card);color:var(--dai-ink);font-weight:600;box-shadow:var(--sh-1)}
+.ph-bar{position:relative;height:5px;border-radius:5px;background:var(--paper2);
+  margin:8px 0 8px;overflow:hidden}
+.ph-bar>i{display:block;height:100%;border-radius:5px;
+  background:linear-gradient(90deg,#E4C274,var(--teng));transition:width .3s var(--ease)}
+.ph-stats{position:relative;display:flex;gap:6px}
+.ph-stats span{flex:1;text-align:center;padding:5px 3px;border-radius:var(--r-sm);
+  background:var(--paper2);font-size:10px;color:var(--ink2);white-space:nowrap}
+.ph-stats b{font-family:var(--serif);font-size:14px;color:var(--ink);margin-right:3px;font-weight:600}
+.ph-stats .od b{color:var(--zhe)}
+.ph-actions{position:relative;display:flex;gap:7px;margin-top:9px}
+.ph-actions button{flex:1;min-width:0;min-height:34px;border-radius:var(--r-md);font-family:inherit;
+  font-size:12px;font-weight:600;letter-spacing:.2px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--dai-ink);
   transition:background .16s var(--ease)}
-.ph-actions button:active{background:rgba(255,255,255,.26)}
-.ph-actions button.primary{background:#FFFDF7;color:var(--dai-ink);border-color:#FFFDF7}
+.ph-actions button:active{background:var(--paper2)}
+.ph-actions button.primary{background:var(--dai);color:#fff;border-color:var(--dai)}
 .ph-actions button[disabled]{opacity:.46}
 
 /* T2. 分组卡：左侧竖标统一四组语言，计数靠标题、说明靠右 */
@@ -1186,94 +1197,6 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .plan-arch{display:flex;align-items:center;justify-content:space-between;gap:8px;
   margin:0 2px 12px;font-size:10.5px;color:var(--ink3)}
 .plan-arch span:last-child{color:var(--dai);cursor:pointer;white-space:nowrap}
-
-/* ---- U. 专注页重设计：今日概览 + 会话卡 + 竖标分组 ---- */
-.focus-hero{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:16px 18px 14px;
-  background:linear-gradient(150deg,#3C6289 0%,#31567D 52%,#274766 100%);
-  color:#fff;margin-bottom:12px;box-shadow:var(--sh-3)}
-.focus-hero::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(120% 92% at 86% -18%,rgba(255,255,255,.18),rgba(255,255,255,0) 60%)}
-.focus-hero::after{content:'';position:absolute;right:-44px;top:-64px;width:190px;height:190px;
-  border:1px solid rgba(255,255,255,.10);border-radius:50%;pointer-events:none}
-.fh-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.fh-label{font-size:10.5px;letter-spacing:1.6px;opacity:.72}
-.fh-date{font-size:11px;opacity:.75;text-align:right}
-.fh-today{position:relative;display:flex;align-items:baseline;gap:6px;margin-top:9px}
-.fh-today b{font-family:var(--serif);font-size:39px;font-weight:600;letter-spacing:-1.4px;line-height:1}
-.fh-today span{font-size:12px;opacity:.82}
-.fh-today em{font-style:normal;font-size:11px;opacity:.66;margin-left:auto}
-.fh-bar{position:relative;height:6px;border-radius:6px;background:rgba(255,255,255,.18);
-  margin:13px 0 12px;overflow:hidden}
-.fh-bar>i{display:block;height:100%;border-radius:6px;
-  background:linear-gradient(90deg,#F3DFA6,#E9C87B);box-shadow:0 0 12px rgba(243,223,166,.42)}
-.fh-stats{position:relative;display:flex;gap:8px}
-.fh-stats span{flex:1;text-align:center;padding:8px 3px;border-radius:var(--r-sm);
-  background:rgba(255,255,255,.10);font-size:10.5px;color:rgba(255,255,255,.82);white-space:nowrap}
-.fh-stats b{font-family:var(--serif);font-size:17px;color:#fff;margin-right:4px;font-weight:600}
-.fh-plan{position:relative;display:flex;align-items:center;gap:6px;min-width:0;
-  margin-top:11px;padding-top:9px;border-top:1px solid rgba(255,255,255,.14);
-  font-size:11px;color:rgba(255,255,255,.84)}
-.fh-plan .dot{width:7px;height:7px;border-radius:50%;flex:none}
-.fh-plan b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fh-plan em{font-style:normal;margin-left:auto;opacity:.66;flex:none}
-
-/* 会话卡：模式 / 科目 / 关联计划 / 表盘 / 主操作，收在一张纸卡里 */
-.focus-board{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
-  padding:15px 16px 14px;margin-bottom:12px;box-shadow:var(--sh-2)}
-.fb-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.fb-mark{width:3px;height:15px;border-radius:2px;background:var(--dai);flex:none}
-.fb-title{font-size:14px;font-weight:600;letter-spacing:.2px}
-.fb-note{margin-left:auto;font-size:10.5px;color:var(--ink3)}
-.seg.mode-seg{margin-bottom:13px}
-/* 科目 + 关联计划并排成一条紧凑选择栏，少占上半屏 */
-.focus-picks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.18fr);gap:8px;margin-bottom:10px}
-.focus-picks .fp{min-width:0}
-.focus-picks .fp-lb{display:flex;align-items:center;gap:2px;font-size:10.5px;line-height:1;
-  color:var(--ink2);margin-bottom:5px}
-.focus-picks .picker-btn{height:38px;padding:0 10px;gap:6px;font-size:12.5px;border-radius:var(--r-sm)}
-.focus-picks .picker-btn .dot{width:7px;height:7px;flex:0 0 7px}
-.focus-picks .picker-btn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.focus-picks .picker-btn .arw{font-size:9px}
-/* 右侧关联计划的浮层改为右对齐，长计划名不超出屏幕 */
-.focus-picks .picker-pop{max-width:calc(100vw - 32px)}
-.focus-picks .fp:last-child .picker-pop{left:auto;right:0}
-.focus-picks .picker-pop .pi{overflow:hidden}
-.focus-picks .picker-pop .pi>span:not(.dot):not(.ck){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
-.fb-stage{position:relative;padding:5px 0 2px}
-.fb-stage::before{content:'';position:absolute;left:50%;top:50%;width:222px;height:222px;
-  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle at 50% 42%,#FFFDF7 0%,rgba(255,253,247,.74) 54%,rgba(255,253,247,0) 78%);
-  box-shadow:0 20px 42px -28px rgba(74,54,22,.36)}
-.dial-wrap{width:214px;height:214px;margin:0 auto;z-index:1}
-.dial-center .time{font-size:46px}
-.dial-center.over .time{font-size:40px}
-.dial-center .phase{font-size:10px;letter-spacing:1.4px}
-.dial-center .subj{font-size:11.5px;margin-top:3px}
-.dial-center .total{font-size:10px}
-.fb-hint{text-align:center;font-size:10.5px;color:var(--ink3);margin:1px 0 12px}
-.focus-actions{gap:8px;margin:0 0 8px;max-width:none}
-.focus-actions .btn{min-height:44px;font-size:14px;border-radius:var(--r-md)}
-.record-link{margin:0 auto;padding:6px 13px;font-size:11px;color:var(--ink2);background:var(--paper2)}
-.record-link:active{background:#E5DCC6}
-
-/* 计时设置 / 专注分布：与计划页同款竖标分组 */
-.fs-card{padding:14px 16px 12px}
-.fs-head{display:flex;align-items:center;gap:8px;padding:0 0 2px;cursor:pointer}
-.fs-head .arw{margin-left:auto}
-.fs-head.open .arw{transform:rotate(90deg)}
-.fs-title{font-size:13.5px;font-weight:600;color:var(--ink)}
-.fs-note{margin-left:auto;font-size:10.5px;color:var(--ink3)}
-.fs-card .set-row{padding:10px 2px;border-bottom:1px solid var(--line-soft);font-size:12.5px}
-.fs-card .set-row:last-child{border-bottom:none}
-.dist{margin-top:4px}
-.dist .b{margin-bottom:10px}
-.dist .b:last-child{margin-bottom:0}
-.dist .b .lb{font-size:11.5px;margin-bottom:5px}
-.dist .b .lb span:first-child{display:inline-flex;align-items:center;gap:6px}
-.dist .b .lb .dot{width:7px;height:7px;border-radius:50%;flex:none}
-.dist .b .lb .num{color:var(--ink2)}
-.dist .b .track{height:7px;background:#EFE7D2;box-shadow:inset 0 1px 2px rgba(74,54,22,.07)}
-.dist .b .track>i{background-image:linear-gradient(90deg,rgba(255,255,255,.32),rgba(255,255,255,0))}
 </style>
 </head>
 <body>
@@ -1297,6 +1220,9 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 var KEY='studywr_app_v1';
 var KEY_BAK='studywr_app_v1_bak';
 var KEY_META='studywr_app_v1_meta';
+/* 版本号单一来源：改 package.json 的 version，打包时自动注入到这里；
+   装机后若能从原生取到 versionName，则优先显示系统里的真实版本。 */
+var APP_VERSION='1.2.3';
 var PALETTE=[
   {n:'黛蓝',c:'#3D5A80'},{n:'朱红',c:'#B93A26'},{n:'竹青',c:'#6B8E5A'},{n:'藤黄',c:'#C99A2E'},
   {n:'紫檀',c:'#7A4B6B'},{n:'月青',c:'#5B9A9A'},{n:'赭石',c:'#A65D3E'},{n:'松绿',c:'#4F7A5B'},
@@ -1374,7 +1300,8 @@ function soundCfgBlank(){
           end:{on:false,name:'system',data:''},
           fifteen:{on:false,name:'system',data:''},
           five:{on:false,name:'system',data:''},
-          endAgainOnManual:false};
+          endAgainOnManual:false,
+          screenOn:true};
 }
 function makeEmpty(){
   return {subjects:[],goals:{dailyMinutes:120,weeklyMinutes:600},subjectGoals:{},
@@ -1402,6 +1329,8 @@ function migrate(s){
     s.soundCfg[k]={on:!!d.on,name:d.name||'system',data:d.data||''};
   });
   s.soundCfg.endAgainOnManual=!!s.soundCfg.endAgainOnManual;
+  /* 屏幕常亮开关：默认开，只有显式设为 false 才关闭（老数据升级后自动开启） */
+  s.soundCfg.screenOn=s.soundCfg.screenOn!==false;
   if(!s.aiConfig.presets)s.aiConfig.presets=[];
   if(!s.aiConfig.models)s.aiConfig.models=[];
   if(!s.aiConfig.prompts||!s.aiConfig.prompts.length)
@@ -1718,7 +1647,47 @@ function planDetailLine(p){
   var s=subjById(p.subjectId);
   return (s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
 }
-/* 今天的计划上下文：把已归档的「今天已完成」也算进完成率与空状态，避免归档后显示成「还没计划」 */
+/* 计划完成率口径：total=总计划（逾期累积未完成 + 今天新设）；today=仅今天设置。默认 total。
+   两个口径都只统计未归档的现行计划（S.plans）——归档计划及其未完成快照一律排除，
+   既不进分子也不进分母；归档后完成率立即按剩余计划重算，与分子分母口径一致。
+   进度按每条计划的「已专注分钟 / 预计分钟」求平均，打勾算满；计时中的关联计划把本段秒数实时计入。 */
+function planRateList(){
+  var t=today(),list=[];
+  S.plans.forEach(function(p){
+    if(p.__archived)return;                       /* 保险：带归档标记的绝不统计 */
+    if(p.date===t){list.push(p);}                 /* 今天设置的计划，两个口径都含 */
+    else if(rateScope==='total'&&p.date<t&&!p.done){ /* 总口径另含过去未完成、累积到今天的计划 */
+      list.push(p);
+    }
+  });
+  return list;
+}
+function planProgressNow(){
+  var list=planRateList();
+  if(!list.length)return 0;
+  var sum=0;
+  list.forEach(function(p){
+    if(p.done){sum+=1;return;}
+    var est=Math.max(1,Number(p.estMin)||0),dm=Number(p.doneMin)||0;
+    /* 正在专注的关联计划：把本段已计秒数实时计入 */
+    if(T.running&&T.phase==='focus'&&T.planId===p.id)dm+=T.elapsed/60;
+    sum+=Math.max(0,Math.min(1,dm/est));
+  });
+  return Math.round(sum/list.length*100);
+}
+/* 切换完成率口径：只更新封面卡这一块，不整页重绘（保留滚动与折叠状态） */
+function setPlanRateScope(scope){
+  if(scope!=='today'&&scope!=='total')return;
+  rateScope=scope;
+  saveUiState();
+  var pr=planProgressNow(),lbl=(scope==='total'?'总计划完成率':'今日计划完成率');
+  var rn=document.getElementById('planRateNum'),rb=document.getElementById('planRateBar'),
+      rl=document.getElementById('planRateLbl'),sc=document.querySelectorAll('.ph-scope span');
+  if(rn)rn.innerHTML=pr+'<em>%</em>';
+  if(rb)rb.style.width=pr+'%';
+  if(rl)rl.textContent=lbl;
+  if(sc&&sc.length){sc[0].classList.toggle('on',scope==='total');sc[1].classList.toggle('on',scope==='today');}
+}
 function todayPlanCtx(){
   var t=today();
   var active=S.plans.filter(function(p){return p.date===t;});
@@ -1727,9 +1696,8 @@ function todayPlanCtx(){
   var archivedDone=(S.archives||[]).filter(function(a){
     return a.kind==='plan'&&a.date===t&&a.data&&a.data.done;}).length;
   var total=active.length+archivedDone;
-  var doneN=done.length+archivedDone;
   return {active:active,undone:undone,done:done,archivedDone:archivedDone,
-    total:total,rate:total?Math.round(doneN/total*100):0};
+    total:total,rate:planProgressNow()};
 }
 /* 单条长期计划归档：完整数据存进归档，从长期计划与首页倒计时移出 */
 function pushLongPlanArchive(p){
@@ -1785,6 +1753,8 @@ function delSubjectGoal(id){
 
 /* ============ 路由 ============ */
 var R={tab:'home',stack:[]};
+/* 计划完成率口径：total（默认，逾期累积+今天）/ today（仅今天），随 UI 状态持久化 */
+var rateScope='total';
 /* 界面恢复：记住上次停留的页面与各页滚动位置。数据本身仍由 save() 落盘，
    这里只解决「操作一次就跳回顶部 / 重开 App 回到首页」的体验问题。 */
 var KEY_UI='studywr_ui_v1';
@@ -1801,12 +1771,13 @@ function uiKey(){
 function saveUiState(){
   var scr=document.getElementById('screen');
   if(scr)_scrollMap[uiKey()]=Math.round(scr.scrollTop||0);
-  try{localStorage.setItem(KEY_UI,JSON.stringify({tab:R.tab,stack:R.stack,scroll:_scrollMap}));}catch(e){}
+  try{localStorage.setItem(KEY_UI,JSON.stringify({tab:R.tab,stack:R.stack,scroll:_scrollMap,rateScope:rateScope}));}catch(e){}
 }
 function restoreUiState(){
   var o=null;
   try{o=JSON.parse(localStorage.getItem(KEY_UI)||'null');}catch(e){o=null;}
   if(!o)return;
+  if(o.rateScope==='today'||o.rateScope==='total')rateScope=o.rateScope;
   if(o.scroll&&typeof o.scroll==='object')_scrollMap=o.scroll;
   var st=o.stack;
   if(Object.prototype.toString.call(st)==='[object Array]'&&st.length&&
@@ -1968,10 +1939,10 @@ function tick(){if(T.running)syncTimer();}
 /* 回前台/页面恢复时立即补算，避免冻结期间不更新 */
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){persistTimer();}
-  else{syncTimer();}
+  else{syncTimer();syncWakeLock();}   /* 回前台补算并续上屏幕常亮（Web 锁切后台会被释放） */
 });
 window.addEventListener('pagehide',persistTimer);
-window.addEventListener('pageshow',function(){syncTimer();});
+window.addEventListener('pageshow',function(){syncTimer();syncWakeLock();});
 function updateTimerUI(){
   var over=T.mode==='down'&&T.phase==='focus'&&T.overtime>0;
   var s=T.subjectId?subjById(T.subjectId):null;
@@ -1998,6 +1969,10 @@ function updateTimerUI(){
   var rec=document.getElementById('recordLink');
   if(rec)rec.textContent=over?('结束并记录 '+fmtDur(T.elapsed)+' ›'):'结束并记录已专注时长 ›';
   var dot=document.getElementById('miniDot');if(dot&&s)dot.style.background=s.color;
+  /* 计划页可见时实时刷新今日完成率（按专注分钟算，连续变化） */
+  var rn=document.getElementById('planRateNum'),rb=document.getElementById('planRateBar');
+  if(rn&&rb){var pr=planProgressNow();
+    rn.innerHTML=pr+'<em>%</em>';rb.style.width=pr+'%';}
 }
 function toggleTimer(){
   if(!T.running){
@@ -2011,16 +1986,18 @@ function toggleTimer(){
     toast(resuming?'继续计时':'开始计时');
     startLiveNotify();           /* 挂常驻「已开始专注」通知（正向/倒计时都有） */
     rescheduleNotify();          /* 预排系统提醒，息屏也能按时响 */
+    syncWakeLock();              /* 开始计时：申请屏幕常亮（开关开启时） */
   }else{
     syncTimer();                 /* 暂停前先补算到当前时刻 */
     T.running=false;toast('已暂停，点按钮继续');
     cancelNotify();              /* 暂停后不再提醒 */
+    syncWakeLock();              /* 暂停：释放屏幕常亮 */
   }
   saveFocus();render();
 }
 function resetTimer(){T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
   T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
-  cancelNotify();saveFocus();render();toast('已重置');}
+  cancelNotify();syncWakeLock();saveFocus();render();toast('已重置');}
 function recordSession(sec){
   if(sec<1){return false;}
   if(!T.subjectId){toast('没有科目，未记录');return false;}
@@ -2043,7 +2020,7 @@ function manualRecord(){
   var donePlan=ok?completeBoundPlan(sec):null;   /* 结束即把关联计划打勾 */
   T.elapsed=0;T.remain=T.focusMin*60;T.phase='focus';T.overtime=0;T.baseOvertime=0;
   T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
-  cancelNotify();saveFocus();render();
+  cancelNotify();syncWakeLock();saveFocus();render();
   if(isDown&&endFired){
     if(S.soundCfg&&S.soundCfg.endAgainOnManual)playSound('end');
   }else{
@@ -2157,6 +2134,38 @@ function capCall(plugin,method,opts){
     return C.Plugins[plugin][method](opts||{});
   if(typeof C.nativePromise==='function')return C.nativePromise(plugin,method,opts||{});
   return Promise.reject(new Error('no-bridge'));
+}
+/* ============ 屏幕常亮：计时期间保持屏幕点亮 ============
+   原生走 Capacitor KeepAwake 插件（底层 FLAG_KEEP_SCREEN_ON，不受页面可见性影响，最稳）；
+   浏览器降级到 Screen Wake Lock API（切后台自动释放，回前台靠 visibilitychange 重新申请）。
+   任何申请/释放失败都静默降级，绝不影响计时本身。 */
+var _wakeHeld=false,_webWake=null;
+function wakeAcquire(){
+  if(_wakeHeld)return;
+  if(isNative()){
+    capCall('KeepAwake','keepAwake',{}).then(function(){_wakeHeld=true;}).catch(function(){_wakeHeld=false;});
+  }else if(typeof navigator!=='undefined'&&navigator.wakeLock&&typeof navigator.wakeLock.request==='function'){
+    navigator.wakeLock.request('screen').then(function(s){
+      _webWake=s;_wakeHeld=true;
+      if(s&&typeof s.addEventListener==='function')s.addEventListener('release',function(){_wakeHeld=false;_webWake=null;});
+    }).catch(function(){_wakeHeld=false;});
+  }
+}
+function wakeRelease(){
+  _wakeHeld=false;
+  if(isNative()){capCall('KeepAwake','allowSleep',{}).catch(function(){});}
+  else if(_webWake){try{_webWake.release();}catch(e){} _webWake=null;}
+}
+/* 只在「正在计时 + 开关开启」时持有常亮锁；暂停/结束/重置/关开关都会释放 */
+function syncWakeLock(){
+  if(T.running&&S.soundCfg&&S.soundCfg.screenOn!==false)wakeAcquire();
+  else wakeRelease();
+}
+function toggleScreenOn(){
+  S.soundCfg=S.soundCfg||soundCfgBlank();
+  S.soundCfg.screenOn=S.soundCfg.screenOn===false;  /* false→true，其余→false（默认开） */
+  save();syncWakeLock();render();
+  toast(S.soundCfg.screenOn?'已开启计时屏幕常亮':'已关闭屏幕常亮，将按系统设置自动熄屏');
 }
 /* ============ 专注提醒：系统通知（后台/息屏）+ 前台弹窗 + 提示音 ============ */
 var NOTIFY_ID={focus:4101,rest:4102,fifteen:4103,five:4104,live:4110,done:4111};
@@ -2876,12 +2885,13 @@ function loadFocus(){
     /* 恢复运行态：用时间戳补算离开期间流逝的时间（含息屏/后台/重启） */
     if(f.running&&f.runStart){T.running=true;syncTimer();}
     if(T.running){startLiveNotify();if(T.mode==='down'&&T.remain>0)rescheduleNotify();}
+    syncWakeLock();   /* 冷启动恢复计时时续上屏幕常亮 */
   }catch(e){}
 }
 loadFocus();
 function setMode(m){T.mode=m;T.running=false;T.phase='focus';T.remain=T.focusMin*60;T.elapsed=0;T.overtime=0;T.baseOvertime=0;
   T.baseElapsed=0;T.baseRemain=T.focusMin*60;T.runStart=0;resetAlertFlags();closeAlert();
-  cancelNotify();saveFocus();render();}
+  cancelNotify();syncWakeLock();saveFocus();render();}
 function step(field,delta,min,max){
   T[field]=Math.max(min,Math.min(max,T[field]+delta));
   if(field==='focusMin'&&!T.running&&T.phase==='focus')T.remain=T.focusMin*60;
@@ -2916,46 +2926,25 @@ function pageFocus(){
   var smax=Math.max(1,S.subjects.reduce(function(a,x){return Math.max(a,subjectSec(x.id,today()));},0));
   if(S.subjects.length){S.subjects.forEach(function(x){
     var sec=subjectSec(x.id,today());
-    dist+='<div class="b"><div class="lb"><span><i class="dot" style="background:'+x.color+'"></i>'+esc(x.name)+'</span>'+
-      '<span class="num">'+fmtDur(sec)+'</span></div>'+
+    dist+='<div class="b"><div class="lb"><span>'+esc(x.name)+'</span><span class="num">'+fmtDur(sec)+'</span></div>'+
       '<div class="track"><i style="width:'+(sec/smax*100)+'%;background:'+x.color+'"></i></div></div>';
   });}else{dist='<div class="muted tiny">还没有科目</div>';}
-  /* 今日概览：专注分钟升级成衬线大字，目标进度与打卡一目了然 */
-  var tsec=secondsOn(today()),goal=(S.goals&&S.goals.dailyMinutes)||0;
-  var mins=Math.floor(tsec/60),pomo=pomodorosOn(today()),st=streak();
-  var goalPct=goal>0?Math.min(100,Math.round(tsec/(goal*60)*100)):0;
-  var ds=today().split('-');
-  var hero='<div class="focus-hero"><div class="fh-top">'+
-    '<span class="fh-label">FOCUS · 今日专注</span>'+
-    '<span class="fh-date">'+Number(ds[1])+' 月 '+Number(ds[2])+' 日 · '+weekCn(today())+'</span></div>'+
-    '<div class="fh-today"><b class="num">'+mins+'</b><span>分钟</span><em>日目标 '+goal+' 分钟</em></div>'+
-    '<div class="fh-bar"><i style="width:'+goalPct+'%"></i></div>'+
-    '<div class="fh-stats"><span><b class="num">'+pomo+'</b>今日番茄</span>'+
-      '<span><b class="num">'+st+'</b>连续打卡</span>'+
-      '<span><b class="num">'+goalPct+'%</b>目标进度</span></div>'+
-    '<div class="fh-plan">'+(pp?'<span class="dot" style="background:'+(subjById(pp.subjectId)?subjById(pp.subjectId).color:C.dai)+'"></span>'+
-      '<b>'+esc(shortPlanTitle(pp))+'</b><em>本次专注</em>':
-      '<span class="dot" style="background:var(--ink3)"></span><b>本次不关联计划</b><em>自由计时</em>')+'</div></div>';
-  var hint=T.mode==='down'?(T.phase==='focus'?'倒计时 '+T.focusMin+' 分钟 · 自己决定何时开始':'休息 '+T.restMin+' 分钟'):
-    '正向计时 · 记录实际用时';
-  var board='<div class="focus-board"><div class="fb-head"><span class="fb-mark"></span>'+
-    '<span class="fb-title">开始一段专注</span><span class="fb-note">可暂停 · 自动记录</span></div>'+
+  return '<div class="hero-title" style="font-size:18px">专注</div><div class="hero-sub">进去就能开始，设置不打扰</div>'+
     '<div class="seg mode-seg"><span class="s'+(T.mode==='down'?' on':'')+'" onclick="setMode(\'down\')">倒计时</span>'+
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
     '<div class="focus-picks">'+
-      '<div class="fp"><div class="fp-lb">当前科目</div>'+
+      '<div class="fp-cell"><div class="fp-lb">当前科目</div>'+
         pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
-      '<div class="fp"><div class="fp-lb">关联计划'+
+      '<div class="fp-cell"><div class="fp-lb">本次关联计划'+
         noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
         pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
-          'openFocusPlanPicker()','本次不关联计划')+'</div></div>'+
-    '<div class="fb-stage"><div class="dial-wrap">'+dial+'</div></div>'+
-    '<div class="fb-hint">'+hint+'</div>'+
+          'openFocusPlanPicker()','本次不关联计划')+'</div>'+
+    '</div>'+
+    '<div class="focus-stage"><div class="dial-wrap">'+dial+'</div></div>'+
     '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+timerActionLabel()+'</button>'+
     '<button class="btn ghost" onclick="resetTimer()">重置</button></div>'+
-    '<div class="record-link" id="recordLink" onclick="manualRecord()">'+(over?'结束并记录 '+fmtDur(T.elapsed):'结束并记录已专注时长')+' ›</div></div>';
-  var setCard='<div class="card fs-card"><div class="fold-head fs-head" id="foldHead" onclick="toggleFold()">'+
-    '<span class="pg-mark"></span><span class="fs-title">计时设置</span>'+
+    '<div class="record-link" id="recordLink" onclick="manualRecord()">'+(over?'结束并记录 '+fmtDur(T.elapsed):'结束并记录已专注时长')+' ›</div>'+
+    '<div class="card"><div class="fold-head" id="foldHead" onclick="toggleFold()"><span style="font-weight:600;font-size:13.5px">计时设置</span>'+
     '<span class="arw"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>'+
     '<div class="fold-body" id="foldBody">'+
       '<div class="set-row"><span>专注时长（分钟）</span><span class="stepper"><button onclick="step(\'focusMin\',-5,1,180)">−</button><input class="v num" type="number" id="focusMinV" min="1" max="180" value="'+T.focusMin+'" onchange="setTimerField(\'focusMin\',this.value,1,180)"><button onclick="step(\'focusMin\',5,1,180)">+</button></span></div>'+
@@ -2963,11 +2952,10 @@ function pageFocus(){
       (T.mode==='down'?
         '<div class="set-row"><span class="lbl">结束后再响一次<small>到点默认响一次；开启后再点「结束并记录」会再响一次</small></span>'+
         '<span class="sw'+((S.soundCfg&&S.soundCfg.endAgainOnManual)?' on':'')+'" onclick="toggleEndAgain()"></span></div>':'')+
-    '</div></div>';
-  var distCard='<div class="card fs-card"><div class="fs-head"><span class="pg-mark" style="--gc:var(--teng)"></span>'+
-    '<span class="fs-title">今日专注分布</span><span class="fs-note">'+S.subjects.length+' 个科目</span></div>'+
-    '<div class="dist">'+dist+'</div></div>';
-  return hero+board+setCard+distCard;
+      '<div class="set-row"><span class="lbl">计时屏幕常亮<small>专注时屏幕不熄灭，方便看表盘；关闭后按系统设置自动锁屏</small></span>'+
+        '<span class="sw'+((S.soundCfg&&S.soundCfg.screenOn!==false)?' on':'')+'" onclick="toggleScreenOn()"></span></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="sec-title">今日专注分布</div><div class="dist">'+dist+'</div></div>';
 }
 function toggleFold(){var h=document.getElementById('foldHead'),b=document.getElementById('foldBody');h.classList.toggle('open');b.classList.toggle('open');}
 /* 倒计时到点已响过一次后，主动点结束是否再响；正向/未到点结束始终响一次 */
@@ -3540,13 +3528,17 @@ function pagePlan(){
         pFoldBtn(key)+'</div>'+
       pFoldBody(key,'<div class="pg-list">'+body+'</div>')+'</div>';
   }
-  /* 今日概览封面：完成率从一行小字升级成可读的进度封面 */
+  /* 今日概览封面：完成率可切换口径（默认总计划），按专注进度连续刷新 */
   var ym=t.split('-'),ac=archCntSafe();
+  var scopeLabel=rateScope==='total'?'总计划完成率':'今日计划完成率';
   var hero='<div class="plan-hero"><div class="ph-top">'+
     '<div class="ph-date"><span class="ph-day num">'+Number(ym[2])+'<small>日</small></span>'+
       '<span class="ph-ym">'+ym[0]+' 年 '+Number(ym[1])+' 月 · '+weekCn(t)+'</span></div>'+
-    '<div class="ph-rate"><b class="num">'+rate+'<em>%</em></b><span>今日完成率</span></div></div>'+
-    '<div class="ph-bar"><i style="width:'+rate+'%"></i></div>'+
+    '<div class="ph-rate"><b class="num" id="planRateNum">'+rate+'<em>%</em></b><span id="planRateLbl">'+scopeLabel+'</span></div></div>'+
+    '<div class="ph-scope">'+
+      '<span class="'+(rateScope==='total'?'on':'')+'" onclick="setPlanRateScope(\'total\')">总计划完成率</span>'+
+      '<span class="'+(rateScope==='today'?'on':'')+'" onclick="setPlanRateScope(\'today\')">今日计划完成率</span></div>'+
+    '<div class="ph-bar"><i id="planRateBar" style="width:'+rate+'%"></i></div>'+
     '<div class="ph-stats">'+
       '<span><b>'+undone.length+'</b>待完成</span>'+
       '<span><b>'+done.length+'</b>已完成</span>'+
@@ -4930,6 +4922,23 @@ function pageSettings(){
       '<div class="menu-item" onclick="openCleanData()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清理数据（可选择清理项）</span><span class="arw">›</span></div></div>';
 }
 /* 关于页：版本信息 / 开源协议 / 免责协议 / 使用方法（内容待补） */
+/* 关于页版本：默认用 APP_VERSION；在 APK 里再向原生取一次 versionName，
+   让「系统里显示的版本」与「App 内显示的版本」始终一致。 */
+var _appVer=APP_VERSION,_appBuild='';
+function aboutVerText(){
+  return 'v'+_appVer+(_appBuild?' (Build '+_appBuild+')':'')+' · 正式版 · 单文件离线运行';
+}
+function syncAboutVersion(){
+  if(!isNative())return;
+  capCall('App','getInfo',{}).then(function(info){
+    if(!info||!info.version)return;
+    var v=String(info.version),b=info.build?String(info.build):'';
+    if(v===_appVer&&b===_appBuild)return;
+    _appVer=v;_appBuild=b;
+    var el=document.getElementById('aboutVer');
+    if(el)el.textContent=aboutVerText();
+  }).catch(function(){});
+}
 function pageAbout(){
   var rows=[
     {t:'开源协议',d:'MIT License —— 允许自由使用、复制、修改与分发，需保留版权声明。'},
@@ -4940,7 +4949,7 @@ function pageAbout(){
     /* 版本号只在这里展示一次，与名称合成一张封面卡 */
     '<div class="about-hero"><div class="nm">StudySpace</div>'+
       '<div class="tg">专注 · 计划 · 复盘 · 沉淀</div>'+
-      '<div class="ver">v1.2.0 · 正式版 · 单文件离线运行</div></div>'+
+      '<div class="ver" id="aboutVer">'+aboutVerText()+'</div></div>'+
     rows.map(function(r){return '<div class="card about-card"><div class="sec-title">'+esc(r.t)+'</div>'+
       '<p>'+esc(r.d)+'</p></div>';}).join('');
 }
@@ -5292,6 +5301,7 @@ function render(opt){
   else if(page==='archive')html=pageArchive();
   else html=simplePage('页面','');
   scr.innerHTML=html;
+  if(page==='about')syncAboutVersion();
   scr.classList.toggle('chat-mode',page==='ai'&&!!S.chats.length);
   if(opt.anchor){
     /* 收起/展开后把该分组标题拉回原位，视线不跳 */
