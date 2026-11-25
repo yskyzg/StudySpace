@@ -2562,12 +2562,48 @@ function findPlanEntry(id){
 }
 function focusBoundPlan(){return findPlanEntry(T.planId);}
 function shortPlanTitle(p){var s=String((p&&p.title)||'计划');return s.length>12?s.slice(0,12)+'…':s;}
+/* 计时中（或有一段未结束的进度）不允许换计划：这段时长已经属于当前计划，
+   必须先「结束并记录」它，或「重置时长」放弃这段进度，才能改绑到别的计划。 */
+function planSwitchBlocked(id){
+  var busy=T.running||T.elapsed>0||T.overtime>0;
+  return busy&&T.planId!==(id||null);
+}
+function askPlanSwitch(id){
+  var cur=T.planId?findPlanEntry(T.planId):null;
+  var target=id?(findPlanEntry(id)?'「'+esc(shortPlanTitle(findPlanEntry(id).p))+'」':'另一条计划'):'不关联计划';
+  var body='<div style="padding:2px 2px 4px;font-size:13.5px;line-height:1.8;color:'+C.ink+'">'+
+    (cur?'当前正在专注「'+esc(shortPlanTitle(cur.p))+'」。':'当前有一段专注正在进行。')+
+    '这段时长还属于它，不能直接换到'+target+'。<br>请先<strong>结束并记录</strong>当前专注，'+
+    '或<strong>重置时长</strong>放弃这段进度，然后再换计划。</div>';
+  var foot='<button class="btn ghost" onclick="closeSheet()">取消</button>'+
+    '<button class="btn ghost del" onclick="switchFocusPlan(\''+id+'\',\'reset\')">重置时长</button>'+
+    '<button class="btn primary" onclick="switchFocusPlan(\''+id+'\',\'record\')">结束并记录</button>';
+  sheet('正在专注，不能换计划',body,foot);
+}
+/* 弹窗里的两个出口：都先清掉当前这段，再改绑到目标计划 */
+function switchFocusPlan(id,how){
+  closeSheet();
+  if(how==='record'){
+    manualRecord();
+    if(T.running){toast('还没有专注时长，请先重置后再换计划');return;}  /* 不足 1 秒，记录失败则不换 */
+  }else resetTimer();
+  if(id){
+    var e=findPlanEntry(id);
+    if(!e)return;
+    var sb=subjById(e.p.subjectId);
+    if(sb)T.subjectId=sb.id;
+    T.planId=id;
+  }else T.planId=null;
+  saveFocus();goTab('focus');render();
+  toast((how==='record'?'已结束并记录，':'已重置，')+(id?'本次专注改为「'+shortPlanTitle(findPlanEntry(id).p)+'」':'本次不再关联计划'));
+}
 /* 从计划项「去专注」：只绑定 + 跳到专注页，不替用户起表。
    计时模式（倒计时 / 正计时）与什么时候开始，都由用户在专注页自己选。
-   已在计时则只改绑、不打断；暂停中则保留进度，由用户决定继续还是重置。 */
+   计时中改绑会被拦下并弹窗，走「结束并记录」或「重置时长」才能换。 */
 function focusOnPlan(id){
   var e=findPlanEntry(id);
   if(!e){toast('这条计划已不存在');return;}
+  if(planSwitchBlocked(id)){closePicker();askPlanSwitch(id);return;}
   var sb=subjById(e.p.subjectId);
   if(sb)T.subjectId=sb.id;
   T.planId=id;saveFocus();goTab('focus');
@@ -2576,10 +2612,12 @@ function focusOnPlan(id){
   if(T.elapsed>0){toast('已关联「'+shortPlanTitle(e.p)+'」，点「继续专注」接着计时');render();return;}
   toast('已关联「'+shortPlanTitle(e.p)+'」· 选好计时模式再点开始');render();
 }
-/* 专注页自选计划：可以不选（id 传空串即解除关联） */
+/* 专注页自选计划：可以不选（id 传空串即解除关联）；计时中同样先走弹窗 */
 function pickFocusPlan(id){
+  closePicker();
+  if(planSwitchBlocked(id)){askPlanSwitch(id);return;}
   var e=id?findPlanEntry(id):null;
-  T.planId=e?id:null;saveFocus();closePicker();render();
+  T.planId=e?id:null;saveFocus();render();
   toast(e?'已关联「'+shortPlanTitle(e.p)+'」':'本次不关联计划');
 }
 function openFocusPlanPicker(){
@@ -2699,7 +2737,7 @@ function pageFocus(){
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
     '<div class="picker-focus">'+pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
     '<div class="plan-pick"><div class="tiny muted">本次关联计划'+
-      noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，模式与开始时机由你自己定。')+'</div>'+
+      noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，模式与开始时机由你自己定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
       pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
         'openFocusPlanPicker()','本次不关联计划')+'</div>'+
     '<div class="focus-stage"><div class="dial-wrap">'+dial+'</div></div>'+
@@ -3243,7 +3281,7 @@ function openDayPlans(ds){
     (archN?'<button class="btn ghost" onclick="openArchForDate(\''+ds+'\')">归档 '+archN+' 条 ›</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">关闭</button>'+
     '<button class="btn primary" onclick="openNewPlanFor(\''+ds+'\')">＋ 当天新增计划</button>',
-    '点左侧勾选框或右侧「完成 / 取消完成」可改状态，「专注」会跳到专注页并绑定这条计划（自己选模式和开始时机）；点标题可编辑。过去的、未来的、已归档的计划都能改。');
+    '点左侧勾选框或右侧「完成 / 取消完成」可改状态，「专注」会跳到专注页并绑定这条计划（自己选模式和开始时机）；计时中要换计划，得先结束并记录或重置时长。点标题可编辑。过去的、未来的、已归档的计划都能改。');
 }
 function openArchForDate(ds){archMonth=String(ds).slice(0,7);archOpenPop=null;closeSheet();push('archive');}
 function openNewPlanFor(ds){openNewPlan();window.__draftPlanDate=ds;renderPlanSheet();}
