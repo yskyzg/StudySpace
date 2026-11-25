@@ -1186,6 +1186,83 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .plan-arch{display:flex;align-items:center;justify-content:space-between;gap:8px;
   margin:0 2px 12px;font-size:10.5px;color:var(--ink3)}
 .plan-arch span:last-child{color:var(--dai);cursor:pointer;white-space:nowrap}
+
+/* ---- U. 专注页重设计：今日概览 + 会话卡 + 竖标分组 ---- */
+.focus-hero{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:16px 18px 14px;
+  background:linear-gradient(150deg,#3C6289 0%,#31567D 52%,#274766 100%);
+  color:#fff;margin-bottom:12px;box-shadow:var(--sh-3)}
+.focus-hero::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 92% at 86% -18%,rgba(255,255,255,.18),rgba(255,255,255,0) 60%)}
+.focus-hero::after{content:'';position:absolute;right:-44px;top:-64px;width:190px;height:190px;
+  border:1px solid rgba(255,255,255,.10);border-radius:50%;pointer-events:none}
+.fh-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.fh-label{font-size:10.5px;letter-spacing:1.6px;opacity:.72}
+.fh-date{font-size:11px;opacity:.75;text-align:right}
+.fh-today{position:relative;display:flex;align-items:baseline;gap:6px;margin-top:9px}
+.fh-today b{font-family:var(--serif);font-size:39px;font-weight:600;letter-spacing:-1.4px;line-height:1}
+.fh-today span{font-size:12px;opacity:.82}
+.fh-today em{font-style:normal;font-size:11px;opacity:.66;margin-left:auto}
+.fh-bar{position:relative;height:6px;border-radius:6px;background:rgba(255,255,255,.18);
+  margin:13px 0 12px;overflow:hidden}
+.fh-bar>i{display:block;height:100%;border-radius:6px;
+  background:linear-gradient(90deg,#F3DFA6,#E9C87B);box-shadow:0 0 12px rgba(243,223,166,.42)}
+.fh-stats{position:relative;display:flex;gap:8px}
+.fh-stats span{flex:1;text-align:center;padding:8px 3px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.10);font-size:10.5px;color:rgba(255,255,255,.82);white-space:nowrap}
+.fh-stats b{font-family:var(--serif);font-size:17px;color:#fff;margin-right:4px;font-weight:600}
+.fh-plan{position:relative;display:flex;align-items:center;gap:6px;min-width:0;
+  margin-top:11px;padding-top:9px;border-top:1px solid rgba(255,255,255,.14);
+  font-size:11px;color:rgba(255,255,255,.84)}
+.fh-plan .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.fh-plan b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fh-plan em{font-style:normal;margin-left:auto;opacity:.66;flex:none}
+
+/* 会话卡：模式 / 科目 / 关联计划 / 表盘 / 主操作，收在一张纸卡里 */
+.focus-board{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:15px 16px 14px;margin-bottom:12px;box-shadow:var(--sh-2)}
+.fb-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.fb-mark{width:3px;height:15px;border-radius:2px;background:var(--dai);flex:none}
+.fb-title{font-size:14px;font-weight:600;letter-spacing:.2px}
+.fb-note{margin-left:auto;font-size:10.5px;color:var(--ink3)}
+.seg.mode-seg{margin-bottom:13px}
+.ff-row{margin-bottom:10px}
+.ff-label{display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--ink2);margin-bottom:5px}
+.ff-row .picker-btn{height:42px}
+.fb-stage{position:relative;padding:5px 0 2px}
+.fb-stage::before{content:'';position:absolute;left:50%;top:50%;width:222px;height:222px;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 42%,#FFFDF7 0%,rgba(255,253,247,.74) 54%,rgba(255,253,247,0) 78%);
+  box-shadow:0 20px 42px -28px rgba(74,54,22,.36)}
+.dial-wrap{width:214px;height:214px;margin:0 auto;z-index:1}
+.dial-center .time{font-size:46px}
+.dial-center.over .time{font-size:40px}
+.dial-center .phase{font-size:10px;letter-spacing:1.4px}
+.dial-center .subj{font-size:11.5px;margin-top:3px}
+.dial-center .total{font-size:10px}
+.fb-hint{text-align:center;font-size:10.5px;color:var(--ink3);margin:1px 0 12px}
+.focus-actions{gap:8px;margin:0 0 8px;max-width:none}
+.focus-actions .btn{min-height:44px;font-size:14px;border-radius:var(--r-md)}
+.record-link{margin:0 auto;padding:6px 13px;font-size:11px;color:var(--ink2);background:var(--paper2)}
+.record-link:active{background:#E5DCC6}
+
+/* 计时设置 / 专注分布：与计划页同款竖标分组 */
+.fs-card{padding:14px 16px 12px}
+.fs-head{display:flex;align-items:center;gap:8px;padding:0 0 2px;cursor:pointer}
+.fs-head .arw{margin-left:auto}
+.fs-head.open .arw{transform:rotate(90deg)}
+.fs-title{font-size:13.5px;font-weight:600;color:var(--ink)}
+.fs-note{margin-left:auto;font-size:10.5px;color:var(--ink3)}
+.fs-card .set-row{padding:10px 2px;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+.fs-card .set-row:last-child{border-bottom:none}
+.dist{margin-top:4px}
+.dist .b{margin-bottom:10px}
+.dist .b:last-child{margin-bottom:0}
+.dist .b .lb{font-size:11.5px;margin-bottom:5px}
+.dist .b .lb span:first-child{display:inline-flex;align-items:center;gap:6px}
+.dist .b .lb .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.dist .b .lb .num{color:var(--ink2)}
+.dist .b .track{height:7px;background:#EFE7D2;box-shadow:inset 0 1px 2px rgba(74,54,22,.07)}
+.dist .b .track>i{background-image:linear-gradient(90deg,rgba(255,255,255,.32),rgba(255,255,255,0))}
 </style>
 </head>
 <body>
@@ -2828,22 +2905,45 @@ function pageFocus(){
   var smax=Math.max(1,S.subjects.reduce(function(a,x){return Math.max(a,subjectSec(x.id,today()));},0));
   if(S.subjects.length){S.subjects.forEach(function(x){
     var sec=subjectSec(x.id,today());
-    dist+='<div class="b"><div class="lb"><span>'+esc(x.name)+'</span><span class="num">'+fmtDur(sec)+'</span></div>'+
+    dist+='<div class="b"><div class="lb"><span><i class="dot" style="background:'+x.color+'"></i>'+esc(x.name)+'</span>'+
+      '<span class="num">'+fmtDur(sec)+'</span></div>'+
       '<div class="track"><i style="width:'+(sec/smax*100)+'%;background:'+x.color+'"></i></div></div>';
   });}else{dist='<div class="muted tiny">还没有科目</div>';}
-  return '<div class="hero-title" style="font-size:18px">专注</div><div class="hero-sub">进去就能开始，设置不打扰</div>'+
+  /* 今日概览：专注分钟升级成衬线大字，目标进度与打卡一目了然 */
+  var tsec=secondsOn(today()),goal=(S.goals&&S.goals.dailyMinutes)||0;
+  var mins=Math.floor(tsec/60),pomo=pomodorosOn(today()),st=streak();
+  var goalPct=goal>0?Math.min(100,Math.round(tsec/(goal*60)*100)):0;
+  var ds=today().split('-');
+  var hero='<div class="focus-hero"><div class="fh-top">'+
+    '<span class="fh-label">FOCUS · 今日专注</span>'+
+    '<span class="fh-date">'+Number(ds[1])+' 月 '+Number(ds[2])+' 日 · '+weekCn(today())+'</span></div>'+
+    '<div class="fh-today"><b class="num">'+mins+'</b><span>分钟</span><em>日目标 '+goal+' 分钟</em></div>'+
+    '<div class="fh-bar"><i style="width:'+goalPct+'%"></i></div>'+
+    '<div class="fh-stats"><span><b class="num">'+pomo+'</b>今日番茄</span>'+
+      '<span><b class="num">'+st+'</b>连续打卡</span>'+
+      '<span><b class="num">'+goalPct+'%</b>目标进度</span></div>'+
+    '<div class="fh-plan">'+(pp?'<span class="dot" style="background:'+(subjById(pp.subjectId)?subjById(pp.subjectId).color:C.dai)+'"></span>'+
+      '<b>'+esc(shortPlanTitle(pp))+'</b><em>本次专注</em>':
+      '<span class="dot" style="background:var(--ink3)"></span><b>本次不关联计划</b><em>自由计时</em>')+'</div></div>';
+  var hint=T.mode==='down'?(T.phase==='focus'?'倒计时 '+T.focusMin+' 分钟 · 自己决定何时开始':'休息 '+T.restMin+' 分钟'):
+    '正向计时 · 记录实际用时';
+  var board='<div class="focus-board"><div class="fb-head"><span class="fb-mark"></span>'+
+    '<span class="fb-title">开始一段专注</span><span class="fb-note">可暂停 · 自动记录</span></div>'+
     '<div class="seg mode-seg"><span class="s'+(T.mode==='down'?' on':'')+'" onclick="setMode(\'down\')">倒计时</span>'+
     '<span class="s'+(T.mode==='up'?' on':'')+'" onclick="setMode(\'up\')">正向计时</span></div>'+
-    '<div class="picker-focus">'+pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
-    '<div class="plan-pick"><div class="tiny muted">本次关联计划'+
+    '<div class="ff-row"><div class="ff-label">当前科目</div>'+
+      pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
+    '<div class="ff-row"><div class="ff-label">本次关联计划'+
       noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
       pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
         'openFocusPlanPicker()','本次不关联计划')+'</div>'+
-    '<div class="focus-stage"><div class="dial-wrap">'+dial+'</div></div>'+
+    '<div class="fb-stage"><div class="dial-wrap">'+dial+'</div></div>'+
+    '<div class="fb-hint">'+hint+'</div>'+
     '<div class="focus-actions"><button class="btn primary" id="mainTimerBtn" onclick="toggleTimer()">'+timerActionLabel()+'</button>'+
     '<button class="btn ghost" onclick="resetTimer()">重置</button></div>'+
-    '<div class="record-link" id="recordLink" onclick="manualRecord()">'+(over?'结束并记录 '+fmtDur(T.elapsed):'结束并记录已专注时长')+' ›</div>'+
-    '<div class="card"><div class="fold-head" id="foldHead" onclick="toggleFold()"><span style="font-weight:600;font-size:13.5px">计时设置</span>'+
+    '<div class="record-link" id="recordLink" onclick="manualRecord()">'+(over?'结束并记录 '+fmtDur(T.elapsed):'结束并记录已专注时长')+' ›</div></div>';
+  var setCard='<div class="card fs-card"><div class="fold-head fs-head" id="foldHead" onclick="toggleFold()">'+
+    '<span class="pg-mark"></span><span class="fs-title">计时设置</span>'+
     '<span class="arw"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>'+
     '<div class="fold-body" id="foldBody">'+
       '<div class="set-row"><span>专注时长（分钟）</span><span class="stepper"><button onclick="step(\'focusMin\',-5,1,180)">−</button><input class="v num" type="number" id="focusMinV" min="1" max="180" value="'+T.focusMin+'" onchange="setTimerField(\'focusMin\',this.value,1,180)"><button onclick="step(\'focusMin\',5,1,180)">+</button></span></div>'+
@@ -2851,8 +2951,11 @@ function pageFocus(){
       (T.mode==='down'?
         '<div class="set-row"><span class="lbl">结束后再响一次<small>到点默认响一次；开启后再点「结束并记录」会再响一次</small></span>'+
         '<span class="sw'+((S.soundCfg&&S.soundCfg.endAgainOnManual)?' on':'')+'" onclick="toggleEndAgain()"></span></div>':'')+
-    '</div></div>'+
-    '<div class="card"><div class="sec-title">今日专注分布</div><div class="dist">'+dist+'</div></div>';
+    '</div></div>';
+  var distCard='<div class="card fs-card"><div class="fs-head"><span class="pg-mark" style="--gc:var(--teng)"></span>'+
+    '<span class="fs-title">今日专注分布</span><span class="fs-note">'+S.subjects.length+' 个科目</span></div>'+
+    '<div class="dist">'+dist+'</div></div>';
+  return hero+board+setCard+distCard;
 }
 function toggleFold(){var h=document.getElementById('foldHead'),b=document.getElementById('foldBody');h.classList.toggle('open');b.classList.toggle('open');}
 /* 倒计时到点已响过一次后，主动点结束是否再响；正向/未到点结束始终响一次 */
