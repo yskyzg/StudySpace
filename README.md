@@ -139,34 +139,30 @@ npm run build:apk
 
 ## 项目结构
 
-本地工作区里，根目录保留旧版 Study-WR 档案，当前项目全部收在 `www/`：
+仓库采用扁平结构，StudySpace 文件直接位于根目录：
 
 ```text
-E:\09 code\Review\
-├── index.html                    旧版档案，保持不动
-├── README.md                     仓库根说明（指向当前项目）
-├── CLAUDE.md                     旧项目工作约束
-└── www\                          当前 StudySpace 项目
-    ├── index.html                应用全部代码（单文件 HTML/CSS/JS）
-    ├── package.json              Capacitor 依赖、脚本、版本单一来源
-    ├── capacitor.config.json     appId / appName / webDir / 插件配置
-    ├── android.keystore.b64      固定签名密钥（勿删）
-    ├── assets\logo.svg           图标与启动图源图
-    ├── .github\workflows\build-apk.yml
-    ├── README.md                 本文件
-    ├── 功能设计清单.md
-    ├── PRD_番茄学习助手_APK重构.md
-    ├── 界面与交互设计规格.md
-    └── 打包APK操作手册.md
+./
+├── index.html                    应用全部代码（单文件 HTML/CSS/JS）
+├── package.json                  Capacitor 依赖、脚本、版本单一来源
+├── capacitor.config.json         appId / appName / webDir / 插件配置
+├── android.keystore.b64          固定签名密钥（勿删）
+├── assets/logo.svg               图标与启动图源图
+├── .github/workflows/build-apk.yml
+├── README.md                     本文件
+├── 功能设计清单.md
+├── PRD_番茄学习助手_APK重构.md
+├── 界面与交互设计规格.md
+└── 打包APK操作手册.md
 ```
 
-GitHub 仓库是**扁平结构**：上传的是 `www/` 里的内容（不是 `www/` 文件夹本身），所以 workflow 会先 `mkdir -p www && cp index.html www/index.html` 再交给 Capacitor。
+构建时 workflow 会先 `mkdir -p www && cp index.html www/index.html`，再交给 Capacitor 生成 Android 工程。
 
 ---
 
 ## 开发约定
 
-- 只改 `www/` 下的文件；根目录旧项目与 `.workbuddy/` 不动。
+- 改动只涉及应用源码与项目文档，不动根目录旧档案与本地工具目录。
 - 保持单文件零依赖：不引入框架、构建工具、CDN 外链或远程字体。
 - 不新增深色模式；不恢复演示数据；不恢复 AI 外链工具。
 - 小步精准修改，只动与需求直接相关的代码与文档。
