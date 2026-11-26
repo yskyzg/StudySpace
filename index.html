@@ -309,6 +309,21 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .fld label{display:block;font-size:12px;color:var(--ink2);margin-bottom:6px}
 .fld input,.fld select{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;
   padding:0 12px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink)}
+/* 设定计划弹层：两列紧凑栅格，窄屏自动回到单列 */
+.plan-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.plan-form .wide{grid-column:1/-1}
+.plan-form .fld{margin-bottom:0;min-width:0}
+.plan-form .fld label{display:flex;align-items:center;gap:4px;font-size:11px;margin-bottom:4px}
+.plan-form .fld label .note-i{width:14px;height:14px}
+.plan-form .fld label .note-i svg{width:10px;height:10px}
+.plan-form .fld input{height:40px;font-size:13px;padding:0 10px}
+.plan-form .picker-btn{height:40px;padding:0 10px;font-size:12.5px}
+.plan-form .stepper{display:flex;width:100%}
+.plan-form .stepper button{width:34px;height:40px;font-size:18px;flex:none}
+.plan-form .stepper input.v{flex:1;width:auto;min-width:0;height:40px;border:none;background:transparent;box-shadow:none;padding:0}
+.plan-form #npCustomType{margin-top:6px!important}
+.plan-form .fld input[type=range]{height:6px;border:0;padding:0;margin:16px 0 12px;box-shadow:none;background:linear-gradient(90deg,var(--dai) 0%,var(--dai) var(--p,0%),#EDE4CE var(--p,0%),#EDE4CE 100%)}
+@media (max-width:360px){.plan-form{grid-template-columns:1fr}.plan-form .wide{grid-column:auto}}
 .sheet-foot{display:flex;gap:10px;margin-top:18px}
 .sheet-foot .btn{flex:1}
 .confirm{max-width:320px;width:calc(100% - 40px);background:var(--card);border-radius:var(--r-lg);
@@ -319,10 +334,12 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .alert-mask{position:fixed;inset:0;background:rgba(30,22,10,.5);z-index:150;display:flex;
   align-items:center;justify-content:center;animation:fadeIn .2s}
 .alert-box{width:calc(100% - 56px);max-width:340px;background:var(--card);border-radius:var(--r-lg);
-  padding:22px 20px 18px;text-align:center;box-shadow:var(--sh-3)}
+  padding:22px 20px 18px;text-align:center;box-shadow:var(--sh-3);position:relative;overflow:hidden}
+.alert-box::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--dai)}
 .alert-box .em{font-size:38px;line-height:1;margin-bottom:8px}
 .alert-box .t{font-size:17px;font-weight:600;color:var(--dai);margin-bottom:6px}
-.alert-box .d{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:18px}
+.alert-box .d{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:18px;
+  overflow-wrap:anywhere;word-break:break-word}
 .alert-box .row2{display:flex;gap:10px}
 .alert-box .row2 .btn{flex:1}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -336,10 +353,23 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .sw.on{background:var(--dai)}
 .sw.on::after{left:22px}
 .set-sub{padding:2px 14px 12px;background:var(--bg)}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;padding:10px 18px;border-radius:22px;font-size:12.5px;
-  z-index:200;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
-#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* 轻提示：暖纸卡 + 竖标，长计划名/时长自动折行，几秒后自动收起 */
+#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px) scale(.98);
+  width:max-content;max-width:calc(100% - 32px);min-width:132px;
+  background:var(--card);border:1px solid var(--line);border-left:3px solid var(--dai);
+  border-radius:14px;padding:10px 14px 10px 12px;
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12.5px;line-height:1.6;color:var(--ink);
+  box-shadow:var(--sh-3);z-index:200;opacity:0;visibility:hidden;
+  transition:opacity .22s var(--ease),transform .22s var(--ease),visibility .22s;
+  pointer-events:none;overflow-wrap:anywhere;word-break:break-word}
+#toast.on{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}
+#toast .ic{width:22px;height:22px;border-radius:50%;background:var(--dai3);color:var(--dai);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none;margin-top:1px}
+#toast .tx{min-width:0;flex:1}
+#toast .tt{display:block;font-weight:600;color:var(--ink)}
+#toast .td{display:block;font-size:11.5px;color:var(--ink2);line-height:1.55;margin-top:2px}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
 .placeholder{text-align:center;color:var(--ink2);padding:30px 16px;font-size:12.5px;line-height:1.8}
 .placeholder .big{font-size:26px;margin-bottom:8px}
 /* ===== 注释：说明文字收成小图标，点击才展开（点别处收起） ===== */
@@ -386,7 +416,19 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .chart-svg .bar.today{fill:var(--dai)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px}
 .legend .lg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2)}
-.legend .sw{width:10px;height:10px;border-radius:3px;flex:none}
+/* 图例色块复用 .sw 会带上开关圆钮，必须在这里彻底中和 */
+.legend .sw{width:10px;height:10px;border-radius:3px;flex:none;position:static;cursor:default;overflow:hidden}
+.legend .sw::after{display:none}
+/* 首页双系列趋势：一张图两组数据，颜色 + 左右轴双重区分 */
+.chart-svg.home-trend{height:118px}
+.chart-svg .axis-min{fill:var(--dai2)}
+.chart-svg .axis-mis{fill:var(--zhu)}
+.chart-svg .bar.min{fill:var(--dai2)}
+.chart-svg .bar.mis{fill:var(--zhu);opacity:.85}
+.chart-svg .bar.min.today{fill:var(--dai)}
+.chart-svg .bar.mis.today{fill:var(--zhe);opacity:1}
+.home-trend-head{margin-bottom:2px}
+.home-trend-legend{margin-top:4px;gap:6px 14px}
 /* 自动解读：做成"批注条"——左侧书签色竖线，右端渐隐，和卡片区分开 */
 .insight{background:linear-gradient(90deg,var(--dai3),rgba(231,238,246,.28));
   border-left:3px solid var(--dai2);border-radius:3px var(--r-md) var(--r-md) 3px;
@@ -433,6 +475,7 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
   padding:11px 12px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink);resize:vertical;line-height:1.65}
 .auto-sum{background:var(--dai3);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--ink);line-height:1.8;margin-bottom:14px}
 .auto-sum b{color:var(--dai)}
+.auto-sum .srg{display:block;font-size:10.5px;color:var(--ink2);margin-bottom:2px;letter-spacing:.2px}
 
 /* ===== AI 助手 ===== */
 /* 对话页占满可视高度：消息区滚动，输入区固定底部，长对话也不顶飞输入框 */
@@ -645,6 +688,17 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 /* 图例与格子保持一致：也用书签三角，不再用字符 ◆ */
 .cal-legend .lgd-lp{width:0;height:0;border-radius:0;background:none;
   border-top:7px solid var(--teng);border-left:7px solid transparent;font-size:0;line-height:0}
+/* 复盘标记：左上角「日 / 周」小徽标，与计划圆点、长期计划书签互不冲突 */
+.cal-d .rv-marks{position:absolute;top:2px;left:2px;display:flex;gap:2px;z-index:1}
+.cal-d .rv-mark{width:13px;height:13px;border-radius:3px;color:#fff;font-size:9px;line-height:13px;
+  text-align:center;font-style:normal;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.cal-d .rv-mark.daily{background:var(--zhu)}
+.cal-d .rv-mark.weekly{background:#7A4B6B}
+.cal-d.today .rv-mark{box-shadow:0 0 0 1px rgba(255,255,255,.85)}
+.cal-legend .lgd-rv{width:13px;height:13px;border-radius:3px;color:#fff;font-size:9px;
+  font-style:normal;font-weight:600;line-height:13px;text-align:center}
+.cal-legend .lgd-rv.daily{background:var(--zhu)}
+.cal-legend .lgd-rv.weekly{background:#7A4B6B}
 .arch-tag{font-size:9.5px;color:var(--teng);background:var(--tengbg);border-radius:20px;
   padding:1px 7px;flex:none;white-space:nowrap}
 /* 科目·明细：可点柱状图 + 年/月/日筛选 + 汇总与记录 */
@@ -678,6 +732,13 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
   border-radius:12px;background:var(--card);margin-bottom:10px}
 .cal-detail .n{font-size:19px;font-weight:600;color:var(--dai)}
 .cal-detail .l{font-size:11px;color:var(--ink2);line-height:1.6}
+/* 月历当日详情：已写的复盘按类型显示，点击可直接打开 */
+.rv-day-flags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.rv-day-flag{flex:1;min-width:132px;display:flex;align-items:center;gap:4px;padding:8px 10px;
+  border-radius:10px;font-size:11.5px;cursor:pointer;line-height:1.4}
+.rv-day-flag span{margin-left:auto;font-size:10.5px;opacity:.75}
+.rv-day-flag.daily{background:var(--zhubg);color:var(--zhu)}
+.rv-day-flag.weekly{background:#F1E6EF;color:#7A4B6B}
 /* 图表悬浮/触摸提示 */
 #chartTip{position:fixed;z-index:400;pointer-events:none;background:var(--ink);color:#fff;
   font-size:12px;line-height:1.5;padding:7px 11px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.22);
@@ -966,6 +1027,53 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .about-card .sec-title{font-size:12.5px;color:var(--dai);letter-spacing:.4px;margin-bottom:8px}
 .about-card p{font-size:11.5px;color:var(--ink2);line-height:1.85;letter-spacing:.1px}
 
+/* ---- L2. 使用说明：目录快跳 + 折叠章节 ---- */
+.help-intro{padding:18px 16px}
+.help-intro .hk{font-size:10px;letter-spacing:1.4px;color:var(--ink3)}
+.help-intro .ht{font-size:18px;font-family:var(--serif);color:var(--dai-ink);margin:5px 0 12px}
+.help-steps{display:flex;flex-direction:column;gap:10px}
+.help-step{display:flex;gap:10px;align-items:flex-start}
+.help-step .n{width:22px;height:22px;flex:none;border-radius:50%;background:var(--dai3);color:var(--dai);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.help-step b{display:block;font-size:12.5px;color:var(--ink);margin-bottom:1px}
+.help-step span{display:block;font-size:11px;color:var(--ink2);line-height:1.65}
+.help-quick{display:flex;gap:8px;margin-top:15px}
+.help-quick .btn{flex:1;min-width:0;padding:0 8px}
+.help-toc{display:flex;gap:6px;overflow-x:auto;padding:1px 0 9px;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+.help-toc::-webkit-scrollbar{display:none}
+.help-toc .hc{flex:none;font-size:11px;padding:6px 10px;border-radius:20px;border:1px solid var(--line);
+  background:var(--card);color:var(--dai);cursor:pointer;white-space:nowrap;box-shadow:var(--sh-1)}
+.help-toc .hc:active{background:var(--dai3)}
+.help-bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink3);
+  margin:2px 2px 10px}
+.help-bar .op{color:var(--dai);cursor:pointer;margin-left:14px}
+.help-sec{padding:0;overflow:hidden}
+.help-head{display:flex;align-items:center;gap:10px;padding:14px 15px;cursor:pointer}
+.help-head .hi{font-size:10px;color:var(--ink3);width:18px;flex:none;font-variant-numeric:tabular-nums}
+.help-head .hn{font-size:13.5px;font-weight:600;flex:1;color:var(--ink)}
+.help-head .ha{font-size:12px;color:var(--ink3);transition:transform .2s var(--ease)}
+.help-head.open .ha{transform:rotate(90deg)}
+.help-head.open .hn{color:var(--dai)}
+.help-body{display:none;padding:0 15px 14px}
+.help-body.open{display:block}
+.help-p{font-size:12px;color:var(--ink2);line-height:1.85;margin:2px 0 8px}
+.help-li{position:relative;padding-left:13px;font-size:12px;color:var(--ink2);line-height:1.8;margin-bottom:5px}
+.help-li::before{content:'';position:absolute;left:2px;top:8px;width:4px;height:4px;border-radius:50%;background:var(--dai2)}
+.help-li b{color:var(--ink);font-weight:600}
+.help-rule{background:var(--dai3);border-radius:var(--r-sm);padding:9px 11px;margin:8px 0 10px;
+  font-size:11.5px;color:var(--dai-ink);line-height:1.75}
+.help-rule b{color:var(--dai)}
+.help-go{display:inline-flex;align-items:center;font-size:11.5px;color:var(--dai);cursor:pointer;
+  border:1px solid #D6E2F0;background:var(--card);border-radius:20px;padding:5px 11px;margin:2px 6px 4px 0}
+.help-go:active{background:var(--dai3)}
+.help-body:not(.open) .help-go{display:none}
+.help-qa{padding:0 15px 13px}
+.help-q{font-size:12px;color:var(--dai-ink);font-weight:600;line-height:1.7;margin:9px 0 2px}
+.help-a{font-size:11.5px;color:var(--ink2);line-height:1.8}
+.help-end{text-align:center;font-size:11px;color:var(--ink3);line-height:1.9;padding:4px 0 10px}
+.help-end span{color:var(--dai);cursor:pointer}
+
 /* ---- M. AI 助手 ---- */
 .ai-bar{gap:8px;margin-bottom:8px}
 .ai-bar .label{font-size:10.5px;color:var(--ink3);letter-spacing:.3px}
@@ -989,8 +1097,12 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 .seg.mode-seg{margin-bottom:12px}
 .seg.mode-seg .s{padding:11px 6px;font-size:13px}
 /* 当前科目 / 本次关联计划：并排紧凑双联，替代原来的上下两行 */
-.focus-picks{display:grid;grid-template-columns:1fr 1.12fr;gap:8px;margin-bottom:10px}
-.focus-picks .fp-lb{display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--ink2);margin-bottom:4px}
+.focus-picks{display:grid;grid-template-columns:1fr 1.12fr;gap:8px;margin-bottom:10px;align-items:start}
+.focus-picks .fp-cell{min-width:0}
+/* 标签行固定高度：右侧说明图标不再把整行撑高，两个下拉框保持同一水平线 */
+.focus-picks .fp-lb{display:flex;align-items:center;gap:3px;height:18px;line-height:18px;
+  font-size:10.5px;color:var(--ink2);margin-bottom:4px}
+.focus-picks .fp-lb .note-i{width:16px;height:16px;flex:none}
 .focus-picks .picker-btn{height:38px;padding:0 10px;gap:6px;font-size:12.5px}
 .focus-picks .picker-btn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .focus-picks .picker-btn .arw{font-size:9px}
@@ -1213,7 +1325,7 @@ div.bar{height:8px;background:rgba(255,255,255,.22);border-radius:999px;overflow
 <div id="sheetRoot"></div>
 <div id="confirmRoot"></div>
 <div id="alertRoot"></div>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /* ============ 全局常量 ============ */
@@ -1222,7 +1334,7 @@ var KEY_BAK='studywr_app_v1_bak';
 var KEY_META='studywr_app_v1_meta';
 /* 版本号单一来源：改 package.json 的 version，打包时自动注入到这里；
    装机后若能从原生取到 versionName，则优先显示系统里的真实版本。 */
-var APP_VERSION='1.2.3';
+var APP_VERSION='1.2.4';
 var PALETTE=[
   {n:'黛蓝',c:'#3D5A80'},{n:'朱红',c:'#B93A26'},{n:'竹青',c:'#6B8E5A'},{n:'藤黄',c:'#C99A2E'},
   {n:'紫檀',c:'#7A4B6B'},{n:'月青',c:'#5B9A9A'},{n:'赭石',c:'#A65D3E'},{n:'松绿',c:'#4F7A5B'},
@@ -1314,6 +1426,11 @@ function makeEmpty(){
 function migrate(s){
   if(!s||!s.subjects)return s;
   s.plans=s.plans||[];s.longPlans=s.longPlans||[];s.sessions=s.sessions||[];s.mistakes=s.mistakes||[];
+  /* 完成日期：老数据没有这个字段，已完成的按「设定当天完成」补，避免把历史已完成误当成逾期欠债 */
+  s.plans.forEach(function(p){
+    p.done=!!p.done;
+    p.doneDate=p.done?String(p.doneDate||p.date||today()):'';
+  });
   s.longPlans.forEach(function(p){
     p.title=p.title||'未命名长期计划';p.targetDate=p.targetDate||today();p.startDate=p.startDate||today();
     p.progress=Math.max(0,Math.min(100,Number(p.progress)||0));p.done=!!p.done;p.note=p.note||'';
@@ -1340,6 +1457,7 @@ function migrate(s){
     m.type=m.type||'';m.reason=m.reason||'';m.answer=m.answer||'';
     m.knowledge=m.knowledge||[];m.img=m.img||'';m.answerImg=m.answerImg||'';
     m.nextReview=m.nextReview||m.date||today();m.stage=m.stage||0;m.reviewed=m.reviewed||0;
+    m.lastReview=m.lastReview||'';
   });
   s.reviews.forEach(function(r){r.subjects=r.subjects||[];});
   return s;
@@ -1583,7 +1701,12 @@ function restoreArchive(id){
     function(){
       S[key]=S[key]||[];
       S[key]=S[key].filter(function(x){return x.id!==a.data.id;});
-      S[key].push(cloneData(a.data));
+      var restored=cloneData(a.data);
+      if(!isLong){                       /* 恢复的日常计划补齐完成日期，老归档按设定当天完成处理 */
+        restored.done=!!restored.done;
+        restored.doneDate=restored.done?String(restored.doneDate||restored.date||today()):'';
+      }
+      S[key].push(restored);
       S.archives=(S.archives||[]).filter(function(x){return x.id!==id;});
       syncArchMonth();save();render();toast('已恢复，可在计划页继续编辑');
     });
@@ -1647,17 +1770,21 @@ function planDetailLine(p){
   var s=subjById(p.subjectId);
   return (s?s.name:'未分类')+' · 预计 '+(p.estMin||0)+' 分 · '+(p.done?'已完成':'未完成');
 }
-/* 计划完成率口径：total=总计划（逾期累积未完成 + 今天新设）；today=仅今天设置。默认 total。
-   两个口径都只统计未归档的现行计划（S.plans）——归档计划及其未完成快照一律排除，
-   既不进分子也不进分母；归档后完成率立即按剩余计划重算，与分子分母口径一致。
-   进度按每条计划的「已专注分钟 / 预计分钟」求平均，打勾算满；计时中的关联计划把本段秒数实时计入。 */
+/* 计划完成率口径：按「已完成条数 / 统计范围内条数」算，完成一项就涨一档，跟专注分钟无关。
+   total（默认）= 到今天仍算逾期的计划 + 今天设置的计划；
+     · 逾期 = 设定日期早于今天，且不是在过去就已完成的（未完成，或今天才补完的都算）
+     · 过去就完成的计划不属于「到当天都没完成的逾期」，不进总计划的分母
+     · 逾期计划今天打勾后仍留在分母、并计入分子，不会因为完成而消失
+   today = 仅今天设置的计划。
+   归档计划及其未完成快照一律排除，两个口径都不进分子分母。 */
 function planRateList(){
   var t=today(),list=[];
   S.plans.forEach(function(p){
     if(p.__archived)return;                       /* 保险：带归档标记的绝不统计 */
-    if(p.date===t){list.push(p);}                 /* 今天设置的计划，两个口径都含 */
-    else if(rateScope==='total'&&p.date<t&&!p.done){ /* 总口径另含过去未完成、累积到今天的计划 */
-      list.push(p);
+    if(p.date===t){list.push(p);return;}          /* 今天设置的计划，两个口径都含 */
+    if(rateScope==='total'&&p.date<t){
+      /* 过去的计划：未完成 = 逾期欠债；今天补完的也算逾期；过去就完成的不算 */
+      if(!p.done||!p.doneDate||p.doneDate===t)list.push(p);
     }
   });
   return list;
@@ -1665,15 +1792,9 @@ function planRateList(){
 function planProgressNow(){
   var list=planRateList();
   if(!list.length)return 0;
-  var sum=0;
-  list.forEach(function(p){
-    if(p.done){sum+=1;return;}
-    var est=Math.max(1,Number(p.estMin)||0),dm=Number(p.doneMin)||0;
-    /* 正在专注的关联计划：把本段已计秒数实时计入 */
-    if(T.running&&T.phase==='focus'&&T.planId===p.id)dm+=T.elapsed/60;
-    sum+=Math.max(0,Math.min(1,dm/est));
-  });
-  return Math.round(sum/list.length*100);
+  var done=0;
+  list.forEach(function(p){if(p.done)done++;});
+  return Math.round(done/list.length*100);
 }
 /* 切换完成率口径：只更新封面卡这一块，不整页重绘（保留滚动与折叠状态） */
 function setPlanRateScope(scope){
@@ -1759,7 +1880,7 @@ var rateScope='total';
    这里只解决「操作一次就跳回顶部 / 重开 App 回到首页」的体验问题。 */
 var KEY_UI='studywr_ui_v1';
 var UI_PAGES={tomatoes:1,goals:1,subjectDetail:1,subjects:1,stats:1,weekly:1,
-  mistakes:1,reviews:1,ai:1,settings:1,about:1,archive:1};
+  mistakes:1,reviews:1,ai:1,settings:1,about:1,help:1,archive:1};
 var _scrollMap={};
 function uiKey(){
   if(R.stack.length){
@@ -1906,7 +2027,7 @@ function advanceTimer(now){
         queueAlert('end');
         /* 倒计时到点即完成关联计划，不必等用户再点「结束并记录」 */
         var dp=completeBoundPlan(T.elapsed);
-        if(dp)toast('专注结束，「'+shortPlanTitle(dp)+'」已自动打勾');
+        if(dp)toast({title:'专注完成',detail:'「'+String(dp.title||'计划')+'」已自动打勾',icon:'✓',ms:4200});
       }
       break;
     }
@@ -1969,7 +2090,7 @@ function updateTimerUI(){
   var rec=document.getElementById('recordLink');
   if(rec)rec.textContent=over?('结束并记录 '+fmtDur(T.elapsed)+' ›'):'结束并记录已专注时长 ›';
   var dot=document.getElementById('miniDot');if(dot&&s)dot.style.background=s.color;
-  /* 计划页可见时实时刷新今日完成率（按专注分钟算，连续变化） */
+  /* 计划页可见时同步完成率：按已完成条数算，只在计划被打勾/取消时才会变 */
   var rn=document.getElementById('planRateNum'),rb=document.getElementById('planRateBar');
   if(rn&&rb){var pr=planProgressNow();
     rn.innerHTML=pr+'<em>%</em>';rb.style.width=pr+'%';}
@@ -2027,13 +2148,30 @@ function manualRecord(){
     playSound('end');
   }
   window.__alertQueue=[];                /* 清掉未消费的提醒，避免结束后又弹/又响 */
-  toast(ok?('已记录专注 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')+
-    (donePlan?' · 「'+shortPlanTitle(donePlan)+'」已打勾':'')):'未记录');
+  if(ok){
+    toast({title:'专注完成',detail:'已记录 '+fmtDur(sec)+(over>0?'（含超时 '+fmtDur(over)+'）':'')+
+      (donePlan?' ·「'+String(donePlan.title||'计划')+'」已打勾':''),icon:'✓',ms:4200});
+  }else toast('未记录');
 }
 if(!timerId)timerId=setInterval(tick,1000);
 
 /* ============ 通用 UI ============ */
-function toast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on');},1600);}
+/* 轻提示统一入口：字符串用于「开始 / 暂停 / 继续 / 重置」，
+   对象用于带详情的完成提醒；详情长文本由 CSS 折行，不再撑出屏幕。 */
+function toast(msg,opt){
+  var t=document.getElementById('toast');if(!t)return;
+  var o=(msg&&typeof msg==='object')?msg:null;
+  var title=o?(o.title||''):String(msg||'');
+  var detail=o?(o.detail||''):'';
+  var icon=o?(o.icon||'✓'):( /暂停/.test(title)?'Ⅱ': /重置/.test(title)?'↺': /开始|继续/.test(title)?'▶':'✓' );
+  var ms=o&&o.ms?o.ms:(detail?4200:2800);
+  t.innerHTML='<span class="ic">'+esc(icon)+'</span><span class="tx">'+
+    '<span class="tt">'+esc(title)+'</span>'+
+    (detail?'<span class="td">'+esc(detail)+'</span>':'')+'</span>';
+  t.classList.add('on');
+  clearTimeout(t._t);
+  t._t=setTimeout(function(){t.classList.remove('on');},ms);
+}
 
 /* ============ 注释：说明文字收成小 i 图标，点击展开、点别处收起 ============ */
 var NOTE_SVG='<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2"/>'+
@@ -2590,7 +2728,8 @@ var ICONS={
   spark:'<path d="M12 3.2l1.9 5.1 5.1 1.9-5.1 1.9L12 17.2l-1.9-5.1L5 10.2l5.1-1.9z"/>',
   layers:'<path d="M12 3.2l8.6 4.6L12 12.4 3.4 7.8z"/><path d="M3.4 12.6L12 17.2l8.6-4.6"/>',
   gear:'<circle cx="12" cy="12" r="3.1"/><path d="M19.2 12a7.2 7.2 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7.3 7.3 0 0 0-2-1.2L14.4 3h-4l-.4 2.6a7.3 7.3 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5a7.2 7.2 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-.9a7.3 7.3 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7.3 7.3 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/>',
-  archive:'<rect x="3" y="4" width="18" height="4.2" rx="1.2"/><path d="M5 8.2V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.2M10 12.5h4"/>'
+  archive:'<rect x="3" y="4" width="18" height="4.2" rx="1.2"/><path d="M5 8.2V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.2M10 12.5h4"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.4a2.6 2.6 0 0 1 5 .8c0 1.2-1.4 1.5-1.6 2.6M12 16.8h.01"/>'
 };
 function renderTabbar(){
   var tabs=[['home','首页'],['focus','专注'],['plan','计划'],['mine','我的']];
@@ -2611,17 +2750,19 @@ function pageHome(){
     '<div class="placeholder" style="padding:20px">今天的任务都完成了 ✓'+
       (planCtx.archivedDone?'<br><span class="tiny muted">'+planCtx.archivedDone+' 项已完成计划已归档</span>':'')+'</div>':
     '<div class="placeholder" style="padding:20px">今天还没有计划<br><button class="btn ghost sm" onclick="goTab(\'plan\')">去添加</button></div>';
-  /* 近 7 天：默认全体科目，含学习时长 + 新增错题两组数据 */
+  /* 近 7 天：学习时长与新增错题合并为一张双系列图，左轴分钟、右轴错题 */
   var days=[];
   for(var i=6;i>=0;i--){var d=shiftDay(-i);days.push({day:d,label:i===0?'今':d.slice(8)});}
-  var minBars=days.map(function(x){var sec=secondsOn(x.day);
-    return {label:x.label,val:minutes(sec),unit:' 分钟',tip:x.label+' · '+fmtDur(sec)};});
-  var misBars=days.map(function(x){return {label:x.label,val:mistakesOn(x.day).length,unit:' 道'};});
+  var trendDays=days.map(function(x){var sec=secondsOn(x.day);
+    return {label:x.label,sec:sec,min:minutes(sec),mis:mistakesOn(x.day).length};});
   var hasTrend=S.sessions.length>0||S.mistakes.length>0;
   var trendHtml=hasTrend?
-    '<div class="tiny muted" style="margin-bottom:2px">学习时长（分钟）· 全体科目'+
-      noteIcon('柱高是当天全部科目的合计时长，点柱子可看精确时长。')+'</div>'+homeMiniBars(minBars)+
-    '<div class="tiny muted" style="margin:10px 0 2px">新增错题（道）· 全体科目</div>'+homeMiniBars(misBars):
+    '<div class="tiny muted home-trend-head">全体科目 · 近 7 天'+
+      noteIcon('左轴是学习时长（分钟），右轴是新增错题（道）；两组数据各自按峰值缩放，点日期可看精确值。')+'</div>'+
+    homeTrendBars(trendDays)+
+    '<div class="legend home-trend-legend">'+
+      '<span class="lg"><i class="sw" style="background:var(--dai2)"></i>学习时长（分钟）</span>'+
+      '<span class="lg"><i class="sw" style="background:var(--zhu)"></i>新增错题（道）</span></div>':
     '<div class="placeholder" style="padding:24px">完成第一个番茄后，这里会有数据</div>';
   /* mode: overdue / today / future */
   function homeTaskRow(p,mode){
@@ -2717,13 +2858,14 @@ function togglePlan(id){
   var p=S.plans.filter(function(x){return x.id===id;})[0];
   if(p){
     p.done=!p.done;
+    p.doneDate=p.done?today():'';                    /* 记录完成日期，供总计划完成率区分「逾期欠债今天补完」 */
     if(p.done)markCheckin(p.date||today(),'plan');   /* 勾完计划即打卡，不用再去点一次 */
     save();render();toast(p.done?'已完成 · 今日已打卡':'已取消完成');return;
   }
   /* 逾期欠债可能来自归档快照：勾选结果写回归档，明细同步更新 */
   var a=(S.archives||[]).filter(function(x){return x.kind==='plan'&&x.data&&x.data.id===id;})[0];
   if(!a)return;
-  a.data.done=!a.data.done;a.detail=planDetailLine(a.data);
+  a.data.done=!a.data.done;a.data.doneDate=a.data.done?today():'';a.detail=planDetailLine(a.data);
   if(a.data.done)markCheckin(a.data.date||a.date||today(),'plan');
   save();render();toast(a.data.done?'已完成，归档记录已同步 · 今日已打卡':'已取消完成');
 }
@@ -2818,7 +2960,9 @@ function pickFocusPlan(id){
 }
 function openFocusPlanPicker(){
   var opts=[{label:'不关联计划（默认）',value:'',sel:!T.planId,onclick:"pickFocusPlan('');closePicker()"}];
-  var list=allPlans().filter(function(p){return !p.done;}).sort(function(a,b){
+  /* 只列当前科目的待完成计划：选了科目以后不再把所有科目的计划混在一起 */
+  var sid=T.subjectId||'';
+  var list=allPlans().filter(function(p){return !p.done&&(!sid||p.subjectId===sid);}).sort(function(a,b){
     var t=today();
     function rank(p){return p.date===t?0:(p.date<t?1:2);}
     return rank(a)-rank(b)||String(a.date).localeCompare(String(b.date));
@@ -2828,7 +2972,8 @@ function openFocusPlanPicker(){
       color:subjById(p.subjectId)?subjById(p.subjectId).color:'',sel:p.id===T.planId,
       onclick:"pickFocusPlan('"+p.id+"');closePicker()"});
   });
-  if(opts.length===1)opts.push({html:'<span class="muted">还没有待完成的计划，可先去计划页新增</span>',
+  if(opts.length===1)opts.push({html:'<span class="muted">'+
+    (sid?'这个科目还没有待完成的计划':'还没有待完成的计划，可先去计划页新增')+'</span>',
     onclick:"closePicker();goTab('plan')"});
   makePicker('focusPlanPick',opts,null,null);
 }
@@ -2838,9 +2983,10 @@ function completeBoundPlan(sec){
   if(!e||e.p.done)return null;
   var p=e.p,used=Math.max(0,Math.round((sec||0)/60));
   p.done=true;
+  p.doneDate=today();                              /* 今天补完的逾期计划仍计入总计划完成率 */
   p.doneMin=p.estMin>0?Math.min(p.estMin,(p.doneMin||0)+used):(p.doneMin||0)+used;
   if(e.a){
-    e.a.data.done=true;e.a.detail=planDetailLine(p);
+    e.a.data.done=true;e.a.data.doneDate=p.doneDate;e.a.detail=planDetailLine(p);
     if(p.date){e.a.date=p.date;e.a.month=String(p.date).slice(0,7);}
   }
   markCheckin(p.date||today(),'plan');
@@ -2936,7 +3082,7 @@ function pageFocus(){
       '<div class="fp-cell"><div class="fp-lb">当前科目</div>'+
         pickerBtn('focusPick',s?s.name:'',s?s.color:'','picker(\'focusPick\',\'pickFocusSubject\',\''+(T.subjectId||'')+'\')','选择当前科目')+'</div>'+
       '<div class="fp-cell"><div class="fp-lb">本次关联计划'+
-        noteIcon('可以不选。选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾；也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
+        noteIcon('可以不选。下拉只列当前科目的未完成计划，换科目后列表跟着变；选中后，专注结束（倒计时到点或点「结束并记录」）会自动把该计划打勾。也可以从计划项右侧的「去专注」跳过来，倒计时会按该计划的预计时间预设，随时可切正计时自己计，什么时候开始由你定。计时中不能换计划，要先结束并记录当前这段，或重置时长放弃它。')+'</div>'+
         pickerBtn('focusPlanPick',pp?shortPlanTitle(pp):'',pp&&subjById(pp.subjectId)?subjById(pp.subjectId).color:'',
           'openFocusPlanPicker()','本次不关联计划')+'</div>'+
     '</div>'+
@@ -3017,13 +3163,16 @@ function renderPlanSheet(){
   var est=window.__draftEst||45;
   var custom=window.__planCustom||'';
   sheet(editing?'编辑计划':'新增计划',
-    '<div class="fld"><label>标题</label><input id="npTitle" value="'+esc(title)+'" placeholder="例如：英语阅读 30 道"></div>'+
-    '<div class="fld"><label>科目（下拉选择）</label>'+pickerBtn('planPick',s?s.name:'',s?s.color:'','picker(\'planPick\',\'pickPlanSubject\',\''+(window.__planSubject||'')+'\')','请选择科目')+'</div>'+
-    '<div class="fld"><label>题型（选填 · 可选该科已设题型或自定义）</label>'+planTypeDropdown()+
-      '<input id="npCustomType" placeholder="输入自定义题型（未录入分类）" style="margin-top:8px;display:'+(window.__planType==='__custom__'?'block':'none')+'" value="'+esc(custom)+'"></div>'+
-    '<div class="fld"><label>预计时间（分钟）</label><span class="stepper"><button onclick="npStep(-5)">−</button><input class="v num" type="number" id="npMin" min="5" max="240" value="'+est+'" onchange="npClamp()"><button onclick="npStep(5)">+</button></span></div>'+
+    '<div class="plan-form">'+
+    '<div class="fld wide"><label>标题</label><input id="npTitle" value="'+esc(title)+'" placeholder="例如：英语阅读 30 道"></div>'+
+    '<div class="fld"><label>科目</label>'+pickerBtn('planPick',s?s.name:'',s?s.color:'','picker(\'planPick\',\'pickPlanSubject\',\''+(window.__planSubject||'')+'\')','请选择科目')+'</div>'+
+    '<div class="fld"><label>题型'+noteIcon('可选题目已设题型，或选「自定义」后手输；不填也可以。')+'</label>'+planTypeDropdown()+
+      '<input id="npCustomType" placeholder="自定义题型（选填）" style="margin-top:6px;display:'+(window.__planType==='__custom__'?'block':'none')+'" value="'+esc(custom)+'"></div>'+
+    '<div class="fld"><label>预计时间'+noteIcon('从计划项「去专注」时，会按这个时间预设倒计时。')+'</label>'+
+      '<span class="stepper"><button onclick="npStep(-5)">−</button><input class="v num" type="number" id="npMin" min="5" max="240" value="'+est+'" onchange="npClamp()"><button onclick="npStep(5)">+</button></span></div>'+
     '<div class="fld"><label>计划日期'+noteIcon('到设定日期会自动变成当天计划：未来计划平时不占首页，今天的任务完成后先看到最近一天。')+'</label>'+
-      '<input type="date" id="npDate" value="'+esc(window.__draftPlanDate||today())+'"></div>',
+      '<input type="date" id="npDate" value="'+esc(window.__draftPlanDate||today())+'"></div>'+
+    '</div>',
     (editing?'<button class="btn danger" onclick="delPlan(\''+window.__editPlan+'\')">删除</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="savePlan()">保存</button>');
 }
@@ -3270,13 +3419,15 @@ function openLongPlanEditor(id){
 function renderLongPlanSheet(){
   var editing=!!window.__editLongPlan;
   sheet(editing?'编辑长期计划':'新建长期计划',
+    '<div class="plan-form">'+
     '<div class="fld"><label>目标名称</label><input id="lpTitle" maxlength="24" placeholder="例如：考前三轮复习" value="'+esc(window.__lpTitle||'')+'"></div>'+
-    '<div class="fld"><label>目标日期（首页倒计时按这天计算）</label><input type="date" id="lpTarget" value="'+(window.__lpTarget||today())+'"></div>'+
-    '<div class="fld"><label>完成进度 <span class="num" id="lpProgVal">'+(window.__lpProgress||0)+'</span>%</label>'+
+    '<div class="fld"><label>目标日期'+noteIcon('首页倒计时按这天计算。')+'</label><input type="date" id="lpTarget" value="'+(window.__lpTarget||today())+'"></div>'+
+    '<div class="fld wide"><label>完成进度 <span class="num" id="lpProgVal">'+(window.__lpProgress||0)+'</span>%</label>'+
       '<input type="range" id="lpProg" min="0" max="100" step="5" value="'+(window.__lpProgress||0)+'" style="width:100%;--p:'+(window.__lpProgress||0)+'%" oninput="lpProgInput(this.value)">'+
       '<div class="lp-quick"><span onclick="lpQuick(-10)">−10%</span><span onclick="lpQuick(10)">+10%</span>'+
       '<span onclick="lpQuick(25)">+25%</span><span onclick="lpQuick(100)">全部完成</span></div></div>'+
-    '<div class="fld"><label>备注（选填）</label><input id="lpNote" maxlength="40" placeholder="例如：重点放在错题与真题" value="'+esc(window.__lpNote||'')+'"></div>',
+    '<div class="fld wide"><label>备注（选填）</label><input id="lpNote" maxlength="40" placeholder="例如：重点放在错题与真题" value="'+esc(window.__lpNote||'')+'"></div>'+
+    '</div>',
     (editing?'<button class="btn danger" onclick="delLongPlan(\''+window.__editLongPlan+'\')">删除</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="saveLongPlan()">保存</button>');
 }
@@ -3335,6 +3486,18 @@ function planMonthShift(n){
   var d=new Date(y,m-1,1);planCalMonth=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);render();
 }
 /* plansOn / allPlans / overduePlans / longPlansDueOn 定义在上方「计划数据统一读取」区块 */
+/* 某天的复盘状态：同一天每日 / 每周可各有一条，同类型取最新一条用于「查看」 */
+function reviewFlagsOn(ds){
+  var out=[];
+  (S.reviews||[]).filter(function(r){return r.date===ds;}).forEach(function(r){
+    var t=r.type==='weekly'?'weekly':'daily';
+    var hit=out.filter(function(x){return x.type===t;})[0];
+    var item={type:t,label:t==='weekly'?'每周':'每日',r:r};
+    if(hit){if(String(r.createdAt||'')>String(hit.r.createdAt||''))hit.r=r;}
+    else out.push(item);
+  });
+  return out.sort(function(a,b){return a.type==='daily'?-1:1;});
+}
 function planCalendarHtml(){
   var ym=curPlanMonth(),y=parseInt(ym.slice(0,4),10),m=parseInt(ym.slice(5,7),10);
   var firstDow=(new Date(y,m-1,1).getDay()+6)%7;   /* 周一为 0 */
@@ -3355,6 +3518,7 @@ function planCalendarHtml(){
     var archN=ps.filter(function(p){return p.__archived;}).length;
     var lp=longPlansDueOn(ds);
     var lpAllDone=lp.length>0&&lp.every(function(p){return p.done;});
+    var rvFlags=reviewFlagsOn(ds);
     var dots='';
     if(ps.length){
       dots='<div class="dots">'+(doneN?'<i style="background:'+C.qing+'"></i>':'')+
@@ -3362,15 +3526,20 @@ function planCalendarHtml(){
         (archN?'<i style="background:'+C.teng+'"></i>':'')+'</div>';
     }
     var mark=lp.length?'<i class="lp-mark'+(lpAllDone?' done':'')+'">◆</i>':'';
+    var rvMark=rvFlags.length?'<span class="rv-marks">'+rvFlags.map(function(f){
+      return '<i class="rv-mark '+f.type+'">'+(f.type==='weekly'?'周':'日')+'</i>';}).join('')+'</span>':'';
     var tip=ds+(ps.length?' · '+ps.length+' 项计划'+(archN?'（含归档 '+archN+'）':''):'')+
-      (lp.length?' · 长期计划截止：'+lp.map(function(p){return p.title||'未命名';}).join('、'):'');
+      (lp.length?' · 长期计划截止：'+lp.map(function(p){return p.title||'未命名';}).join('、'):'')+
+      (rvFlags.length?' · '+rvFlags.map(function(f){return '已'+f.label+'复盘';}).join('、'):'');
     h+='<div class="cal-d'+(ds===t?' today':'')+(ps.length?' has':'')+(lp.length?' lp-due':'')+
-      '" title="'+esc(tip)+'" onclick="openDayPlans(\''+ds+'\')">'+mark+
+      '" title="'+esc(tip)+'" onclick="openDayPlans(\''+ds+'\')">'+mark+rvMark+
       '<span>'+d+'</span>'+dots+'</div>';
   }
   h+='</div><div class="cal-legend"><span><i style="background:'+C.dai+'"></i>待完成</span>'+
     '<span><i style="background:'+C.qing+'"></i>已完成</span>'+
     '<span><i style="background:'+C.teng+'"></i>已归档</span>'+
+    '<span><i class="lgd-rv daily">日</i>已每日复盘</span>'+
+    '<span><i class="lgd-rv weekly">周</i>已每周复盘</span>'+
     '<span><i class="lgd-lp">◆</i>长期计划截止</span><span>点日期查看当天计划</span></div>';
   return h;
 }
@@ -3458,6 +3627,13 @@ function openDayPlans(ds){
   var doneN=ps.filter(function(p){return p.done;}).length;
   var body='<div class="tiny muted" style="margin-bottom:6px">'+ds+' · '+weekCn(ds)+
     (ps.length?' · 共 '+ps.length+' 项 / 已完成 '+doneN+' 项':'')+'</div>';
+  var rvs=reviewFlagsOn(ds);
+  if(rvs.length){
+    body+='<div class="rv-day-flags">'+rvs.map(function(f){
+      return '<span class="rv-day-flag '+f.type+'" onclick="closeSheet();openReviewEditor(\''+f.r.id+'\')">'+
+        '✓ 已'+f.label+'复盘<span>查看 ›</span></span>';
+    }).join('')+'</div>';
+  }
   if(!ps.length)body+='<div class="placeholder" style="padding:18px">这一天还没有计划</div>';
   else{
     body+=ps.map(function(p){
@@ -3528,7 +3704,7 @@ function pagePlan(){
         pFoldBtn(key)+'</div>'+
       pFoldBody(key,'<div class="pg-list">'+body+'</div>')+'</div>';
   }
-  /* 今日概览封面：完成率可切换口径（默认总计划），按专注进度连续刷新 */
+  /* 今日概览封面：完成率可切换口径（默认总计划），按已勾选条数计算 */
   var ym=t.split('-'),ac=archCntSafe();
   var scopeLabel=rateScope==='total'?'总计划完成率':'今日计划完成率';
   var hero='<div class="plan-hero"><div class="ph-top">'+
@@ -3599,6 +3775,7 @@ function pageMine(){
       item(ICONS.layers,'科目管理',"push('subjects')")+'</div>'+
     '<div class="card mine-group"><div class="sec-title">系统</div>'+
       item(ICONS.gear,'设置',"push('settings')")+
+      item(ICONS.help,'使用说明',"push('help')")+
       item(ICONS.archive,'归档'+(acN?'（'+acN+' 条）':''),"push('archive')")+'</div>';
 }
 /* 个人资料：昵称 + 个人学习目标（与 App 内「学习目标」不同，指使用者自己的学习目的） */
@@ -3979,19 +4156,30 @@ function svgBars(items){
     if(items.length<=10||i%Math.ceil(items.length/6)===0)s+='<text class="ax" x="'+(x+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+d.label+'</text>';});
   return s+'</svg>';
 }
-/* 首页专用紧凑柱状图（带点击/触摸提示） */
-function homeMiniBars(items){
-  if(!items.length)return '';
-  var W=320,H=92,pl=26,pr=6,pt=8,pb=18,iw=W-pl-pr,ih=H-pt-pb;
-  var mx=Math.max.apply(null,items.map(function(d){return d.val;}).concat([1]));
-  var bw=iw/items.length*0.62,step=iw/items.length;
-  var s='<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
-  for(var g=0;g<=2;g++){var gy=pt+ih-(g/2)*ih;s+='<line class="grid" x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'"/>';}
-  items.forEach(function(d,i){
-    var h=(d.val/mx)*ih,x=pl+i*step+(step-bw)/2,y=pt+ih-h;
-    s+='<rect class="bar'+(i===items.length-1?' today':'')+'" x="'+x+'" y="'+y+'" width="'+bw+'" height="'+Math.max(2,h)+'" rx="2"'+(d.color?' fill="'+d.color+'"':'')+'/>';
-    s+=chartHit(x+bw/2,pt+ih-Math.max(2,h)/2,Math.max(bw,12),d.tip||(d.label+' · '+d.val+(d.unit||'')));
-    s+='<text class="ax" x="'+(x+bw/2)+'" y="'+(H-5)+'" text-anchor="middle">'+d.label+'</text>';});
+/* 首页专用双系列柱状图：左轴分钟、右轴错题，同日并排，点日期看精确值 */
+function homeTrendBars(days){
+  if(!days.length)return '';
+  var W=320,H=118,pl=25,pr=25,pt=10,pb=20,iw=W-pl-pr,ih=H-pt-pb;
+  var scMin=niceScale(Math.max.apply(null,days.map(function(d){return d.min;}).concat([1])),2);
+  var scMis=niceScale(Math.max.apply(null,days.map(function(d){return d.mis;}).concat([1])),2);
+  var step=iw/days.length,bw=Math.min(12,step*0.26),gap=3;
+  var s='<svg class="chart-svg home-trend" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+  for(var g=0;g<=2;g++){
+    var gy=pt+ih-(g/2)*ih,v=Math.round(scMin.step*g),w=Math.round(scMis.step*g);
+    s+='<line class="grid" x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'"/>';
+    s+='<text class="ax axis-min" x="'+(pl-3)+'" y="'+(gy+3)+'" text-anchor="end">'+v+'</text>';
+    s+='<text class="ax axis-mis" x="'+(W-pr+3)+'" y="'+(gy+3)+'" text-anchor="start">'+w+'</text>';
+  }
+  days.forEach(function(d,i){
+    var cx=pl+i*step+step/2,todayBar=(i===days.length-1?' today':'');
+    var hMin=(d.min/scMin.max)*ih,hMis=(d.mis/scMis.max)*ih;
+    var xMin=cx-gap/2-bw,xMis=cx+gap/2;
+    s+='<rect class="bar min'+todayBar+'" x="'+xMin+'" y="'+(pt+ih-Math.max(2,hMin))+'" width="'+bw+'" height="'+Math.max(2,hMin)+'" rx="2"/>';
+    s+='<rect class="bar mis'+todayBar+'" x="'+xMis+'" y="'+(pt+ih-Math.max(2,hMis))+'" width="'+bw+'" height="'+Math.max(2,hMis)+'" rx="2"/>';
+    s+=chartHit(cx,pt+ih-Math.max(hMin,hMis)/2,step*0.42,
+      d.label+' · 学习 '+fmtDur(d.sec)+'（'+d.min+' 分） · 错题 '+d.mis+' 道');
+    s+='<text class="ax" x="'+cx+'" y="'+(H-5)+'" text-anchor="middle">'+d.label+'</text>';
+  });
   return s+'</svg>';
 }
 /* 环形扇区：单一项占 100% 时整圆弧的起终点重合，SVG 会省略弧线不画，拆成两段半圆 */
@@ -4439,10 +4627,11 @@ function saveMistake(){
     reason:document.getElementById('mReason').value.trim(),answer:document.getElementById('mAnswer').value.trim(),
     knowledge:document.getElementById('mKnow').value.split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean),
     img:imgEl?imgEl.src:'',answerImg:'',
-    nextReview:today(),stage:window.__editMist?(subjById(window.__mistSubject)?undefined:0):0,reviewed:0};
+    nextReview:today(),stage:window.__editMist?(subjById(window.__mistSubject)?undefined:0):0,reviewed:0,lastReview:''};
   if(window.__editMist){
     var idx=S.mistakes.findIndex(function(x){return x.id===window.__editMist;});
-    if(idx>=0){m.stage=S.mistakes[idx].stage||0;m.reviewed=S.mistakes[idx].reviewed||0;m.nextReview=S.mistakes[idx].nextReview;S.mistakes[idx]=m;}
+    if(idx>=0){m.stage=S.mistakes[idx].stage||0;m.reviewed=S.mistakes[idx].reviewed||0;
+      m.nextReview=S.mistakes[idx].nextReview;m.lastReview=S.mistakes[idx].lastReview||'';S.mistakes[idx]=m;}
   }else S.mistakes.push(m);
   save();closeSheet();render();toast('已保存错题');
 }
@@ -4468,8 +4657,10 @@ function openMistakeDetail(id){
     '<div class="kv-block"><div class="k">错因</div><div class="v">'+(esc(m.reason)||'未填写')+'</div></div>'+
     '<div class="kv-block"><div class="k">正确答案 / 解法</div><div class="v">'+(esc(m.answer)||'未填写')+'</div></div>'+
     ((m.knowledge&&m.knowledge.length)?'<div>'+m.knowledge.map(function(k){return '<span class="pill">'+esc(k)+'</span>';}).join('')+'</div>':'')+
-    '<div class="tiny muted" style="margin-top:8px">下次复习：'+esc(m.nextReview||'未设置')+(isDue?' · 今天该复习了':'')+'</div>',
-    (isDue?'<button class="btn primary" onclick="markReviewed(\''+m.id+'\')">✓ 已复习</button>':'')+
+    '<div class="tiny muted" style="margin-top:8px">上次复习：'+esc(m.lastReview||'未复习')+' · 下次复习：'+esc(m.nextReview||'未设置')+
+      (isDue?' · 今天该复习了':' · 已重做可提前打卡，重新计时')+'</div>',
+    (isDue?'<button class="btn primary" onclick="markReviewed(\''+m.id+'\')">✓ 已复习</button>':
+      '<button class="btn ghost" onclick="markReviewed(\''+m.id+'\')">↻ 再复习一次（提前重做）</button>')+
     '<button class="btn ghost" onclick="askAIMistake(\''+m.id+'\')">问 AI 这道题</button>'+
     '<button class="btn ghost" onclick="openMistakeEditor(\''+m.id+'\')">编辑</button>');
 }
@@ -4478,13 +4669,15 @@ function previewImg(src){
   m.innerHTML='<img src="'+src+'" style="max-width:92%;max-height:88%;border-radius:10px" onclick="this.parentNode.remove()">';
   m.onclick=function(){m.remove();};document.body.appendChild(m);
 }
-/* 1/3/7 天复习节奏 */
+/* 1/3/7 天复习节奏：首次 +1 天、第二次 +3 天、第三次起 +7 天；提前重做也重新计时 */
 function markReviewed(id){
   var m=S.mistakes.filter(function(x){return x.id===id;})[0];if(!m)return;
-  var gaps=[1,3,7],stage=Math.min((m.stage||0)+1,gaps.length-1);
-  m.stage=stage;m.reviewed=(m.reviewed||0)+1;
-  m.nextReview=shiftDay(gaps[stage]===gaps[gaps.length-1]&&stage===gaps.length-1?7:gaps[stage]);
-  save();closeSheet();render();toast('已记录，'+gaps[stage]+' 天后再复习');
+  var gaps=[1,3,7],idx=Math.min(Math.max(0,m.stage||0),gaps.length-1),gap=gaps[idx];
+  m.stage=Math.min(idx+1,gaps.length-1);
+  m.reviewed=(m.reviewed||0)+1;
+  m.lastReview=today();
+  m.nextReview=shiftDay(gap);
+  save();closeSheet();render();toast('已记录，'+gap+' 天后再复习');
 }
 /* 错题 → AI：先选「发到已有对话 / 新建对话」，新建时可选提示词预设 */
 function askAIMistake(id){
@@ -4575,13 +4768,24 @@ function pageReviews(){
         ((r.improve||r.tomorrow)?'<div class="rv-sub">'+esc(((r.improve?'改进：'+r.improve:('明日：'+r.tomorrow))||'').slice(0,42))+'</div>':'')+'</div>';
     }).join(''):'<div class="empty"><div class="ic">✍</div><div>还没有复盘<br>每天花两分钟回顾，进步看得见</div></div>');
 }
-/* 当日只读摘要 */
-function daySummary(date){
-  var sec=secondsOn(date),p=pomodorosOn(date);
-  var wrong=S.mistakes.filter(function(x){return x.date===date;}).reduce(function(a,x){return a+(x.wrong||0);},0);
-  var bySub={};sessionsOn(date).forEach(function(s){bySub[s.subjectId]=(bySub[s.subjectId]||0)+(s.seconds||0);});
+/* 复盘数据范围：每日 = 所选当天；每周 = 截至所选日期的最近 7 天 */
+function reviewDays(f){
+  var end=(f&&f.date)||today(),n=(f&&f.type==='weekly')?7:1,days=[];
+  for(var i=n-1;i>=0;i--)days.push(shiftDateStr(end,-i));
+  return days;
+}
+/* 只读摘要：按复盘类型取对应范围，避免「每周」只显示当天数据 */
+function reviewSummary(date,type){
+  var days=reviewDays({date:date,type:type}),sec=0,p=0,wrong=0,bySub={};
+  days.forEach(function(d){
+    sec+=secondsOn(d);p+=pomodorosOn(d);
+    wrong+=S.mistakes.filter(function(x){return x.date===d;}).reduce(function(a,x){return a+(x.wrong||0);},0);
+    sessionsOn(d).forEach(function(s){bySub[s.subjectId]=(bySub[s.subjectId]||0)+(s.seconds||0);});
+  });
   var parts=Object.keys(bySub).map(function(id){var sb=subjById(id);return (sb?sb.name:'未分类')+' '+fmtDur(bySub[id]);});
-  return '专注 <b>'+fmtDur(sec)+'</b> · <b>'+p+' 个番茄</b> · 错题 <b>'+wrong+' 道</b>'+
+  var scope=type==='weekly'?'近 7 天（'+days[0]+' 至 '+days[days.length-1]+'）':'当天 '+date;
+  return '<span class="srg">复盘范围：'+esc(scope)+'</span>'+
+    '专注 <b>'+fmtDur(sec)+'</b> · <b>'+p+' 个番茄</b> · 错题 <b>'+wrong+' 道</b>'+
     (parts.length?'<br>科目分布：'+parts.join('、'):'');
 }
 function openReviewEditor(id){
@@ -4590,18 +4794,23 @@ function openReviewEditor(id){
   var date=r?r.date:today();
   sheet(r?'编辑复盘':'写复盘',
     '<div class="row"><div class="fld" style="flex:1"><label>日期</label><input type="date" id="rvDate" value="'+date+'" onchange="refreshReviewSum()"></div>'+
-      '<div class="fld" style="flex:1"><label>类型</label><select id="rvType"><option value="daily"'+(r&&r.type==='daily'?' selected':'')+'>每日</option>'+
+      '<div class="fld" style="flex:1"><label>类型</label><select id="rvType" onchange="refreshReviewSum()"><option value="daily"'+(r&&r.type==='daily'?' selected':'')+'>每日</option>'+
       '<option value="weekly"'+(r&&r.type==='weekly'?' selected':'')+'>每周</option></select></div></div>'+
-    '<div class="auto-sum" id="rvSum">'+daySummary(date)+'</div>'+
+    '<div class="auto-sum" id="rvSum">'+reviewSummary(date,r?r.type:'daily')+'</div>'+
     '<div class="sec-box"><label>① 完成情况</label><textarea id="rvDone" placeholder="今天完成了什么">'+esc(r?r.done||'':'')+'</textarea></div>'+
     '<div class="sec-box"><label>② 困难与不足</label><textarea id="rvHard" placeholder="遇到什么困难">'+esc(r?r.hard||'':'')+'</textarea></div>'+
     '<div class="sec-box"><label>③ 改进措施</label><textarea id="rvImprove" placeholder="下次怎么改进">'+esc(r?r.improve||'':'')+'</textarea></div>'+
     '<div class="sec-box"><label>④ 明日重点</label><textarea id="rvTomorrow" placeholder="明天最重要的事">'+esc(r?r.tomorrow||'':'')+'</textarea></div>'+
-    '<button class="btn ghost block" onclick="aiReview()">✦ 一键 AI 复盘（模拟）</button>',
+    '<button class="btn ghost block" onclick="aiReview(this)">✦ 一键 AI 复盘'+((S.aiConfig&&S.aiConfig.apiKey&&S.aiConfig.baseUrl&&S.aiConfig.model)?'':'（未配置接口）')+'</button>',
     (r?'<button class="btn danger" onclick="delReview(\''+r.id+'\')">删除</button>':'')+
     '<button class="btn ghost" onclick="closeSheet()">取消</button><button class="btn primary" onclick="saveReview()">保存</button>');
 }
-function refreshReviewSum(){var d=document.getElementById('rvDate').value;var el=document.getElementById('rvSum');if(el&&d)el.innerHTML=daySummary(d);}
+function refreshReviewSum(){
+  var d=document.getElementById('rvDate').value,el=document.getElementById('rvSum');
+  if(!el||!d)return;
+  var t=(document.getElementById('rvType')||{}).value||'daily';
+  el.innerHTML=reviewSummary(d,t);
+}
 function collectReviewForm(){
   return {date:document.getElementById('rvDate').value||today(),type:document.getElementById('rvType').value,
     done:document.getElementById('rvDone').value.trim(),hard:document.getElementById('rvHard').value.trim(),
@@ -4620,15 +4829,87 @@ function delReview(id){
   confirmDo('删除这条复盘？','删除后不可恢复。',function(){
     S.reviews=S.reviews.filter(function(x){return x.id!==id;});save();closeSheet();render();toast('已删除');});
 }
-function aiReview(){
-  var f=collectReviewForm();
-  var m=fmtDur(secondsOn(f.date)),p=pomodorosOn(f.date);
-  var done=f.done||('今天专注 '+m+'，完成 '+p+' 个番茄');
-  document.getElementById('rvDone').value=done;
-  document.getElementById('rvHard').value=f.hard||'专注时段被打断较多，后半程效率下降';
-  document.getElementById('rvImprove').value=f.improve||'把最难的任务放在精力最好的时段，番茄之间彻底休息 5 分钟';
-  document.getElementById('rvTomorrow').value=f.tomorrow||'优先完成 2 项高价值计划，晚间复盘错题';
-  toast('已生成 AI 复盘草稿，可修改后保存');
+/* 复盘用真实数据：每日取当天，每周取截至所选日期的近 7 天 */
+function reviewFactsForAI(f){
+  var end=f.date||today(),days=reviewDays(f);
+  var sec=0,pom=0,mis=0,bySubj={};
+  days.forEach(function(d){
+    sec+=secondsOn(d);pom+=pomodorosOn(d);mis+=mistakesOn(d).length;
+    sessionsOn(d).forEach(function(s){
+      var sb=s.subjectId?subjById(s.subjectId):null,k=sb?sb.name:'未分类';
+      bySubj[k]=(bySubj[k]||0)+(s.seconds||0);
+    });
+  });
+  var plans=S.plans.filter(function(p){return days.indexOf(p.date)>=0;});
+  var doneN=plans.filter(function(p){return !!p.done;}).length;
+  var rows=['复盘类型：'+(f.type==='weekly'?'每周':'每日')+'；日期：'+end,
+    '数据范围：'+days[0]+' 至 '+days[days.length-1]+'（'+(f.type==='weekly'?'最近 7 天':'当天')+'）',
+    '专注时长：'+fmtDur(sec)+'（'+minutes(sec)+' 分钟），番茄 '+pom+' 个',
+    '新增错题：'+mis+' 道',
+    '计划：完成 '+doneN+' 项，未完成 '+(plans.length-doneN)+' 项'];
+  var sk=Object.keys(bySubj);
+  if(sk.length)rows.push('科目时长：'+sk.map(function(k){return k+' '+minutes(bySubj[k])+' 分';}).join('、'));
+  if(f.done)rows.push('我已写完成情况：'+f.done);
+  if(f.hard)rows.push('我已写困难与不足：'+f.hard);
+  if(f.improve)rows.push('我已写改进措施：'+f.improve);
+  if(f.tomorrow)rows.push('我已写明日重点：'+f.tomorrow);
+  return rows.join('\n');
+}
+/* 模型返回严格 JSON；不规整时用中文段落标记兜底解析 */
+function parseReviewDraft(text){
+  var s=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim(),out={};
+  try{
+    var j=JSON.parse(s);
+    if(j&&typeof j==='object')['done','hard','improve','tomorrow'].forEach(function(k){
+      if(j[k])out[k]=String(j[k]).trim();});
+    if(out.done||out.hard||out.improve||out.tomorrow)return out;
+  }catch(e){}
+  var marks=[['done','【完成情况】'],['hard','【困难与不足】'],['improve','【改进措施】'],['tomorrow','【明日重点】']];
+  marks.forEach(function(m,i){
+    var a=s.indexOf(m[1]);if(a<0)return;
+    var b=i+1<marks.length?s.indexOf(marks[i+1][1],a+m[1].length):s.length;
+    if(b<0)b=s.length;
+    out[m[0]]=s.slice(a+m[1].length,b).replace(/^[\s:：]+/,'').trim();
+  });
+  return out;
+}
+/* 未配置接口或调用失败时的本地模板兜底 */
+function aiReviewMock(f){
+  var sec=0,p=0;
+  reviewDays(f).forEach(function(d){sec+=secondsOn(d);p+=pomodorosOn(d);});
+  var label=f.type==='weekly'?'近 7 天':'当天';
+  return {done:f.done||(label+'专注 '+fmtDur(sec)+'，完成 '+p+' 个番茄'),
+    hard:f.hard||'专注时段被打断较多，后半程效率下降',
+    improve:f.improve||'把最难的任务放在精力最好的时段，番茄之间彻底休息 5 分钟',
+    tomorrow:f.tomorrow||'优先完成 2 项高价值计划，晚间复盘错题'};
+}
+function fillReviewDraft(d){
+  var ids={done:'rvDone',hard:'rvHard',improve:'rvImprove',tomorrow:'rvTomorrow'};
+  Object.keys(ids).forEach(function(k){var el=document.getElementById(ids[k]);if(el&&d[k])el.value=d[k];});
+}
+function aiReview(btn){
+  var f=collectReviewForm(),cfg=S.aiConfig||aiCfgBlank();
+  function resetBtn(){if(btn){btn.textContent='✦ 一键 AI 复盘';btn.disabled=false;}}
+  if(!(cfg.apiKey&&cfg.baseUrl&&cfg.model)){
+    fillReviewDraft(aiReviewMock(f));
+    toast('未配置 AI 接口，已用本地模板；设置里配置后可真实生成');
+    return;
+  }
+  if(btn){btn.textContent='生成中…';btn.disabled=true;}
+  var system='你是学习复盘顾问。只根据用户提供的真实数据写复盘，不编造未提供的事实。'+
+    '只返回一个 JSON 对象，键为 done、hard、improve、tomorrow，值为字符串，不要 Markdown 代码块，不要额外说明。'+
+    '每段不超过 60 个汉字；improve 和 tomorrow 必须是具体可执行的动作。'+
+    '如果用户已经写过对应内容，请以其为基础润色补充，不要改变原意。';
+  var user='请基于以下 StudySpace 真实学习数据生成复盘草稿。数据不足的维度写「暂无记录」。\n'+reviewFactsForAI(f);
+  callAIText([{role:'system',content:system},{role:'user',content:user}],cfg).then(function(text){
+    var d=parseReviewDraft(text);
+    if(!d.done&&!d.hard&&!d.improve&&!d.tomorrow)throw new Error('返回格式无法解析');
+    fillReviewDraft({done:d.done||f.done,hard:d.hard||f.hard,improve:d.improve||f.improve,tomorrow:d.tomorrow||f.tomorrow});
+    toast('已生成 AI 复盘草稿，可修改后保存');
+  }).catch(function(err){
+    fillReviewDraft(aiReviewMock(f));
+    toast('接口调用失败（'+(err&&err.message||'网络异常')+'），已用本地模板兜底');
+  }).then(resetBtn);
 }
 function exportReviewTXT(id){
   var r=S.reviews.filter(function(x){return x.id===id;})[0];if(!r)return;
@@ -4798,20 +5079,11 @@ function httpGetJson(url,headers){
   return fetch(url,{headers:headers||{}}).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
 }
-/* 真实接口：OpenAI 兼容 /chat/completions；失败时降级为本地模拟，不吞错 */
-function callAIAPI(chat,cfg){
-  var p=getChatPrompt(chat);
-  var msgs=[{role:'system',content:p.text}];
-  chat.messages.slice(-20).forEach(function(m){
-    var c=m.text||'';
-    if(m.img&&/vl|vision|4o|gemini|plus/i.test(cfg.model||''))
-      c=[{type:'text',text:c},{type:'image_url',image_url:{url:m.img}}];
-    msgs.push({role:m.role==='user'?'user':'assistant',content:c});
-  });
+/* 真实接口：OpenAI 兼容 /chat/completions；App 走原生 HTTP 绕过 WebView 跨域，浏览器用 fetch */
+function callAIText(msgs,cfg){
   var url=String(cfg.baseUrl).replace(/\/+$/,'')+'/chat/completions';
   var headers={'Content-Type':'application/json','Authorization':'Bearer '+cfg.apiKey};
   var body={model:cfg.model,messages:msgs,temperature:0.7};
-  /* App 内走原生 HTTP，绕过 WebView 跨域限制；浏览器里用 fetch */
   if(isNative()){
     return capCall('CapacitorHttp','request',{url:url,method:'POST',headers:headers,data:body})
       .then(function(r){
@@ -4825,6 +5097,18 @@ function callAIAPI(chat,cfg){
     .then(function(j){
       var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
       if(!t)throw new Error('返回内容为空');return t;});
+}
+/* 对话专用：按当前会话提示词拼装消息，再走通用文本请求 */
+function callAIAPI(chat,cfg){
+  var p=getChatPrompt(chat);
+  var msgs=[{role:'system',content:p.text}];
+  chat.messages.slice(-20).forEach(function(m){
+    var c=m.text||'';
+    if(m.img&&/vl|vision|4o|gemini|plus/i.test(cfg.model||''))
+      c=[{type:'text',text:c},{type:'image_url',image_url:{url:m.img}}];
+    msgs.push({role:m.role==='user'?'user':'assistant',content:c});
+  });
+  return callAIText(msgs,cfg);
 }
 /* 本地模拟：只作无接口时的兜底，按当前提示词与问题关键词匹配 */
 function aiMockReply(q,chat){
@@ -4921,7 +5205,7 @@ function pageSettings(){
     '<div class="card"><div class="sec-title" style="color:'+C.zhe+'">危险区</div>'+
       '<div class="menu-item" onclick="openCleanData()" style="color:'+C.zhe+'"><svg class="ic" style="stroke:'+C.zhe+'" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg><span>清理数据（可选择清理项）</span><span class="arw">›</span></div></div>';
 }
-/* 关于页：版本信息 / 开源协议 / 免责协议 / 使用方法（内容待补） */
+/* 关于页：版本信息 / 开源协议 / 免责协议 / 使用方法说明 */
 /* 关于页版本：默认用 APP_VERSION；在 APK 里再向原生取一次 versionName，
    让「系统里显示的版本」与「App 内显示的版本」始终一致。 */
 var _appVer=APP_VERSION,_appBuild='';
@@ -4942,8 +5226,7 @@ function syncAboutVersion(){
 function pageAbout(){
   var rows=[
     {t:'开源协议',d:'MIT License —— 允许自由使用、复制、修改与分发，需保留版权声明。'},
-    {t:'免责协议',d:'本应用为个人学习工具，数据仅保存在本机。使用者需自行备份，因设备损坏、系统清理或误操作导致的数据丢失，开发者不承担责任。学习成果因人而异，本应用不对升学、考试成绩作任何承诺。'},
-    {t:'使用方法',d:'内容整理中，将在全部功能完成后补充。'}
+    {t:'免责协议',d:'本应用为个人学习工具，数据仅保存在本机。使用者需自行备份，因设备损坏、系统清理或误操作导致的数据丢失，开发者不承担责任。学习成果因人而异，本应用不对升学、考试成绩作任何承诺。'}
   ];
   return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">关于</span></div>'+
     /* 版本号只在这里展示一次，与名称合成一张封面卡 */
@@ -4951,7 +5234,157 @@ function pageAbout(){
       '<div class="tg">专注 · 计划 · 复盘 · 沉淀</div>'+
       '<div class="ver" id="aboutVer">'+aboutVerText()+'</div></div>'+
     rows.map(function(r){return '<div class="card about-card"><div class="sec-title">'+esc(r.t)+'</div>'+
-      '<p>'+esc(r.d)+'</p></div>';}).join('');
+      '<p>'+esc(r.d)+'</p></div>';}).join('')+
+    '<div class="card about-card"><div class="sec-title">使用方法</div>'+
+      '<p>从建科目、定计划到专注、复盘与备份，完整步骤和关键规则见「我的 → 系统 → 使用说明」。</p></div>'+
+    '<div class="card about-card"><div class="sec-title">项目主页</div>'+
+      '<div class="menu-item" onclick="openProjectLink()"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg><span>GitHub · yskyzg/StudySpace</span><span class="arw">↗</span></div>'+
+      '<div class="tiny muted" style="margin-top:9px;word-break:break-all;-webkit-user-select:text;user-select:text">https://github.com/yskyzg/StudySpace</div></div>';
+}
+/* 关于页项目链接：App 内交给系统浏览器，浏览器预览开新标签；被拦截时提示长按复制 */
+function openProjectLink(){
+  var url='https://github.com/yskyzg/StudySpace';
+  try{
+    if(isNative())window.open(url,'_system');
+    else window.open(url,'_blank','noopener,noreferrer');
+  }catch(e){toast('打开失败，请长按下方链接复制');}
+}
+/* ============ 使用说明：应用内手册（单文件、无外链） ============ */
+var HELP_SECS=[
+  {k:'quick',t:'快速开始',html:
+    '<div class="help-p">首次打开是空的，按下面四步走一遍，首页、统计和复盘就会自然有数据。</div>'+
+    '<div class="help-li"><b>建科目</b>：我的 → 科目管理，先建常用科目和题型。</div>'+
+    '<div class="help-li"><b>定目标</b>：我的 → 学习目标，设置每日 / 每周分钟数。</div>'+
+    '<div class="help-li"><b>写计划</b>：计划页点「新增计划」，或从月历点某天新增。</div>'+
+    '<div class="help-li"><b>去专注</b>：计划项点「去专注」会自动绑定并按预计时间预设时长，自己点开始即可。</div>'+
+    '<div class="help-rule">数据只保存在本机，不注册、不上传。建议设置好后到「设置 → 导出备份」留一份 JSON。</div>'+
+    '<span class="help-go" onclick="push(\'subjects\')">去建科目 ›</span>'+
+    '<span class="help-go" onclick="goTab(\'plan\')">去定计划 ›</span>'+
+    '<span class="help-go" onclick="goTab(\'focus\')">去专注 ›</span>'},
+  {k:'focus',t:'专注计时',html:
+    '<div class="help-li">倒计时 / 正向计时可切换。计时基于时间戳，息屏、切后台或重启 App 都按真实流逝补齐。</div>'+
+    '<div class="help-li">倒计时到点不会自动开始下一段，继续累计显示 +mm:ss；点「结束并记录」按总时长落一次记录（至少 1 秒）。</div>'+
+    '<div class="help-li">开始 / 暂停 / 继续 / 重置会弹暖纸提示，约 2.8 秒自动消失；完成提醒约 4.2 秒，不会长期占屏。</div>'+
+    '<div class="help-li">计时设置里可改专注与休息时长、各类提示音、结束后是否再响一次；屏幕常亮默认开启，暂停或结束自动释放。</div>'+
+    '<div class="help-rule">当前科目与关联计划并排显示。换科目会刷新关联计划候选；<b>计时中或有未结束进度时不能改绑</b>，需先结束并记录或重置时长。</div>'+
+    '<span class="help-go" onclick="goTab(\'focus\')">打开专注页 ›</span>'+
+    '<span class="help-go" onclick="push(\'tomatoes\')">看番茄记录 ›</span>'},
+  {k:'plan',t:'计划与关联',html:
+    '<div class="help-li">计划包含标题、科目、题型（选填）、预计时间、计划日期。未来计划到期会自动进入当天，平时不占首页。</div>'+
+    '<div class="help-li">「去专注」入口在计划项、首页任务和月历详情里都有；点击只绑定并跳转，<b>不会自动开始计时</b>。</div>'+
+    '<div class="help-li">关联计划下拉只列当前科目下未完成的计划，换科目跟着变，也可以不选。</div>'+
+    '<div class="help-li">结束并记录（含倒计时到点）会自动给关联计划打勾、累加已专注分钟；会话里同时记下计划名，统计可追溯。</div>'+
+    '<div class="help-li">逾期未完成会排到最前并注明逾期天数；全部完成后首页显示次日预览。分组标题可收起，状态会记住。</div>'+
+    '<div class="help-rule">长期计划单独区块：设目标日期、拖进度、写备注。已完成的可折叠；进行中的长期计划需单条归档。</div>'+
+    '<span class="help-go" onclick="goTab(\'plan\')">打开计划页 ›</span>'},
+  {k:'progress',t:'完成率与月历',html:
+    '<div class="help-li">封面卡可切换两种口径，按条数计算：完成一项涨一档，<b>与专注分钟无关</b>。</div>'+
+    '<div class="help-rule"><b>总计划完成率</b>（默认）＝过去未完成累积到今天 + 今天计划，含今天补完的逾期计划；<b>今日计划完成率</b>＝仅今天的计划。两者都不计已归档计划。</div>'+
+    '<div class="help-li">计划月历圆点：黛蓝＝待完成，竹青＝已完成，藤黄＝已归档；右上书签表示长期计划截止日，点日期可看当天详情。</div>'+
+    '<div class="help-li">月历左上角复盘徽标：「日」朱红＝已每日复盘，「周」紫檀＝已每周复盘，同一天可同时有两种。</div>'+
+    '<div class="help-rule">归档只收今天及以往<b>已完成</b>的日常计划与已完成的长期计划；以往未完成的欠债不会被吞掉，归档快照仍可在月历里改状态或恢复。</div>'+
+    '<span class="help-go" onclick="goTab(\'plan\')">打开月历 ›</span>'+
+    '<span class="help-go" onclick="push(\'archive\')">查看归档 ›</span>'},
+  {k:'goal',t:'目标与打卡',html:
+    '<div class="help-li">日 / 周目标支持全局设置和分科目设置；达成环按真实专注分钟计算，目标为 0 时不显示百分比。</div>'+
+    '<div class="help-rule"><b>打卡判定</b>：当天有真实专注记录（时长 &gt; 0），或当天有计划被勾选完成，二者满足其一即打卡。只设计划、只点开始、错题复习都不算；取消完成后立即失效。</div>'+
+    '<div class="help-li">达到日目标会额外标红为「达标」；今天还没学习不算断签。连续天数按真实打卡日期往前数。</div>'+
+    '<div class="help-li">打卡月历蓝＝已打卡、红＝达标、浅色＝未打卡，今天高亮；点日期看当天时长、番茄数与科目分布。</div>'+
+    '<div class="help-li">科目 · 明细支持年 / 月 / 日筛选，柱子和节点可点，能看当天番茄明细与计划详情。</div>'+
+    '<span class="help-go" onclick="push(\'goals\')">打开学习目标 ›</span>'},
+  {k:'mistake',t:'错题与复习',html:
+    '<div class="help-li">录入科目、题型、题数、摘要、错因、正解、知识点，可附图；图片压缩后只存本机，随 JSON 备份一起导出。</div>'+
+    '<div class="help-li">列表按日期倒序，支持科目 / 题型联动筛选；未填题型归到「未分类」。</div>'+
+    '<div class="help-rule"><b>复习节奏</b>：1 → 3 → 7 天，之后每 7 天循环。到期才进「待复习提醒」；未到期也能在详情点「再复习一次（提前重做）」重新排期。</div>'+
+    '<div class="help-li">详情显示复习次数、上次与下次复习日期；编辑错题不会清掉复习历史。</div>'+
+    '<div class="help-li">可带题目与图片问 AI；批量导出生成可打印的 HTML 报告，浏览器可另存 PDF。</div>'+
+    '<span class="help-go" onclick="push(\'mistakes\')">打开错题本 ›</span>'},
+  {k:'review',t:'复盘与周报',html:
+    '<div class="help-li">复盘分四段：完成情况 / 困难与不足 / 改进措施 / 明日重点。弹层上方有只读数据摘要。</div>'+
+    '<div class="help-rule"><b>每日复盘</b>只汇总所选当天；<b>每周复盘</b>汇总截至所选日期的最近 7 天。切换类型时摘要立即刷新。</div>'+
+    '<div class="help-li">「一键 AI 复盘」需要先在设置里配置接口；它会带真实数据和你已写的内容请求模型，回填四段后可继续修改。未配置或失败会明确提示，并用本地模板兜底。</div>'+
+    '<div class="help-li">写完的复盘可在列表筛选、编辑、删除、导出 TXT，并在计划月历上看到对应徽标。</div>'+
+    '<div class="help-li">周报以周一为周首，可切上下周；展示总时长、日目标达成率、活跃天数、番茄数与科目分布。周点评由本地规则生成，不调用 AI。</div>'+
+    '<span class="help-go" onclick="push(\'reviews\')">打开复盘 ›</span>'+
+    '<span class="help-go" onclick="push(\'weekly\')">查看周报 ›</span>'},
+  {k:'data',t:'统计与 AI',html:
+    '<div class="help-li">学习统计支持近 7 / 30 天或年 + 月，科目与题型联动筛选；所有图表跟随同一范围，点 / 触摸可看精确值。</div>'+
+    '<div class="help-li">首页学习趋势是一张双系列图：黛蓝＝学习分钟（左轴），朱红＝新增错题（右轴），同日两根柱并排。</div>'+
+    '<div class="help-li">番茄记录可按日翻页、删除单条，也能补记没打开 App 时完成的番茄（会标记来源为手动）。</div>'+
+    '<div class="help-li">AI 助手支持多会话、提示词预设、文字与图片、上下文压缩；最近 20 条进入请求。App 内走原生 HTTP 避免跨域，浏览器走 fetch。</div>'+
+    '<div class="help-rule">接口在「设置 → AI 接口」配置，Key 只存本机。失败时会降级为本地回应并说明原因。</div>'+
+    '<span class="help-go" onclick="push(\'stats\')">打开学习统计 ›</span>'+
+    '<span class="help-go" onclick="push(\'ai\')">打开 AI 助手 ›</span>'+
+    '<span class="help-go" onclick="push(\'settings\')">打开设置 ›</span>'},
+  {k:'safety',t:'数据与更新',html:
+    '<div class="help-li">无账号、无云端、无埋点。主数据、备份、界面状态和计时状态都保存在本机；AI Key 也只在本机配置。</div>'+
+    '<div class="help-li">设置里可导出 JSON 备份并调用系统分享选保存位置，也可导入恢复；报告 / PDF 从「导出学习数据」生成。</div>'+
+    '<div class="help-li">清理数据按类勾选、有二次确认；归档只在「清空所有数据」时一起删除。</div>'+
+    '<div class="help-rule"><b>更新 APK</b>：使用固定签名覆盖安装，版本只升不降，本机数据会保留。系统「应用信息」与「关于」页显示的版本一致。</div>'+
+    '<div class="help-li">卸载 App、系统清理或设备损坏仍可能丢数据，请定期导出备份。</div>'+
+    '<span class="help-go" onclick="push(\'settings\')">去导出备份 ›</span>'+
+    '<span class="help-go" onclick="push(\'about\')">查看版本 ›</span>'},
+  {k:'faq',t:'常见问题',html:
+    '<div class="help-q">Q：为什么今天没有打卡？</div>'+
+    '<div class="help-a">A：需要当天有真实专注记录，或当天完成至少一项计划。只设计划、只点开始都不算。</div>'+
+    '<div class="help-q">Q：点了「去专注」怎么没开始计时？</div>'+
+    '<div class="help-a">A：这是刻意设计。它只绑定计划并把倒计时设为预计时间，何时开始由你决定。</div>'+
+    '<div class="help-q">Q：计时中为什么换不了关联计划？</div>'+
+    '<div class="help-a">A：避免把时长错记到别的计划。请先「结束并记录」，或「重置时长」后再换。</div>'+
+    '<div class="help-q">Q：错题复习按钮不见了？</div>'+
+    '<div class="help-a">A：主按钮只在到期时出现；未到期可进详情点「再复习一次（提前重做）」。</div>'+
+    '<div class="help-q">Q：每周复盘到底取哪七天？</div>'+
+    '<div class="help-a">A：截至所选日期（含当天）往前数 7 天，摘要里会写明起止日期。</div>'+
+    '<div class="help-q">Q：更新 App 会丢数据吗？</div>'+
+    '<div class="help-a">A：固定签名覆盖安装不会丢；仍建议升级前导出一份备份。</div>'}
+];
+function toggleHelpSec(k){
+  var b=document.getElementById('hs_'+k),h=document.getElementById('hh_'+k);
+  if(!b||!h)return;
+  b.classList.toggle('open');h.classList.toggle('open');syncHelpBar();
+}
+function helpExpandAll(on){
+  HELP_SECS.forEach(function(s){
+    var b=document.getElementById('hs_'+s.k),h=document.getElementById('hh_'+s.k);
+    if(b&&h){b.classList.toggle('open',on);h.classList.toggle('open',on);}
+  });
+  syncHelpBar();
+}
+function syncHelpBar(){
+  var n=0;
+  HELP_SECS.forEach(function(s){var b=document.getElementById('hs_'+s.k);if(b&&b.classList.contains('open'))n++;});
+  var el=document.getElementById('helpCount');if(el)el.textContent=n+'/'+HELP_SECS.length+' 节已展开';
+}
+function helpJump(k){
+  var b=document.getElementById('hs_'+k),h=document.getElementById('hh_'+k);
+  if(b&&h){b.classList.add('open');h.classList.add('open');syncHelpBar();}
+  var sec=document.getElementById('sec_'+k),scr=document.getElementById('screen');
+  if(sec&&scr)setTimeout(function(){
+    scr.scrollTop+=sec.getBoundingClientRect().top-scr.getBoundingClientRect().top-8;
+  },20);
+}
+function pageHelp(){
+  var toc='<div class="help-toc">'+HELP_SECS.map(function(s){
+    return '<span class="hc" onclick="helpJump(\''+s.k+'\')">'+s.t+'</span>';}).join('')+'</div>';
+  var secs=HELP_SECS.map(function(s,i){
+    var open=i===0?' open':'';
+    return '<div class="card help-sec" id="sec_'+s.k+'">'+
+      '<div class="help-head'+open+'" id="hh_'+s.k+'" onclick="toggleHelpSec(\''+s.k+'\')">'+
+        '<span class="hi">'+(i+1<10?'0':'')+(i+1)+'</span><span class="hn">'+s.t+'</span><span class="ha">›</span></div>'+
+      '<div class="help-body'+open+'" id="hs_'+s.k+'">'+s.html+'</div></div>';}).join('');
+  return '<div class="page-head"><span class="back" onclick="back()">‹</span><span class="title">使用说明</span></div>'+
+    '<div class="card help-intro"><div class="hk">GETTING STARTED</div><div class="ht">把学习装进日常</div>'+
+      '<div class="help-steps">'+
+        '<div class="help-step"><span class="n">1</span><div><b>先建科目与目标</b><span>科目是统计、计划和错题的共同入口。</span></div></div>'+
+        '<div class="help-step"><span class="n">2</span><div><b>写下要做的计划</b><span>设定日期与预计时间，到期自动进入当天。</span></div></div>'+
+        '<div class="help-step"><span class="n">3</span><div><b>开始一次专注</b><span>可从计划直接跳来，时长已按预计时间预设。</span></div></div>'+
+      '</div><div class="help-quick">'+
+        '<button class="btn ghost sm" onclick="push(\'subjects\')">建科目</button>'+
+        '<button class="btn ghost sm" onclick="goTab(\'plan\')">定计划</button>'+
+        '<button class="btn primary sm" onclick="goTab(\'focus\')">去专注</button></div></div>'+
+    toc+'<div class="help-bar"><span id="helpCount">1/'+HELP_SECS.length+' 节已展开</span>'+
+      '<span><span class="op" onclick="helpExpandAll(true)">全部展开</span><span class="op" onclick="helpExpandAll(false)">全部收起</span></span></div>'+
+    secs+'<div class="help-end">StudySpace · 专注 · 计划 · 复盘 · 沉淀<br>查看 <span onclick="push(\'about\')">关于与版本</span></div>';
 }
 /* ============ 通知诊断面板：真机上排查系统通知为何不弹 ============ */
 function openNotifyDiag(){
@@ -5298,6 +5731,7 @@ function render(opt){
   else if(page==='ai')html=pageAI();
   else if(page==='settings')html=pageSettings();
   else if(page==='about')html=pageAbout();
+  else if(page==='help')html=pageHelp();
   else if(page==='archive')html=pageArchive();
   else html=simplePage('页面','');
   scr.innerHTML=html;

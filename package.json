@@ -1,6 +1,6 @@
 {
   "name": "studyspace-apk",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "description": "StudySpace - Capacitor APK 打包骨架",
   "scripts": {
